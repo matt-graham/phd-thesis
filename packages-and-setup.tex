@@ -1,0 +1,139 @@
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{csquotes}
+\usepackage[UKenglish]{babel}                  
+\usepackage[%
+    %backend=biber, %instead of bibtex
+	backend=bibtex8,
+	bibencoding=ascii,%
+	language=auto,%
+	style=numeric-comp,%
+    %style=authoryear-comp, % Author 1999, 2010
+    %bibstyle=authoryear,dashed=false, % dashed: substitute rep. author with ---
+    sorting=nyt, % name, year, title
+    maxbibnames=10, % default: 3, et al.
+    %backref=true,%
+    natbib=true % natbib compatibility mode (\citep and \citet still work)
+]{biblatex}
+\usepackage{amsmath}    
+\usepackage{textcomp} % fix warning with missing font shapes
+\usepackage{scrhack} % fix warnings when using KOMA with listings package          
+\usepackage{xspace} % to get the spacing after macros right  
+\usepackage{mparhack} % get marginpar right
+\usepackage[printonlyused,smaller]{acronym} % nice macros for handling all acronyms in the thesis
+\usepackage{tabularx} % better tables
+\setlength{\extrarowheight}{3pt} % increase table row height
+\newcommand{\tableheadline}[1]{\multicolumn{1}{c}{\spacedlowsmallcaps{#1}}}
+\newcommand{\myfloatalign}{\centering} % to be used with each float for alignment
+\usepackage{caption}
+\captionsetup{font=small} % format=hang,
+\usepackage{subfig}  
+\usepackage[pdftex,hyperfootnotes=false,pdfpagelabels]{hyperref}  % backref linktocpage pagebackref
+\pdfcompresslevel=9
+\pdfadjustspacing=1 
+\usepackage[pdftex]{graphicx} 
+\usepackage[%
+  %drafting, % prints the date and time at the bottom of each page
+  %parts, % use part divisions in document (cannot be used with no chapters)
+  %nochapters, % use classicthesis styling in document classes without chapters  
+  %linedheaders, %
+  eulerchapternumbers, %
+  %beramono, %
+  %eulermath, %
+  pdfspacing, %
+  %minionprospacing, %
+  %tocaligned, %
+  %dottedtoc, %
+  %manychapters, %
+  listings, %
+  floatperchapter, %
+  subfig, %
+]{classicthesis}
+
+% Use edited arsclassica styling (no bold fonts, no change to sf font)
+\usepackage{arsclassica-alt}
+
+% Use Libertine fonts for text and maths and Bitstream Vera Mono for monospaced
+\usepackage[mono=false,proportional]{libertine}
+\usepackage[libertine,cmintegrals,cmbraces]{newtxmath}
+\usepackage[scaled=0.8]{beramono}
+
+\makeatletter
+\newcommand\libertineTLF{\def\libertine@figurealign{T}\libertineLF}
+% \newcommand\libertinePLF{\def\libertine@figurealign{}\libertineLF}    %% not needed
+\newcommand\libertineTOsF{\def\libertine@figurealign{T}\libertineOsF}
+\newcommand\libertinePOsF{\def\libertine@figurealign{}\libertineOsF}
+\makeatother
+
+%% to have proportional old style figures in the main text
+\AtBeginDocument{\libertinePOsF}
+
+%% to have tabular figures in all tabulary environments
+\usepackage{etoolbox}
+\makeatletter
+\pretocmd{\TY@tabular}{\libertineTLF}{}{}   %% tabular lining figures
+\makeatother
+
+\let\forall\forallAlt
+
+%\usepackage{libertinust1math} % slanted integrals, by default
+%\usepackage[cal=stix,scr=boondoxo,bb=boondox]{mathalfa}
+
+%\usepackage{mathrsfs}
+% https://tex.stackexchange.com/a/23741
+%\DeclareMathAlphabet{\mathscrbf}{OMS}{mdugm}{b}{n}
+%\DeclareFontFamily{U}{px-math-ds}{\skewchar\font=45}% double-struck
+%\DeclareFontShape{U}{px-math-ds}{m}{n}{pxr-ds}{}
+%\DeclareFontShape{U}{px-math-ds}{b}{n}{pxb-ds}{}
+%\DeclareMathAlphabet{\mathbbx}{U}{px-math-ds}{m}{n}
+%\usepackage[bb=mma]{mathalfa}
+
+\usepackage{enumitem}
+ 
+% Use one-and-half line spacing as per University of Edinburgh requirements
+\usepackage[onehalfspacing]{setspace}
+
+% Hacky solution to keep margin notes as single-spaced
+%\let\prevmarginpar\marginpar
+%\renewcommand{\marginpar}[1]{
+%  \prevmarginpar{
+%    \begin{singlespace}
+%      #1
+%    \end{singlespace}
+%  }
+%}
+
+% Change page layout to meet University of Edinburgh requirements
+\usepackage{geometry}
+\geometry{
+  a4paper,
+  includehead,
+  includemp,
+  headsep=5mm,
+  %nomarginpar,
+  marginparsep=8mm,
+  marginparwidth=27mm,
+  top=20mm,
+  bottom=40mm,
+  outer=25mm,
+  inner=40mm,
+  %showframe
+}
+
+% Spaced paragraphs with no initial indent
+\usepackage[parfill]{parskip}
+
+% Necessary for correct hyperlinks (to index, bib, etc.)                                  
+\newcounter{dummy} 
+
+\newcommand{\ie}{i.\,e.}
+\newcommand{\Ie}{I.\,e.}
+\newcommand{\eg}{e.\,g.}
+\newcommand{\Eg}{E.\,g.} 
+
+% Unnumbered front-matter sections with TOC entries
+\newcommand{\frontmattersection}[1]{
+  \refstepcounter{dummy}
+  \section*{#1}
+  \addcontentsline{toc}{section}{#1}
+}

@@ -1,0 +1,111 @@
+\DeclareMathOperator{\expectation}{\vvmathbb{E}}
+\DeclareMathOperator{\indicator}{\vvmathbb{1}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\chol}{chol}
+\DeclareMathOperator{\gvn}{|}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\trace}{Trace}
+\DeclareMathOperator{\dimension}{dim}
+\DeclareMathOperator{\diag}{diag}
+
+\let\originalleft\left
+\let\originalright\right
+\renewcommand{\left}{\mathopen{}\mathclose\bgroup\originalleft}
+\renewcommand{\right}{\aftergroup\egroup\originalright}
+
+\newcommand{\probdens}{\mathit{p}}
+\newcommand{\probability}{\mathit{P}}
+\newcommand{\vct}[1]{\boldsymbol{#1}}
+\newcommand{\mtx}[1]{\boldsymbol{#1}}
+\newcommand{\set}[1]{\mathit{#1}}
+\newcommand{\sset}[1]{\mathcal{#1}}
+\newcommand{\fset}[1]{\lbr #1 \rbr}
+\newcommand{\reals}{\vvmathbb{R}}
+\newcommand{\naturals}{\vvmathbb{N}}
+\newcommand{\integers}{\vvmathbb{Z}}
+\newcommand{\ind}[1]{\indicator{1}\lsb #1 \rsb}
+\newcommand{\bigo}[1]{\mathcal{O}\lpa #1\rpa}
+\newcommand{\lpa}{\left(}
+\newcommand{\rpa}{\right)}
+\newcommand{\lbr}{\left\lbrace}
+\newcommand{\rbr}{\right\rbrace}
+\newcommand{\lsb}{\left[}
+\newcommand{\rsb}{\right]}
+%\newcommand{\prob}[1]{\vvmathbb{P}\lpa #1 \rpa}
+\newcommand{\prob}[2]{\probability_{#1}\lpa #2 \rpa}
+\newcommand{\probnoarg}[1]{\probability_{#1}}
+%\newcommand{\pden}[1]{\vvmathbb{p}\lpa #1 \rpa}
+\newcommand{\pden}[2]{\probdens_{#1}\lpa #2 \rpa}
+\newcommand{\pdennoarg}[1]{\probdens_{#1}}
+%\newcommand{\rvar}[1]{%
+%  \mathchoice
+%  {\mbox{$\mathit{\expandafter\MakeUppercase\expandafter{#1}}$}}
+%  {\mbox{\small$\mathit{\expandafter\MakeUppercase\expandafter{#1}}$}}
+%  {\mbox{\tiny$\mathit{\expandafter\MakeUppercase\expandafter{#1}}$}}
+%  {\mbox{\tiny$\mathit{\expandafter\MakeUppercase\expandafter{#1}}$}}
+%}
+\newcommand{\rvar}[1]{\mathsf{#1}}
+%\newcommand{\rvar}[1]{\mathrm{#1}}
+\newcommand{\rvct}[1]{\boldsymbol{\rvar{#1}}}
+\newcommand{\nrm}[1]{\mathcal{N}\lpa #1 \rpa}
+\newcommand{\rng}[2]{\lbr #1 \dots #2 \rbr}
+\newcommand{\expc}[1]{\vvmathbb{E}\lsb #1 \rsb}
+\newcommand{\var}[1]{\vvmathbb{V}\lsb #1 \rsb}
+\newcommand{\dr}{\mathrm{d}}
+\newcommand{\td}[2]{\frac{\dr #1}{\dr #2}}
+\newcommand{\tdd}[2]{\frac{\dr^2 #1}{\dr #2^2}}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\pdd}[3]{\frac{\partial^2 #1}{\partial #2 \partial #3}}
+\newcommand{\tr}{^{\mkern-1.5mu\mathsf{T}}}
+\newcommand{\sml}[1]{#1}
+\newcommand{\obs}[1]{\breve{#1}}
+\newcommand{\lebm}[2]{\lambda^{#1}\lbr \dr #2 \rbr}
+\newcommand{\haum}[2]{\mathcal{H}^{#1}\lbr \dr #2 \rbr}
+\newcommand{\dirm}[3]{\delta^{#1}_{#2}\lbr \dr #3 \rbr}
+\newcommand{\hamiltonian}{h}
+\newcommand{\extended}[1]{\skew{2}{\tilde}{#1}}
+\newcommand{\normconst}{Z}
+\newcommand{\partfunc}{z}
+\newcommand{\transition}{\mathbb{T}}
+
+\newcommand{\func}[1]{\mathrm{#1}}
+\newcommand{\vctfunc}[1]{{\mathbf{#1}}}
+
+\newcommand{\inlinetr}{\phantom{}^\textsc{t}}
+
+\makeatletter % Define relationships between lower and upper case Greek characters
+  \g@addto@macro\@uclclist{%
+    \eth\Eth
+    \thorn\Thorn
+    \alpha\Alpha
+    \beta\Beta
+    \gamma\Gamma
+    \delta\Delta
+    \epsilon\Epsilon
+    \varepsilon\Varepsilon
+    \zeta\Zeta
+    \eta\Eta
+    \theta\Theta
+    \vartheta\Vartheta
+    \iota\Iota
+    \kappa\Kappa
+    \lambda\Lambda
+    \mu\Mu
+    \nu\Nu
+    \xi\Xi
+    \omicron\Omicron
+    \pi\Pi
+    \varpi\Varpi
+    \rho\Rho
+    \varrho\Varrho
+    \sigma\Sigma
+    \varsigma\Varsigma
+    \tau\Tau
+    \upsilon\Upsilon
+    \phi\Phi
+    \varphi\Varphi
+    \chi\Chi
+    \psi\Psi
+    \omega\Omega
+  }

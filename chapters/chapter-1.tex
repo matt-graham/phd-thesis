@@ -1,0 +1,112 @@
+\chapter{\mbox{Probabilistic inference}}\label{ch:probabilistic-inference}
+
+%\marginpar{We are hardly able to get through one waking hour without facing some situation (e.g. will it rain or won’t it?) where we do not have enough information to permit deductive reasoning \\--- Edward Jaynes}
+\marginpar{The actual science of logic is conversant at present only with things either certain, impossible, or entirely doubtful, none of which (fortunately) we have to reason on. Therefore the true logic for this world is the calculus of probabilities\\---James Clerk Maxwell}
+Inference is the process of drawing conclusions from evidence. Much of our lives are spent making inferences about the world given our observations of it. In particular inference is a central aspect of the scientific process. Although deductive logic offers a framework for inferring conclusions from absolute statements of truth, it does not apply to the more typical real-world setting where the information we receive is subject to uncertainty. 
+
+%\marginpar{Probability theory is nothing but common sense reduced to calculation. \\--- Pierre-Simon Laplace}%
+To make inferences under conditions of uncertainty, we must instead turn to probability theory. Probabilities offer a consistent framework for quantifying the uncertainty in our beliefs about the world and making inferences given these beliefs. The output of the inference process is itself probabilistic, reflecting that the conclusions we make given uncertain information will themselves be subject to uncertainty. 
+
+%Various axiomatic bases have been proposed for deriving the laws of probability. Of particular note are the Kolmogorov axioms \citep{} which are the basis for the modern measure-theoretic formulation of probability theory. Cox's theorem \citep{} and related work by Polya \citep{} and Jaynes \citep{}, offers an alternative axiomatic basis for deriving probability theory from a minimal set of `common-sense' postulates, with resulting system of \emph{plausible reasoning} seen as natural extension of formal deductive logic under conditions of uncertainty. There has been much philosophical debate over the interpretation of probabilties
+
+In this chapter we will first introduce the probability notation we will use in the rest of this work, and state some basic results which will be important in the later chapters. We will introduce graphical models as a compact way of visualising structure in probabilistic models. Finally we will give a concrete definition of the probabilistic inference tasks that the methods presented in the rest of this thesis are aimed at computing (approximate) solutions to, \marginpar{Probability theory is nothing but common sense reduced to calculation. \\--- Pierre-Simon Laplace}and motivate why such approximate computational methods are needed.
+
+%We will here largely ignore philosophical disucssions of interpretations of probabilities, and instead concentrate on the computational aspects of performing probabilistic inference.
+
+\section{Probability theory}
+
+Formally, a probability space is defined as a triplet $(\set{S},\,\sset{E},\,\mu)$ where
+
+\begin{itemize}
+  \item $\set{S}$ is the \emph{sample space}, the set of all possible outcomes,
+  \marginpar{A $\sigma$-algebra, $\sset{E}$, on a set $\set{S}$ is set of subsets of $\set{S}$ with $\set{S} \in \sset{E}$, $\emptyset \in \sset{E}$ and which is closed under complement and countable unions and intersections.}
+  \item $\sset{E}$ is the \emph{event space}, a $\sigma$-algebra on $\set{S}$, defining all possible events (measurable subsets of $\set{S}$),
+  \item $\mu$ is the \emph{probability measure}, a finite measure satisfying $\mu(\set{S}) = 1$, which specifies the probabilities of events in $\sset{E}$.
+\end{itemize}
+
+\marginpar{\raggedright Kolmogorov's axioms:\begin{enumerate}[leftmargin=0pt] \item Non-negativity: $\mu(\set{E}) \geq 0 ~\forall \set{E} \in \sset{E}$, \item Normalisation: $\mu(\set{S}) = 1$, \item Countable additivity: for any countable set of disjoint events $\fset{\set{E}_i}_i :$ $\set{E}_i \in \sset{F} ~\forall i$, $\set{E}_i \cap \set{E}_j = \emptyset ~\forall i,\,j$, $\mu\lpa \cup_i \set{E}_i\rpa = \sum_{i} \mu(\set{E}_i)$.\end{enumerate}}
+%\marginpar{Kolmogorov's axioms\\1. The probability of an event is real and non-negative. \\2. The probability of the sample space is 1. \\3. The probability of any countable set of mutually exclusive events is equal to the sum of the individual event probabilties.}
+Given this definition of a probability space, Kolmogorov's axioms \citep{} can be used to derive a measure-theoretic formulation of probability theory. The measure-theoretic approach has the advanatage of providing a unified treatment for describing probabilities on both finite and infinite sample spaces. Although alternative derivations of the laws of probability from different premises such as Cox's theorem \citep{} have been proposed, modern extensions of this work result in a calculus of probabilities that is equivalent to Kolmogorov's \citep{}, with the differences mainly being in the philosophical interpretations of probabilities.
+
+\subsection{Random variables}
+
+When modelling real-world processes, rather than considering abstract sample spaces, it is usually more helpful to consider \emph{random variables} which represent the observed and unobserved variables in the model of interest. Formally a random variable $\rvar{x} : \set{S} \to \set{X}$ is a measurable function from the sample space to a measurable space $(\set{X},\,\sset{F})$. Often $\set{X}$ is the reals $\reals$ and $\sset{F}$ is the Borel $\sigma$-algebra on the reals $\sset{B}(\reals)$,\marginpar{The Borel $\sigma$-algebra $\sset{B}(\reals)$ is the smallest $\sigma$-algebra on $\reals$ which contains all open real intervals.} in which case we will refer to a \emph{real random variable}. It is also common to consider cases where $\set{X}$ is a real vector space $\reals^D$ and $\sset{F} = \sset{B}(\reals^D)$ - in this case we will term the resulting random variable a \emph{random vector} and use the notation $\rvct{x} : \set{S} \to \set{X}$. A final special case is when $\set{X}$ is (a subset of) the integers $\integers$ and $\sset{F}$ is the power set $\sset{P}(\set{X})$ in which case we will refer to $\rvar{x}$ as a \emph{discrete random variable}.
+
+Due to the definition of a random variable as a measurable function, we can define pushforward measure on a random variable $\rvar{x}$
+\begin{equation}
+  \mu_{\rvar{x}}(A) 
+  = \mu\lpa\rvar{x}^{-1}(\set{A})\rpa
+  = \mu\lpa \lbr s \in \set{S}: \rvar{x}(s) \in A \rbr \rpa
+  \quad \forall \set{A} \in \sset{F}.
+\end{equation}
+The measure $\mu_{\rvar{x}}$ therefore defines the probability that the random variable $\rvar{x}$ takes a value in a measurable set $\set{A} \in \sset{F}$ as $\mu_{\rvar{x}}(\set{A})$.
+
+%Random variables will play a central role in the explanation of the work in this thesis. We will consider a random variable to represent a quantity we are uncertain about the value of; that uncertainty may be considered to arise from incomplete knowledge of the quantity or it having a fundamentally stochastic nature, this is mainly an issue of interpretation which we will largely sidestep.
+
+\subsection{Probability densities}
+
+So far we have ignored how the probability measure $\mu$ (or by consequence the pushforward measure on a random variable $\mu_{\rvar{x}}$) is defined. 
+
+\marginpar{A measure on $\set{X}$ is $\sigma$-finite if $\set{X}$ is a countable union of finite measure sets.}
+The Radon--Nikodyn theorem \citep{} guarantees that for a pair of $\sigma-$finite measures $\mu$ and $\nu$ on a measurable space $(\set{X},\,\sset{F})$ where $\nu$ is absolutely continuous with respect to $\mu$,  then there is a unique (up to $\mu$-null sets) measurable function $f : \set{X} \to [0,\,\infty)$ termed a \emph{density} such that
+\begin{equation}
+  \nu(\set{A}) = \int_{\set{A}} f\,\dr\mu
+  \quad \forall \set{A} \in \sset{F}.
+\end{equation}
+\marginpar{If $\mu$ and $\nu$ are measures on a measurable space $(\set{X},\,\sset{F})$ then $\nu$ has absolute continuity \acs{wrt} to $\mu$ if $~\forall \set{A} \in \sset{F}$, \mbox{$\mu(\set{A})=0 \Rightarrow \nu(\set{A})=0$.}}
+The density function $f$ is also termed the \emph{Radon-Nikodym derivative} of $\nu$ with respect to $\mu$, denoted $\td{\nu}{\mu}$. Density functions therefore represent a convenient way to define a probability measure with respect to an appropriate base measure (which the probability measure will be absolutely continuous with respect to).
+
+For the common case of real random variables (vectors), an appropriate choice of base measure is the \emph{Lebesgue measure}, $\lambda$, on the reals $\reals$ ($\reals^D$ for random vectors). The pushforward measure $\mu_{\rvar{x}}$ defining the probability distribution of a real random variable $\rvar{x}$ can then be defined via a \emph{probability density function} $\pdennoarg{\rvar{x}} : \set{X} \to [0,\,\infty)$ by
+\begin{equation}\label{eq:real-rv-prob-dens}
+    \mu_{\rvar{x}}(\set{A})
+    = \int_{\set{A}} \pdennoarg{\rvar{x}} \,\dr\lambda
+    = \int_{\set{A}} \pden{\rvar{x}}{x} \,\dr x
+    \qquad
+    \forall \set{A} \subseteq \sset{B}(\reals)
+\end{equation}
+with an equivalent definition for a random vector $\rvct{x}$ with density $\pdennoarg{\rvct{x}}$. The notation in the second equality uses a convention that will be used throughout this thesis that integrals without an explicit measure (but with an explicit variable of integration) are assumed to be with respect to the Lebesgue measure.
+
+For discrete random variables, an appropriate base measure is instead the \emph{counting measure}, $\#$. \marginpar{The counting measure $\#$ is defined as $\#(\set{A}) = |\set{A}|$ for all finite $\set{A}$ and $\#(\set{A}) = +\infty$ otherwise.} The probability distribution of a discrete random variable can then be defined via a \emph{probability mass function} $\probnoarg{\rvar{x}} : \set{X} \to [0,\,1]$ by
+\begin{equation}
+    \mu_{\rvar{x}}(\set{A})
+    = \int_{\set{A}} \probnoarg{\rvar{x}} \,\dr\#
+    = \sum_{x \in \set{A}} \prob{\rvar{x}}{x} 
+    \qquad
+    \forall \set{A} \subseteq \sset{P}(\set{X}).
+\end{equation}
+Note that technically $\probnoarg{\rvar{x}}$ is a density with respect to the counting measure, however we will follow the common convention of reserving density for real random variables. Unlike a probability density $\pdennoarg{\rvar{x}}$, the co-domain of a probability mass function $\probnoarg{\rvar{x}}$ is restricted to $[0,\,1]$ due to the normalisation requirement $\mu_{\rvar{x}}(\set{X}) = 1$. 
+
+\subsection{Change of variables}
+
+\subsection{Expectations}
+
+\subsection{Conditional expectations}
+
+\section{Graphical models}
+
+\marginpar{Graphical models = statistics × graph theory × computer science\\---Zoubin Ghahramani}
+
+\subsection{Directed and undirected graphical models}
+
+\subsection{Factor graphs}
+
+\subsection{Stochastic computation graphs}
+
+\section{Inference}
+
+\marginpar{You cannot do inference without making assumptions\\---David Mackay}
+
+\subsection{Posterior expectations}
+
+\subsection{Model evidence}
+
+
+% ## Random variables
+% - definition in terms of uncertainty / degrees of belief (as opposed to stochasticity)
+% discrete random variables - probability mass function
+% continuous random variables - probability density function
+% product and sum rules (+ Bayes rule)
+% probability density functions - change of variable
+% Borel-Kolgomorov paradox
+% LOTUS
+% factor graphs

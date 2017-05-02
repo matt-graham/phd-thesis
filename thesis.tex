@@ -1,0 +1,96 @@
+% fix some latex issues see: http://www.bakoma-tex.com/doc/latex/base/fixltx2e.pdf
+\RequirePackage{fix-cm} 
+
+\documentclass[
+  twoside,
+  openright,
+  titlepage,
+  cleardoublepage=plain,
+  fontsize=11pt,
+]{scrbook}
+
+\input{personal-details}
+\input{packages-and-setup}
+\input{definitions}
+
+\addbibresource{refs.bib}
+\addbibresource[label=ownpubs]{own-pubs.bib}
+
+%\hyphenation{put special hyphenation here}
+
+\begin{document}
+
+\frenchspacing  % Single space between sentences
+\raggedbottom  % Make pages height of content without adding vertical space
+\pagestyle{empty}
+
+% Title page
+
+\newgeometry{
+  noheadfoot,
+  nomarginpar,
+  top=20mm,
+  bottom=40mm,
+  outer=25mm,
+  inner=40mm,
+}
+
+\include{front-back-matter/title-page}
+\include{front-back-matter/title-back}
+
+% Front matter
+
+\setcounter{page}{1}
+\restoregeometry
+
+% Add top-level 'Front matter' line to TOC using method described at
+% https://tex.stackexchange.com/a/10297 to ensure it appears in correct place
+\makeatletter
+\immediate\write\@auxout{\noexpand\@writefile{toc}{\noexpand\tocEntry{Front matter}}}
+\makeatother
+
+\begingroup
+
+\pagestyle{plain}
+
+% change section title formatting in front matter to similar to chapter formatting in
+% main content
+\titleformat
+  {\section}
+  {\normalfont\Large\sffamily}
+  {}
+  {10pt}
+  {\vspace*{.9\baselineskip}\spacedallcaps}
+
+\include{front-back-matter/abstract}
+\include{front-back-matter/lay-summary}
+\include{front-back-matter/acknowledgments}
+\include{front-back-matter/declaration}
+%\include{front-back-matter/publications}
+\include{front-back-matter/contents}
+
+\endgroup
+
+% Main matter
+
+\pagestyle{scrheadings}
+\cleardoublepage
+\include{chapters/chapter-1}
+\include{chapters/chapter-2}
+\include{chapters/chapter-3}
+\include{chapters/chapter-4}
+
+% Appendices
+
+\appendix
+\cleardoublepage
+\include{chapters/chapter-A}
+
+% Back matter
+
+\cleardoublepage
+\include{front-back-matter/bibliography}
+%\cleardoublepage
+%\include{front-back-matter/colophon}
+
+\end{document}

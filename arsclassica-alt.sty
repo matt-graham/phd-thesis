@@ -1,0 +1,145 @@
+%************************************************************
+% arsclassica.sty
+%
+% copyright (C) 2008-2017 Lorenzo Pantieri
+% http://www.lorenzopantieri.net/
+%
+%************************************************************
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{arsclassica-alt}[2017/02/01]
+\RequirePackage{classicthesis}
+\RequirePackage{caption}
+
+
+% Chapter numbers
+
+\let\chapterNumber\undefined 
+\ifthenelse{\boolean{@eulerchapternumbers}}
+{\newfont{\chapterNumber}{eurb10 scaled 5000}}% 
+{\newfont{\chapterNumber}{pplr9d scaled 5000}}
+
+
+\microtypesetup{expansion=True}%
+
+\DeclareRobustCommand{\spacedallcaps}[1]{{\sffamily\textls[160]{\MakeTextUppercase{#1}}}}
+\DeclareRobustCommand{\spacedlowsmallcaps}[1]{{\sffamily\textls[80]{\scshape\MakeTextLowercase{#1}}}}
+
+% Headlines
+
+\renewcommand{\sectionmark}[1]{
+  \markright{
+    \textsc{\MakeTextLowercase{\thesection}} 
+    {\spacedlowsmallcaps{#1}}
+  }
+}
+
+\lehead{
+  \mbox{
+    \llap{\small\thepage\kern1em\color{halfgray}\vline}
+    \color{halfgray}\hspace{0.5em}\headmark\hfil
+  }
+}
+ 
+\rohead{
+  \mbox{
+    \hfil{\color{halfgray}\headmark\hspace{0.5em}}
+    \rlap{\small{\color{halfgray}\vline}\kern1em\thepage}
+  }
+}
+
+\renewcommand{\headfont}{\normalfont\sffamily}
+\renewcommand{\pnumfont}{\small\sffamily}
+  
+    
+% Layout of the sectional headings
+
+\RequirePackage{titlesec}
+
+\titleformat
+  {\chapter}
+  [block]
+  {\normalfont\Large\sffamily}
+  {\color{halfgray}\chapterNumber\thechapter\hspace{10pt}\vline}
+  {10pt}%
+  {\spacedallcaps}
+ 
+\titleformat
+  {\section} 
+  {\normalfont\Large\sffamily}
+  {\libertinePOsF\textsc{\MakeTextLowercase{\thesection}}}
+  {1em}
+  {\spacedlowsmallcaps}
+
+\titleformat
+  {\subsection}
+  {\normalfont\sffamily}
+  {\libertinePOsF\textsc{\MakeTextLowercase{\thesubsection}}}
+  {1em}
+  {\normalsize}
+  
+\titleformat
+  {\subsubsection}
+  {\normalfont\sffamily\itshape}{\textsc%
+  {\libertinePOsF\MakeTextLowercase{\thesubsubsection}}}%
+  {1em}
+  {\normalsize\itshape}        
+
+\titleformat
+  {\paragraph}
+  [runin]
+  {\normalfont\normalsize\sffamily}
+  {\textsc{\MakeTextLowercase{\theparagraph}}}%
+  {0pt}
+  {\spacedlowsmallcaps}    
+
+\renewcommand{\descriptionlabel}[1]{\hspace*{\labelsep}\spacedlowsmallcaps{#1}}
+
+%\titlespacing*{\chapter}{0pt}{1\baselineskip}{2\baselineskip}[\marginparsep]
+
+\titlespacing*{\section}{0pt}{.5\baselineskip}{.4\baselineskip}[\marginparsep]
+
+\titlespacing*{\subsection}{0pt}{.25\baselineskip}{0pt}[\marginparsep]
+
+\titlespacing*{\subsubsection}{0pt}{.125\baselineskip}{0pt}[\marginparsep]
+
+\titlespacing*{\paragraph}{0pt}{0pt}{1\baselineskip}
+
+\newcommand\formatchapter[1]{% 
+  \vbox to \ht\strutbox{ 
+    \setbox0=\hbox{\chapterNumber\thechapter\hspace{10pt}\vline\ } 
+    \advance\hsize-\wd0 \advance\hsize-10pt\raggedright 
+    \spacedallcaps{#1}\vss}
+}
+ 
+\titleformat{\chapter}[block] 
+  {\normalfont\Large\sffamily} 
+  {\textcolor{halfgray}{\chapterNumber\thechapter} \hspace{10pt}\vline\ }
+  {10pt} 
+  {\formatchapter}    
+
+
+% grey bullets
+\renewcommand\labelitemi{\color{halfgray}$\bullet$} 
+
+
+% sans-serif caption labels
+\captionsetup{format=hang,font=small,labelfont={sf}}
+\captionsetup[table]{skip=\medskipamount}
+
+
+% hyperref
+\hypersetup{%
+    colorlinks=true, linktocpage=true, pdfstartpage=1, 
+    pdfstartview=FitV, breaklinks=true, pdfpagemode=UseNone, 
+    pageanchor=true, pdfpagemode=UseOutlines,%
+    plainpages=false, bookmarksnumbered,
+    bookmarksopen=true,%
+    bookmarksopenlevel=1,%
+    hypertexnames=true, pdfhighlight=/O,%
+    urlcolor=webbrown, linkcolor=RoyalBlue, 
+    citecolor=webgreen,%
+    hyperfootnotes=false,pdfpagelabels,
+    pdfcreator={pdfLaTeX},%
+    pdfproducer={LaTeX}%
+}
