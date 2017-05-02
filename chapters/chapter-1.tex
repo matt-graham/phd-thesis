@@ -13,7 +13,7 @@ In this chapter we will first introduce the probability notation we will use in 
 
 %We will here largely ignore philosophical disucssions of interpretations of probabilities, and instead concentrate on the computational aspects of performing probabilistic inference.
 
-\section{Probability theory}
+\section{Probability theory}\label{sec:probability-theory}
 
 Formally, a probability space is defined as a triplet $(\set{S},\,\sset{E},\,\mu)$ where
 
@@ -24,11 +24,21 @@ Formally, a probability space is defined as a triplet $(\set{S},\,\sset{E},\,\mu
   \item $\mu$ is the \emph{probability measure}, a finite measure satisfying $\mu(\set{S}) = 1$, which specifies the probabilities of events in $\sset{E}$.
 \end{itemize}
 
-\marginpar{\raggedright Kolmogorov's axioms:\begin{enumerate}[leftmargin=0pt] \item Non-negativity: $\mu(\set{E}) \geq 0 ~\forall \set{E} \in \sset{E}$, \item Normalisation: $\mu(\set{S}) = 1$, \item Countable additivity: for any countable set of disjoint events $\fset{\set{E}_i}_i :$ $\set{E}_i \in \sset{F} ~\forall i$, $\set{E}_i \cap \set{E}_j = \emptyset ~\forall i,\,j$, $\mu\lpa \cup_i \set{E}_i\rpa = \sum_{i} \mu(\set{E}_i)$.\end{enumerate}}
+\marginpar{\raggedright
+Kolmogorov's axioms:
+  \begin{enumerate}[leftmargin=0pt]
+    \item Non-negativity: $\mu(\set{E}) \geq 0 ~\forall \set{E} \in \sset{E}$, 
+    \item Normalisation: $\mu(\set{S}) = 1$, 
+    \item Countable additivity: for any countable set of disjoint events 
+    $\fset{\set{E}_i}_i :$ $\set{E}_i \in \sset{F} ~\forall i$, 
+    $\set{E}_i \cap \set{E}_j = \emptyset ~\forall i \neq j$, 
+    $\mu\lpa \cup_i \set{E}_i\rpa = \sum_{i} \mu(\set{E}_i)$.
+  \end{enumerate}
+}
 %\marginpar{Kolmogorov's axioms\\1. The probability of an event is real and non-negative. \\2. The probability of the sample space is 1. \\3. The probability of any countable set of mutually exclusive events is equal to the sum of the individual event probabilties.}
 Given this definition of a probability space, Kolmogorov's axioms \citep{} can be used to derive a measure-theoretic formulation of probability theory. The measure-theoretic approach has the advanatage of providing a unified treatment for describing probabilities on both finite and infinite sample spaces. Although alternative derivations of the laws of probability from different premises such as Cox's theorem \citep{} have been proposed, modern extensions of this work result in a calculus of probabilities that is equivalent to Kolmogorov's \citep{}, with the differences mainly being in the philosophical interpretations of probabilities.
 
-\subsection{Random variables}
+\subsection{Random variables}\label{subsec:random-variables}
 
 When modelling real-world processes, rather than considering abstract sample spaces, it is usually more helpful to consider \emph{random variables} which represent the observed and unobserved variables in the model of interest. Formally a random variable $\rvar{x} : \set{S} \to \set{X}$ is a measurable function from the sample space to a measurable space $(\set{X},\,\sset{F})$. Often $\set{X}$ is the reals $\reals$ and $\sset{F}$ is the Borel $\sigma$-algebra on the reals $\sset{B}(\reals)$,\marginpar{The Borel $\sigma$-algebra $\sset{B}(\reals)$ is the smallest $\sigma$-algebra on $\reals$ which contains all open real intervals.} in which case we will refer to a \emph{real random variable}. It is also common to consider cases where $\set{X}$ is a real vector space $\reals^D$ and $\sset{F} = \sset{B}(\reals^D)$ - in this case we will term the resulting random variable a \emph{random vector} and use the notation $\rvct{x} : \set{S} \to \set{X}$. A final special case is when $\set{X}$ is (a subset of) the integers $\integers$ and $\sset{F}$ is the power set $\sset{P}(\set{X})$ in which case we will refer to $\rvar{x}$ as a \emph{discrete random variable}.
 
@@ -43,9 +53,69 @@ The measure $\mu_{\rvar{x}}$ therefore defines the probability that the random v
 
 %Random variables will play a central role in the explanation of the work in this thesis. We will consider a random variable to represent a quantity we are uncertain about the value of; that uncertainty may be considered to arise from incomplete knowledge of the quantity or it having a fundamentally stochastic nature, this is mainly an issue of interpretation which we will largely sidestep.
 
-\subsection{Probability densities}
+\subsection{Joint and conditional probability}\label{subsec:joint-and-conditional-probabilities}
 
-So far we have ignored how the probability measure $\mu$ (or by consequence the pushforward measure on a random variable $\mu_{\rvar{x}}$) is defined. 
+Often we will jointly define multiple random variables on the same probability space. Let $(\set{S},\,\sset{E},\,\mu)$ be a probability space and $\rvar{x} : \set{S} \to \set{X}$, $\rvar{y} : \set{S} \to \set{Y}$ be two random variables with corresponding $\sigma$-algebras $\sigma(\rvar{x})$ and $\sigma(\rvar{y})$. Then the \emph{joint probability} of $\rvar{x}$ and $\rvar{y}$ is defined as
+\begin{equation}\label{eq:joint-probability-rvar}
+  \mu_{\rvar{x},\rvar{y}}(\set{A},\,\set{B}) = 
+  \mu\lpa \rvar{x}^{-1}(\set{A}) \cap \rvar{y}^{-1}(\set{B})\rpa
+  \quad \forall \set{A} \in \sigma(\rvar{x}),\,\set{B} \in \sigma(\rvar{y}).
+\end{equation}
+The joint probability is related to the probabilities $\mu_\rvar{x}$ and $\mu_\rvar{y}$ by
+\begin{equation}\label{eq:sum-rule-rvar}
+  \mu_{\rvar{x},\rvar{y}}(\set{A},\,\set{Y}) =
+  \mu_{\rvar{x}}(\set{A}),~
+  \mu_{\rvar{x},\rvar{y}}(\set{X},\,\set{B}) =
+  \mu_{\rvar{y}}(\set{B})
+  \quad \forall \set{A} \in \sigma(\rvar{x}),\,\set{B} \in \sigma(\rvar{y}).
+\end{equation}
+In this context $\mu_{\rvar{x}}$ and $\mu_{\rvar{y}}$ are referred to as \emph{marginals} of the joint.
+
+\marginpar{In Kolmogorov's probability theory, \eqref{eq:conditional-probability} is given as an additional definition distinct from the basic axioms. In alternatives such as the work of Cox \citep{} and de Finetti \citep{}, conditional probabilities are instead viewed as a primitive.}
+Also useful is the definition of \emph{conditional probability}
+\begin{equation}\label{eq:conditional-probability}
+  \mu(\set{A} \gvn \set{B}) =
+  \frac{\mu(\set{A} \cap \set{B})}{\mu(\set{B})}
+  \quad \forall \set{A} \in \sset{E},\,\set{B} \in \sset{E} : \mu(\set{B}) \neq 0.
+\end{equation}
+From this definition and \eqref{eq:joint-probability-rvar} it can be shown that
+\begin{equation}\label{eq:product-rule}
+\begin{split}
+  \mu_{\rvar{x},\rvar{y}}(\set{A},\,\set{B}) =
+  \mu_{\rvar{x}|\rvar{y}}(\set{A} \gvn \set{B}) \mu_{\rvar{y}}(\set{B}) =
+  \mu_{\rvar{y}|\rvar{x}}(\set{B} \gvn \set{A}) \mu_{\rvar{x}}(\set{A})\\
+  \forall \set{A} \in \sigma(\rvar{x}),\,\set{B} \in \sigma(\rvar{y}) : 
+  \mu_{\rvar{x},\rvar{y}}(\set{A},\,\set{B}) \neq 0,
+\end{split}
+\end{equation}
+which is sometimes referred to as the product rule. 
+
+An implication of \eqref{eq:product-rule} is what is often termed \emph{Bayes' theorem}
+\begin{equation}\label{eq:bayes-theorem}
+\begin{split}
+  \mu_{\rvar{x}|\rvar{y}}(\set{A} \gvn \set{B}) =
+  \frac{\mu_{\rvar{y}|\rvar{x}}(\set{B} \gvn \set{A}) \mu_{\rvar{x}}(\set{A})}{\mu_{\rvar{y}}(\set{B})} 
+  \\
+  \forall \set{A} \in \sigma(\rvar{x}),\,
+  \set{B} \in \sigma(\rvar{y}) : \mu_{\rvar{y}}(\set{B}) \neq 0,
+\end{split}
+\end{equation}
+which will be of key importance in the later discussion of inference.
+
+%\begin{equation}\label{eq:product-rule-pmf}
+%  \prob{\rvar{x},\rvar{y}}{x,\,y}
+%  = \prob{\rvar{y}|\rvar{x}}{y\gvn x} \prob{\rvar{x}}{x}
+%  = \prob{\rvar{x}|\rvar{y}}{x\gvn y} \prob{\rvar{y}}{y}
+%\end{equation}
+
+%\begin{equation}\label{eq:sum-rule}
+%  \prob{\rvar{x}}{x} 
+%  = \sum_{y\in\set{Y}} \prob{\rvar{x},\rvar{y}}{x,\,y}
+%\end{equation}
+
+\subsection{Probability densities}\label{subsec:probability-densities}
+
+So far we have ignored how the probability measure $\mu$ (or by consequence the pushforward measure on one or more random variables) is defined. 
 
 \marginpar{A measure on $\set{X}$ is $\sigma$-finite if $\set{X}$ is a countable union of finite measure sets.}
 The Radon--Nikodyn theorem \citep{} guarantees that for a pair of $\sigma-$finite measures $\mu$ and $\nu$ on a measurable space $(\set{X},\,\sset{F})$ where $\nu$ is absolutely continuous with respect to $\mu$,  then there is a unique (up to $\mu$-null sets) measurable function $f : \set{X} \to [0,\,\infty)$ termed a \emph{density} such that
@@ -56,7 +126,7 @@ The Radon--Nikodyn theorem \citep{} guarantees that for a pair of $\sigma-$finit
 \marginpar{If $\mu$ and $\nu$ are measures on a measurable space $(\set{X},\,\sset{F})$ then $\nu$ has absolute continuity \acs{wrt} to $\mu$ if $~\forall \set{A} \in \sset{F}$, \mbox{$\mu(\set{A})=0 \Rightarrow \nu(\set{A})=0$.}}
 The density function $f$ is also termed the \emph{Radon-Nikodym derivative} of $\nu$ with respect to $\mu$, denoted $\td{\nu}{\mu}$. Density functions therefore represent a convenient way to define a probability measure with respect to an appropriate base measure (which the probability measure will be absolutely continuous with respect to).
 
-For the common case of real random variables (vectors), an appropriate choice of base measure is the \emph{Lebesgue measure}, $\lambda$, on the reals $\reals$ ($\reals^D$ for random vectors). The pushforward measure $\mu_{\rvar{x}}$ defining the probability distribution of a real random variable $\rvar{x}$ can then be defined via a \emph{probability density function} $\pdennoarg{\rvar{x}} : \set{X} \to [0,\,\infty)$ by
+For the common case of real random variables (vectors), an appropriate choice of base measure is the \emph{Lebesgue measure}, $\lambda$, on the reals $\reals$ ($\reals^D$ for random vectors). The pushforward measure $\mu_{\rvar{x}}$ defining the probability of a real random variable $\rvar{x}$ can then be defined via a \emph{probability density function} $\pdennoarg{\rvar{x}} : \set{X} \to [0,\,\infty)$ by
 \begin{equation}\label{eq:real-rv-prob-dens}
     \mu_{\rvar{x}}(\set{A})
     = \int_{\set{A}} \pdennoarg{\rvar{x}} \,\dr\lambda
@@ -64,9 +134,12 @@ For the common case of real random variables (vectors), an appropriate choice of
     \qquad
     \forall \set{A} \subseteq \sset{B}(\reals)
 \end{equation}
-with an equivalent definition for a random vector $\rvct{x}$ with density $\pdennoarg{\rvct{x}}$. The notation in the second equality uses a convention that will be used throughout this thesis that integrals without an explicit measure (but with an explicit variable of integration) are assumed to be with respect to the Lebesgue measure.
+with analagous definitions for a random vector $\rvct{x}$ with density $\pdennoarg{\rvct{x}}$, and a pair of real random variables (or vectors) $\rvar{x},\rvar{y}$ with joint density $\pdennoarg{\rvar{x},\rvar{y}}$. 
 
-For discrete random variables, an appropriate base measure is instead the \emph{counting measure}, $\#$. \marginpar{The counting measure $\#$ is defined as $\#(\set{A}) = |\set{A}|$ for all finite $\set{A}$ and $\#(\set{A}) = +\infty$ otherwise.} The probability distribution of a discrete random variable can then be defined via a \emph{probability mass function} $\probnoarg{\rvar{x}} : \set{X} \to [0,\,1]$ by
+The notation in the second equality in \eqref{eq:real-rv-prob-dens} uses a convention that will be used throughout this thesis that integrals without an explicit measure (but with an explicit variable of integration) are assumed to be with respect to the Lebesgue measure. The normalisation requirement for the probability measure $\mu_{\rvar{x}}$ means that $\int_{\set{X}}\pdennoarg{\rvar{x}}\,\dr\lambda = 1$.
+
+\marginpar{The counting measure $\#$ is defined as $\#(\set{A}) = |\set{A}|$ for all finite $\set{A}$ and $\#(\set{A}) = +\infty$ otherwise.}
+For discrete random variables, an appropriate base measure is instead the \emph{counting measure}, $\#$. The probability of a discrete random variable is then be defined via a \emph{probability mass function} $\probnoarg{\rvar{x}} : \set{X} \to [0,\,1]$ by
 \begin{equation}
     \mu_{\rvar{x}}(\set{A})
     = \int_{\set{A}} \probnoarg{\rvar{x}} \,\dr\#
@@ -74,9 +147,16 @@ For discrete random variables, an appropriate base measure is instead the \emph{
     \qquad
     \forall \set{A} \subseteq \sset{P}(\set{X}).
 \end{equation}
-Note that technically $\probnoarg{\rvar{x}}$ is a density with respect to the counting measure, however we will follow the common convention of reserving density for real random variables. Unlike a probability density $\pdennoarg{\rvar{x}}$, the co-domain of a probability mass function $\probnoarg{\rvar{x}}$ is restricted to $[0,\,1]$ due to the normalisation requirement $\mu_{\rvar{x}}(\set{X}) = 1$. 
+Note that technically $\probnoarg{\rvar{x}}$ is a density with respect to the counting measure, however we will follow the common convention of reserving density for real random variables (and random vectors). Unlike a probability density $\pdennoarg{\rvar{x}}$, the co-domain of a probability mass function $\probnoarg{\rvar{x}}$ is restricted to $[0,\,1]$ due to the non-negativity and normalisation requirements for the probability measure $\mu_{\rvar{x}}$, with $\sum_{x\in\set{X}} \pden{\rvar{x}}{x} = 1$.
+
+When dealing with random variables, we will usually only specify the co-domain of the random variable $\set{X}$ and a probability density function for a real random variable (or random vector) or probability mass function for a discrete random variable, with the base measure being implicitly defined as the Lebesgue measure or counting measure respectively. Similarly we will usually neglect to explicitly define the probability space $(\set{S},\,\sset{E},\,\mu)$ which the random variable(s) map from. In this case we will typically use the loose notation $\rvar{x} \in \set{X}$ to mean a random variable $\rvar{x}$ with co-domain $\set{X}$.
+
+This less explicit but more succinct probability notation in terms of random variables and densities is common in the machine learning and computational statitistics literature and will generally be preferred to improve readability. The underlying measure-theoretic basis of these concepts will however be important for some of the upcoming definitions in this chapter and some of the proofs later in the thesis.
+
 
 \subsection{Change of variables}
+
+
 
 \subsection{Expectations}
 
