@@ -14,17 +14,41 @@
 \renewcommand{\left}{\mathopen{}\mathclose\bgroup\originalleft}
 \renewcommand{\right}{\aftergroup\egroup\originalright}
 
-\newcommand{\probdens}{\mathit{p}}
-\newcommand{\probability}{\mathit{P}}
+\newcommand{\probdens}{\mathsf{p}}
+\newcommand{\probability}{\mathsf{P}}
+%\newcommand{\probdens}{\vvmathbb{p}}
+%\newcommand{\probability}{\vvmathbb{P}}
+\newcommand{\pden}[1]{\probdens_{#1}}  
+\newcommand{\prob}[1]{\probability_{#1}}   
+
+\newcommand{\lebesgue}{\lambda}
+\newcommand{\hausdorff}{\mathcal{H}}
+\newcommand{\lebm}[1]{
+  \ifthenelse { \equal {#1} {1} }
+    { \lebesgue }   % if #1 == blank
+    { \lebesgue^{#1} }   % else (not blank)
+}
+\newcommand{\haum}[1]{
+  \ifthenelse { \equal {#1} {} }
+    { \hausdorff }   % if #1 == blank
+    { \hausdorff^{#1} }   % else (not blank)
+}
+\newcommand{\countm}{\#}
+
+\newcommand{\borel}{\mathscr{B}}
+\newcommand{\powerset}{\mathscr{P}}
+
 \newcommand{\vct}[1]{\boldsymbol{#1}}
 \newcommand{\mtx}[1]{\boldsymbol{#1}}
+%\newcommand{\set}[1]{\mathcal{#1}}
+%\newcommand{\sset}[1]{\mathscr{#1}}
 \newcommand{\set}[1]{\mathit{#1}}
 \newcommand{\sset}[1]{\mathcal{#1}}
 \newcommand{\fset}[1]{\lbr #1 \rbr}
 \newcommand{\reals}{\vvmathbb{R}}
 \newcommand{\naturals}{\vvmathbb{N}}
 \newcommand{\integers}{\vvmathbb{Z}}
-\newcommand{\ind}[1]{\indicator{1}\lsb #1 \rsb}
+\newcommand{\ind}[1]{\indicator_{#1}}
 \newcommand{\bigo}[1]{\mathcal{O}\lpa #1\rpa}
 \newcommand{\lpa}{\left(}
 \newcommand{\rpa}{\right)}
@@ -32,12 +56,13 @@
 \newcommand{\rbr}{\right\rbrace}
 \newcommand{\lsb}{\left[}
 \newcommand{\rsb}{\right]}
+
 %\newcommand{\prob}[1]{\vvmathbb{P}\lpa #1 \rpa}
-\newcommand{\prob}[2]{\probability_{#1}\lpa #2 \rpa}
-\newcommand{\probnoarg}[1]{\probability_{#1}}
+%\newcommand{\prob}[2]{\probability_{#1}\lpa #2 \rpa}
+%\newcommand{\probnoarg}[1]{\probability_{#1}}
 %\newcommand{\pden}[1]{\vvmathbb{p}\lpa #1 \rpa}
-\newcommand{\pden}[2]{\probdens_{#1}\lpa #2 \rpa}
-\newcommand{\pdennoarg}[1]{\probdens_{#1}}
+%\newcommand{\pden}[2]{\probdens_{#1}\lpa #2 \rpa}
+%\newcommand{\pdennoarg}[1]{\probdens_{#1}}
 %\newcommand{\rvar}[1]{%
 %  \mathchoice
 %  {\mbox{$\mathit{\expandafter\MakeUppercase\expandafter{#1}}$}}
@@ -60,9 +85,6 @@
 \newcommand{\tr}{^{\mkern-1.5mu\mathsf{T}}}
 \newcommand{\sml}[1]{#1}
 \newcommand{\obs}[1]{\breve{#1}}
-\newcommand{\lebm}[2]{\lambda^{#1}\lbr \dr #2 \rbr}
-\newcommand{\haum}[2]{\mathcal{H}^{#1}\lbr \dr #2 \rbr}
-\newcommand{\dirm}[3]{\delta^{#1}_{#2}\lbr \dr #3 \rbr}
 \newcommand{\hamiltonian}{h}
 \newcommand{\extended}[1]{\skew{2}{\tilde}{#1}}
 \newcommand{\normconst}{Z}
