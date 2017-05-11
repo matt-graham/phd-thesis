@@ -2,7 +2,7 @@
 
 %\marginpar{We are hardly able to get through one waking hour without facing some situation (e.g. will it rain or won’t it?) where we do not have enough information to permit deductive reasoning \\--- Edward Jaynes}
 \marginpar{The actual science of logic is conversant at present only with things either certain, impossible, or entirely doubtful, none of which (fortunately) we have to reason on. Therefore the true logic for this world is the calculus of probabilities\\---James Clerk Maxwell}
-Inference is the process of drawing conclusions from evidence. Much of our lives are spent making inferences about the world given our observations of it. In particular inference is a central aspect of the scientific process. Although deductive logic offers a framework for inferring conclusions from absolute statements of truth, it does not apply to the more typical real-world setting where the information we receive is subject to uncertainty. 
+Inference is the process of drawing conclusions from evidence. Much of our lives are spent making inferences about the world given our observations of it; in particular inference is a central aspect of the scientific process. Although deductive logic offers a framework for inferring conclusions from absolute statements of truth, it does not apply to the more typical real-world setting where the information we receive is subject to uncertainty. 
 
 %\marginpar{Probability theory is nothing but common sense reduced to calculation. \\--- Pierre-Simon Laplace}%
 To make inferences under conditions of uncertainty, we must instead turn to probability theory. Probabilities offer a consistent framework for quantifying the uncertainty in our beliefs about the world and making inferences given these beliefs. The output of the inference process is itself probabilistic, reflecting that the conclusions we make given uncertain information will themselves be subject to uncertainty. 
@@ -36,14 +36,14 @@ Kolmogorov's axioms:
   \end{enumerate}
 }
 %\marginpar{Kolmogorov's axioms\\1. The probability of an event is real and non-negative. \\2. The probability of the sample space is 1. \\3. The probability of any countable set of mutually exclusive events is equal to the sum of the individual event probabilties.}
-Given this definition of a probability space, Kolmogorov's axioms \citep{} can be used to derive a measure-theoretic formulation of probability theory. The probability of an event $\set{E} \in \sset{E}$ is defined as the measure of that event $\probability(\set{E})$.
+Given this definition of a probability space, Kolmogorov's axioms \citep{} can be used to derive a measure-theoretic formulation of probability theory. The probability of an event $\set{E} \in \sset{E}$ is defined as the measure of that event $\probability(\set{E})$. Two events $\set{A},\set{B} \in \sset{E}$ are said to be \emph{independent} if $\probability(\set{A}\cap\set{B}) = \probability(\set{A})\probability(\set{B})$.
 
 The measure-theoretic approach has the advanatage of providing a unified treatment for describing probabilities on both finite and infinite sample spaces. Although alternative derivations of the laws of probability from different premises such as Cox's theorem \citep{} have been proposed, modern extensions of this work result in a calculus of probabilities that is equivalent to Kolmogorov's \citep{}, with the differences mainly being in the philosophical interpretations of probabilities.
 
 \subsection{Random variables}\label{subsec:random-variables}
 
 \marginpar{If $(\set{X},\,\sset{F})$ and $(\set{Y},\,\sset{G})$ are two measurable spaces, a function $f : \set{X} \to \set{Y}$ is measurable if $f^{-1}(\set{E}) \in \sset{F}$ $\forall \set{E} \in \sset{G}$.}
-When modelling real-world processes, rather than considering events as subsets of an abstract sample space, it is usually more helpful to consider \emph{random variables} which represent observed and unobserved quantities in the model of interest. A random variable $\rvar{x} : \set{S} \to \set{X}$ is defined as a measurable function from the sample space to a measurable space $(\set{X},\,\sset{F})$. 
+When modelling real-world processes, rather than considering events as subsets of an abstract sample space, it is usually more helpful to consider \emph{random variables} which represent quantities in the model of interest. A random variable $\rvar{x} : \set{S} \to \set{X}$ is defined as a measurable function from the sample space to a measurable space $(\set{X},\,\sset{F})$. 
 
 \marginpar{The Borel $\sigma$-algebra $\borel(\reals)$ is the smallest $\sigma$-algebra on $\reals$ which contains all open real intervals.}
 Often $\set{X}$ is the reals, $\reals$, and $\sset{F}$ is the Borel $\sigma$-algebra on the reals, $\borel(\reals)$, in which case we will refer to a \emph{real random variable}. It is also common to consider cases where $\set{X}$ is a real vector space, $\reals^D$, and $\sset{F} = \borel(\reals^D)$ - in this case we will term the resulting random variable a \emph{random vector} and use the notation $\rvct{x} : \set{S} \to \set{X}$. A final special case is when $\set{X}$ is countable and $\sset{F}$ is the power set $\powerset(\set{X})$ in which case we will refer to $\rvar{x}$ as a \emph{discrete random variable}.
@@ -78,6 +78,11 @@ The joint probability is related to the probabilities $\prob{\rvar{x}}$ and $\pr
 \end{equation}
 In this context $\prob{\rvar{x}}$ and $\prob{\rvar{y}}$ are referred to as \emph{marginals} of the joint.
 
+The two random variables are said to be independent if and only if
+\begin{equation}\label{eq:independent-rvars}
+  \prob{\rvar{x},\,\rvar{y}}(\set{A},\set{B}) = \prob{\rvar{x}}(\set{A})\prob{\rvar{y}}(\set{B})
+  \quad \forall \set{A} \in \sset{F},\,\set{B} \in \sset{G}.
+\end{equation}
 \marginpar{In Kolmogorov's probability theory, \eqref{eq:conditional-probability} is given as an additional definition distinct from the basic axioms. In alternatives such as the work of Cox \citep{} and de Finetti \citep{}, conditional probabilities are instead viewed as a primitive.}
 Also useful is the definition of \emph{conditional probability}
 \begin{equation}\label{eq:conditional-probability}
@@ -149,10 +154,10 @@ Analagously for a random vector $\rvct{x}$ with density $\pden{\rvct{x}} : \real
     \forall \set{A} \in \borel(\reals^D).
 \end{equation}
 %The normalisation requirement for the probability measure $\probability_{\rvar{x}}$ means that $\int_{\set{X}}\pden{\rvar{x}}\,\dr\lebm{1} = 1$. 
-The notation in the second equalities in \eqref{eq:real-rv-prob-dens} and \eqref{eq:vector-prob-dens} use a convention that will be used throughout this thesis that integrals without an explicit measure (but with an explicit variable of integration) are assumed to be with respect to the Lebesgue measure.
-
+The notation in the second equalities in \eqref{eq:real-rv-prob-dens} and \eqref{eq:vector-prob-dens} uses a convention that will be used throughout this thesis that integrals without an explicit measure are with respect to the Lebesgue measure. 
 \marginpar{The counting measure $\countm$ is defined as $\countm(\set{A}) = |\set{A}|$ for all finite $\set{A}$ and $\countm(\set{A}) = +\infty$ otherwise.}
-For discrete random variables, an appropriate base measure is instead the \emph{counting measure}, $\countm$. The probability of a discrete random variable is then defined via a probability density $\pden{\rvar{x}} : \set{X} \to [0,\,1]$ by
+
+For discrete random variables, an appropriate base measure is instead \pagebreak the \emph{counting measure}, $\countm$. The probability of a discrete random variable is then defined via a probability density $\pden{\rvar{x}} : \set{X} \to [0,\,1]$ by
 \begin{equation}
     \prob{\rvar{x}}(\set{A})
     = \int_{\set{A}} \pden{\rvar{x}} \,\dr\countm
@@ -171,15 +176,15 @@ The joint probability $\prob{\rvar{x},\rvar{y}}$ of a pair of random variables $
   \quad \forall \set{A} \in \sset{F}, \,\set{B} \in \sset{G},
 \end{equation}
 \marginpar{If $(\set{X}_1,\,\sset{F}_1,\,\mu_1)$ and $(\set{X}_2,\,\sset{F}_2,\,\mu_2)$ are two measure spaces, the product measure $\mu_1 \times \mu_2$ on a measurable space $(\set{X}_1\times\set{X}_2,\,\sset{F}_1\otimes\sset{F}_2)$ is defined as satisfying $(\mu_1\times\mu_2)(\set{A}_1\times\set{A}_2) = \mu_1(\set{A}_1)\mu_2(\set{A}_2)$ $\forall \set{A}_1\in\sset{F}_1,\,\set{A}_2\in\sset{F}_2$.}
-where $\mu_{\rvar{x}} \times \mu_{\rvar{y}}$ represents the product measure of two appropriate base measures $\mu_{\rvar{x}}$ and $\mu_{\rvar{y}}$ e.g. $\mu_{\rvar{x}} = \lebm{1}$ and $\mu_{\rvar{y}} = \countm$ if $\rvar{x}$ is a real random variable and $\rvar{y}$ is a discrete random variable.
+where $\mu_{\rvar{x}} \times \mu_{\rvar{y}}$ represents the product measure of two appropriate base measures $\mu_{\rvar{x}}$ and $\mu_{\rvar{y}}$, e.g. $\mu_{\rvar{x}} = \lebm{1}$ and $\mu_{\rvar{y}} = \countm$ if $\rvar{x}$ is a real random variable and $\rvar{y}$ is a discrete random variable.
 
-When dealing with random variables, we will usually only specify the co-domain of the random variable(s) and a (joint) probability density, with the base measure being implicitly defined as the Lebesgue measure for real random variables (or vectors), counting measure for discrete random variables and an appropriate product measure for a mix of random variables. Similarly we will usually neglect to explicitly define the probability space $(\set{S},\,\sset{E},\,\probability)$ which the random variable(s) map from. In this case we will typically use the loose notation $\rvar{x} \in \set{X}$ to mean a random variable $\rvar{x}$ with co-domain $\set{X}$.
+When dealing with random variables, we will usually only specify the co-domain of the random variable(s) and a (joint) probability density, with the base measure being implicitly defined as the Lebesgue measure for real random variables (or vectors), counting measure for discrete random variables and an appropriate product measure for a mix of random variables. Similarly we will usually neglect to explicitly define the probability space $(\set{S},\,\sset{E},\,\probability)$ which the random variable(s) map from. In this case we will typically use the loose notation $\rvar{x} \in \set{X}$ to mean a random variable $\rvar{x}$ with co-domain $\set{X}$. 
 
 This less explicit but more succinct probability notation in terms of random variables and densities is common in the machine learning and computational statitistics literature and will generally be preferred to improve readability. The underlying measure-theoretic basis of these concepts will however be important for some of the upcoming definitions in this chapter and some of the derivations later in the thesis.
 
-\subsection{Change of variables}\label{subsec:change-of-variables}
+\subsection{Transforms of random variables}\label{subsec:change-of-variables}
 
-It is common to define a random variable via a transform of another. Let $\rvar{x} \in \set{X}$ be a random variable with co-domain the measurable space $(\set{X},\,\sset{F})$. Further let $(\set{Y},\,\sset{G})$ be a second measurable space and $\phi : \set{X} \to \set{Y}$ a measurable function between the two spaces. Then if we define $\rvar{y} = \phi(\rvar{x})$ then analagously to our original definition of $\prob{\rvar{x}}$ as the pushforward measure of $\probability$ under the measurable function defining $\rvar{x}$, we can define $\prob{\rvar{y}}$ in terms of $\prob{\rvar{x}}$ as
+It is common to define a random variable via a transform of another. Let $\rvar{x}$ be a random variable with co-domain the measurable space $(\set{X},\,\sset{F})$. Further let $(\set{Y},\,\sset{G})$ be a second measurable space and $\phi : \set{X} \to \set{Y}$ a measurable function between the two spaces. If we define $\rvar{y} = \phi \circ \rvar{x}$ then analagously to our original definition of $\prob{\rvar{x}}$ as the pushforward measure of $\probability$ under the measurable function defining $\rvar{x}$, we can define $\prob{\rvar{y}}$ in terms of $\prob{\rvar{x}}$ as
 \begin{equation}\label{eq:change-of-variables-probability}
   \prob{\rvar{y}}(\set{A}) = 
   \prob{\rvar{x}} \circ \phi^{-1}(\set{A}) =
@@ -190,13 +195,21 @@ i.e. the probability of the event $\rvar{y} \in \set{A}$ is equal to the probabi
 
 If the probability $\prob{\rvar{x}}$ is defined by a probability density $\pden{\rvar{x}}$ with respect to a measure $\mu_{\rvar{x}}$, we can also in some cases find a density $\pden{\rvar{y}}$ on the transformed variable $\rvar{y} = \phi(\rvar{x})$ with respect to a (potentially different) measure $\mu_{\rvar{y}}$ which can be used to calculate the probability $\prob{\rvar{y}}$, 
 \begin{equation}\label{eq:change-of-variables-general}
-  \prob{\rvar{y}}(\set{A}) = 
-  \int_{\set{A}} \pden{\rvar{y}} \,\dr\mu_{\rvar{y}} =
-  \int_{\phi^{-1}(\set{A})} \pden{\rvar{x}} \,\dr\mu_{\rvar{x}}
+  \prob{\rvar{y}}(\set{A}) =
+  \int_{\phi^{-1}(\set{A})} \pden{\rvar{x}} \,\dr\mu_{\rvar{x}} = 
+  \int_{\set{A}} \pden{\rvar{y}} \,\dr\mu_{\rvar{y}}
   \quad \forall \set{A} \in \sset{G}.
 \end{equation}
 
-For random variables with countable co-domains where the integral in \eqref{eq:change-of-variables-general} corresponds to a sum, a $\pden{\rvar{y}}$ satisfying \eqref{eq:change-of-variables-general} is simple to identify. If $\rvar{x}$ is a discrete random variable with probability density $\pden{\rvar{x}}$ with respect to the counting measure, then $\rvar{y} = \phi(\rvar{x})$ will necessarily also be a discrete random variable and we can define a probability density $\pden{\rvar{y}}$ with respect to the counting measure in terms of $\pden{\rvar{x}}$ as
+For random variables with countable co-domains where the integral in \eqref{eq:change-of-variables-general} corresponds to a sum, a $\pden{\rvar{y}}$ satisfying \eqref{eq:change-of-variables-general} is simple to identify. If $\rvar{x}$ is a discrete random variable with probability density $\pden{\rvar{x}}$ with respect to the counting measure, then $\rvar{y} = \phi(\rvar{x})$ will necessarily also be a discrete random variable. Applying \eqref{eq:change-of-variables-general} for $\pden{\rvar{x}} = \td{\prob{\rvar{x}}}{\countm}$ we have that
+\begin{align}\label{eq:change-of-variables-discrete-derivation}
+  \int_{\phi^{-1}(\set{A})} \pden{\rvar{x}}(x) \,\dr\countm(x) &= 
+  \sum_{x\in\phi^{-1}(\set{A})} \pden{\rvar{x}}(x)  =
+  \sum_{y \in \set{A}} \sum_{x\in\phi^{-1}(y)} \pden{\rvar{x}}(x) \nonumber \\
+  &= \int_{\set{A}} \sum_{x\in\phi^{-1}(y)} \pden{\rvar{x}}(x) \,\dr\countm(y)
+  \quad \forall \set{A} \in \sset{G}.
+\end{align}
+We can therefore define $\pden{\rvar{y}} = \td{\prob{\rvar{y}}}{\countm}$ in terms of $\pden{\rvar{x}}$ as
 \begin{equation}\label{eq:change-of-variables-discrete}
   \pden{\rvar{y}}(y) = \sum_{x \in \phi^{-1}(y)} \pden{\rvar{x}}(x)
   \quad \forall y \in \set{Y}.
@@ -206,44 +219,82 @@ In the special case that $\phi$ is bijective we have that
   \pden{\rvar{y}}(y) = \pden{\rvar{x}}\circ\phi^{-1}(y)
   \quad \forall y \in \set{Y}.
 \end{equation}
-Now consider the case where $\rvar{x}$ and $\rvar{y}$ are both real random variables. Here the situation is more complicated as we need to account for any local contraction / expansion of space by the map $\phi$. For In one dimension this is described by $\left|\pd{\phi}{x}\right|$ the absolute value of the derivative of $\phi$. If $\phi : \reals \to \reals$ is an absolutely continuous function, then let $\set{Z} \subseteq \reals$ be the (possibly empty) set of points where the derivative $\pd{\phi}{x}$ does not exist or is equal to zero. If $\prob{\rvar{x}}(\set{Z}) = 0$ and $\rvar{x}$ has probability density $\pden{\rvar{x}}$ with respect to the Lebesgue measure then
-\begin{equation}\label{eq:change-of-variables-real}
-  \pden{\rvar{y}}(y) = 
-  \sum_{x \in \phi^{-1}(y)} \pden{\rvar{x}}(x) \left|\pd{\phi}{x}\right|^{-1}
-  \quad \forall y \not\in \phi(\set{Z}),
+
+For transformations of real random variables and vectors, the situation is more complicated as we need to account for any local contraction or expansion of space by the map $\phi$. Let $\set{X} = \reals^M$ and $\set{Y} = \reals^N$ with $N \leq M, \, N,M \in \naturals$. %(we do not consider the case $N > M$ as would necessarily correspond to the transformed random variable only having support on a $N$ dimensional manifold in $\set{Y}$). 
+We will need a result from geometric measure theory, the \emph{co-area formula} \citep{}. Let $g$ be an $L^1$ integrable function and $\vct{\phi} : \set{X} \to \set{Y}$ a Lipschitz map. Then the co-area formula states that
+\begin{equation}\label{eq:co-area-formula}
+  \int_{\set{X}} 
+    g(\vct{x}) \, J_{\vct{\phi}}(\vct{x})
+  \,\dr\lambda^{M}(\vct{x}) =
+  \int_{\set{Y}} \int_{\vct{\phi}^{-1}(\vct{y})}
+    g(\vct{x})
+  \,\dr\haum{M-N}(\vct{x})\,\dr\lebm{N}(\vct{y})
 \end{equation}
-defines a probability density for $\rvar{y}$. The density can take arbitrary finite values for $y \in \phi(\set{Z})$ as $\lebm{1}\lpa\phi(\set{Z})\rpa = 0$ due to the assumed absolute continuity of $\phi$ and the absolute continuity of $\prob{\rvar{x}}$ with respect to $\lebm{1}$ so that $\prob{\rvar{x}}(\set{Z}) = 0 \Rightarrow \lebm{1}(\set{Z}) = 0$. For bijective $\phi$ such that $\phi^{-1}$ is uniquely defined, then we recover the more commonly quoted special case
-\begin{equation}\label{eq:change-of-variables-real-bijective}
-  \pden{\rvar{y}}(y) = \pden{\rvar{x}}\circ\phi^{-1}(y) \left|\pd{\phi^{-1}}{y}\right|
-  \quad \forall y \in \set{Y}.
+\marginpar{The $D$-dimensional Hausdorff measure $\haum{D}$ on $\reals^N$ for $D \in \naturals$, $0 < D < N$ formalises a measure of the `volume' of $D$-dimensional submanifolds of $\reals^N$ - e.g. for $D=1$ it corresponds to the length of a curve in $\reals^N$. Additionally $\haum{N} = \lebm{N}$ and $\haum{0} = \countm$.}
+where $\haum{D}$ is the $D$-dimensional \emph{Hausdorff measure}  and $J_{\vct{\phi}} : \set{X} \to [0,\infty)$ is the \emph{Jacobian determinant} defined as
+\begin{equation}\label{eq:jacobian-determinant-def}
+ J_{\vct{\phi}}(\vct{x}) = 
+ \left|\pd{\vct{\phi}}{\vct{x}}\pd{\vct{\phi}}{\vct{x}}\tr\right|^{\frac{1}{2}}
+ \quad \forall \vct{x} \in \set{X}.
 \end{equation}
-We can also generalise to functions of random vectors. Let $\rvct{x} \in \reals^M$ and $\rvct{y} \in \reals^N$ be two random vectors with $M \geq N$. Further let $\vct{\phi} : \reals^M \to \reals^N$ be a Lipschitz map and $\set{Z} \subseteq \reals^M$ be the (possibly empty) set of points where the Jacobian ($N \times M$ matrix of partial derivatives) $\pd{\vct{\phi}}{\vct{x}}$ does not exist or has determinant zero. If $\prob{\rvct{x}}(\set{Z}) = 0$ and $\rvct{x}$ has probability density $\pden{\rvar{x}}$ with respect to the Lebesgue measure $\lebm{M}$ then
+Now let $\rvct{x}$ be a random vector with co-domain the measurable space $(\set{X},\,\borel(\reals^M))$ and define $\rvct{y} = \vct{\phi} \circ \rvct{x}$ as a random vector with co-domain the measurable space $(\set{Y},\,\borel(\reals^N))$ with $\vct{\phi} : \set{X} \to \set{Y}$ a Lipschitz map as above. Let $\set{Z} = \lbr \vct{x} \in \set{X} : J_{\vct{\phi}}(\vct{x}) = 0 \rbr$ and require that $\prob{\rvar{x}}(\set{Z}) = 0$. Then for $\set{A} \in \borel(\reals^N)$ define an $L^1$ integrable function $g$ as
+\begin{equation}\label{eq:change-of-var-real-vector-derivation-1}
+  g(\vct{x}) = 
+  \begin{cases}
+    \ind{\set{A}}\circ\,\vct{\phi}(\vct{x}) \, \pden{\rvct{x}}(\vct{x}) \, J_{\vct{\phi}}(\vct{x})^{-1}
+    & \quad \forall \vct{x} \in \set{X} \setminus \set{Z}\\
+    0 & \quad \forall \vct{x} \in \set{Z}
+  \end{cases}.
+\end{equation}
+Integrating $g(\vct{x})\,J_{\vct{\phi}}(\vct{x})$ over $\vct{x} \in \set{X}$ we have that
+\begin{align}\label{eq:change-of-var-real-vector-derivation-2}
+  \int_{\set{X}} 
+    g(\vct{x}) \, J_{\vct{\phi}}(\vct{x})
+  \,\dr\lambda^{M}(\vct{x}) 
+  &=
+  \int_{\set{X}\setminus{\set{Z}}}
+    \ind{\set{A}}\circ\,\vct{\phi}(\vct{x})\,
+    \pden{\rvct{x}}(\vct{x})
+  \,\dr\lambda^{M}(\vct{x})\\
+  &=
+  \int_{\set{X}}
+    \ind{\set{A}}\circ\,\vct{\phi}(\vct{x})
+  \,\dr\prob{\rvar{x}}(\vct{x})
+  \\
+  &=
+  \int_{\phi^{-1}(\set{A})}
+  \,\dr\prob{\rvar{x}}(\vct{x}) = \prob{\rvar{y}}(\set{A}).
+\end{align}
+The equality between first and second lines comes from the requirement $\prob{\rvar{x}}(\set{Z}) = 0$, with the Lebesgue integrals of a function over two sets which differ by only a zero-measure set equal. Now applying the co-area formula \eqref{eq:co-area-formula} to the left-hand side gives
+\begin{equation}\label{eq:change-of-var-real-vector-derivation-3}
+  \int_{\set{Y}} \int_{\vct{\phi}^{-1}(\vct{y})} g(\vct{x}) \,\dr\haum{M-N}(\vct{x})\,\dr\lebm{N}(\vct{y})
+  = \prob{\rvar{y}}(\set{A}).
+\end{equation}
+Therefore we can define a density $\pden{\rvar{y}} = \td{\prob{\rvar{y}}}{\lebm{N}}$ satisfying \eqref{eq:change-of-variables-general} as
 \begin{equation}\label{eq:change-of-variables-vector}
   \pden{\rvct{y}}(\vct{y}) = 
   \int_{\vct{\phi}^{-1}(\vct{y})} 
-    \pden{\rvct{x}}(\vct{x})
-    \left|\pd{\vct{\phi}}{\vct{x}}\pd{\vct{\phi}}{\vct{x}}\tr\right|^{-\frac{1}{2}} 
+    \pden{\rvct{x}}(\vct{x})\,J_{\vct{\phi}}(\vct{x})^{-1}
   \,\dr\haum{M-N}(\vct{x})
-  \quad \forall \vct{y} \not\in \vct{\phi}(\set{Z}),
+  \quad \forall \vct{y} \not\in \vct{\phi}(\set{Z}).
 \end{equation}
-where $\haum{D}$ is the $D$-dimensional \emph{Hausdorff measure}. Again $\pden{\rvar{y}}$ can take arbitary finite values on $\vct{\phi}(\set{Z})$. This result can be derived from \emph{Federer's Co-Area Formula} \citep{}. As the Hausdorff measure of dimension zero is equivalent to the counting measure i.e. $\haum{0} = \countm$, then for the case where $M = N$ i.e. $\vct{\phi}$ is dimension preserving then we have that
+For the special case of a dimension-preserving map $\vct{\phi}$ with $N = M$ the integral in \eqref{eq:change-of-variables-vector} is with respect to $\haum{0}$ which is equivalent to the counting measure $\countm$. In this case $J_{\vct{\phi}}(\vct{x}) = \left|\pd{\vct{\phi}}{\vct{x}}\right|$ and we therefore get
 \begin{equation}\label{eq:change-of-variables-vector-same-dim}
   \pden{\rvct{y}}(\vct{y}) = 
   \sum_{\vct{x} \in \vct{\phi}^{-1}(\vct{y})} 
-    \pden{\rvct{x}}(\vct{x})
-    \left|\pd{\vct{\phi}}{\vct{x}}\right|^{-1} 
-  \quad \forall \vct{y} \not\in \vct{\phi}(\set{Z}),
+    \pden{\rvct{x}}(\vct{x}) \, \left| \pd{\vct{\phi}}{\vct{x}} \right|^{-1}
+  \quad \forall \vct{y} \not\in \vct{\phi}(\set{Z}).
 \end{equation}
-which \eqref{eq:change-of-variables-real} can be seen to be a special case of for $M = N = 1$. If $\vct{\phi}$ is further constrained to be a diffeomorphism, i.e. it is differentiable and bijective and its inverse is also differentiable, then the standard multidimensional change of variables formula is recovered
+Under the further restriction that $\vct{\phi}$ is bi-Lipschitz, i.e. it is bijective and Lipschitz in both directions, we recover the more commonly presented multidimensional change of variables formula
 \begin{equation}\label{eq:change-of-variables-vector-bijective}
   \pden{\rvct{y}}(\vct{y}) = 
     \pden{\rvct{x}}\circ\vct{\phi}^{-1}(\vct{y})
     \left|\pd{\vct{\phi}^{-1}}{\vct{y}}\right|
   \quad \forall \vct{y} \in \set{Y}.
 \end{equation}
-In all of the cases considered, we have seen that if the function $\phi$ the random variable $\rvar{x}$ is mapped through is bijective, the resulting expression for the density on the mapped random variable $\rvar{y}$ is simpler in the sense that the pre-image $\phi^{-1}(y)$ of a point $y \in \set{Y}$ is itself a point and so we do not need to integrate or sum over points in the pre-image. 
+In both of the cases considered, we have seen that if the function $\phi$ the random variable $\rvar{x}$ is mapped through is bijective, the resulting expression for the density on the mapped random variable $\rvar{y}$ is simpler in the sense that the pre-image $\phi^{-1}(y)$ of a point $y \in \set{Y}$ is itself a point and so we do not need to integrate or sum over points in the pre-image which will often be difficult to do analytically. 
 
-Bijectivity is a very limiting condition however, with many models involving non-bijective transformations of random variables. In particular later in this thesis we will see that the more general forms for calculating the density of a transformed variable are key to proposed methods for performing inference in generative models defined by complex, non-dimension preserving and non-bijective transformations of random variables.
+Bijectivity is a very limiting condition however, with many models involving non-bijective transformations of random variables. Later in this thesis we will see that methods used for defining the more general forms for calculating the density of a transformed variable are key to proposed methods for performing inference in generative models defined by complex, non-dimension preserving and non-bijective transformations of random variables.
 
 \subsection{Expectations}\label{subsec:expectations}
 
@@ -309,15 +360,14 @@ Define $g : \set{Y} \to \set{X}$ as
     0 & \forall y \in \set{Y} : \pden{\rvar{y}}(y) = 0.
   \end{cases}
 \end{equation}
-Then from \eqref{eq:conditional-density-expc-derivation-1} we have that
-\begin{align}
+Then from \eqref{eq:conditional-density-expc-derivation-1} we have that for all $\set{A} \in \sset{G}$
+\begin{equation}
   \int_{\rvar{y}^{-1}(\set{A})} \rvar{x}(s) \, \dr\probability(s)
-  &=
-  \int_{\set{A}} g(y) \pden{\rvar{y}}(y) \,\dr\mu_{\rvar{y}}(y)\\
-  &=
-  \int_{\set{A}} g(y) \,\dr\prob{\rvar{y}}(y)
-  ~ \forall \set{A} \in \sset{G}
-\end{align}
+  =
+  \int_{\set{A}} g(y) \, \pden{\rvar{y}}(y) \,\dr\mu_{\rvar{y}}(y)
+  =
+  \int_{\set{A}} g(y) \,\dr\prob{\rvar{y}}(y).
+\end{equation}
 The definition of $g$ in \eqref{eq:conditional-density-expc-derivation-2} therefore satisfies the definition of conditional expectation in \eqref{eq:conditional-expectation-property} and is uniquely defined up to a $\prob{\rvar{y}}$-null set. Therefore if $\pden{\rvar{x},\rvar{y}}$ and $\pden{\rvar{y}}$ can be defined we have that 
 \begin{equation}\label{eq:conditional-expectation-density}
   \expc{\rvar{x}\gvn\rvar{y}}(y) =
@@ -335,12 +385,281 @@ which can be seen to be analagous to the definition of conditional probability i
 \section{Graphical models}\label{sec:graphical-models}
 
 \marginpar{Graphical models = statistics × graph theory × computer science\\---Zoubin Ghahramani}
+When working with probabilistic models defining large collections of random variables, it will often be the case that not all the variables are jointly dependent on each other but that instead there are more local conditional relationships between them. Graphical models, which use graphs to describe the relationship between random variables, are a useful framework for visualising the structure in complex probabilistic models and for giving a graph-theoretic basis for establishing the dependence between sets of random variables.
+
+Central to all graphical models in the concept of conditional independence. Let $(\set{S},\,\sset{E},\,\probability)$ be a probability space and $\rvar{x} : \set{S} \to \set{X}$, $\rvar{y} : \set{S} \to \set{Y}$ and $\rvar{z} : \set{S} \to \set{Z}$ be three random variables with corresponding $\sigma$-algebras, $\sset{F}_{\rvar{x}}$, $\sset{F}_{\rvar{y}}$ and $\sset{F}_{\rvar{z}}$ respectively. Analagously to the earlier definition of (unconditional) independence of random variables in \eqref{eq:independent-rvars}, we say that \emph{$\rvar{x}$ and $\rvar{y}$ are conditionally independent given $\rvar{z}$}, denoted $\rvar{x} \perp \rvar{y} \gvn \rvar{z}$, if
+\begin{equation}\label{eq:conditional-independence-property}
+\begin{split}
+  \rvar{x} \perp \rvar{y} \gvn \rvar{z} \iff
+  \prob{\rvar{x},\rvar{y}|\rvar{z}}(\set{A},\set{B}\gvn\set{C}) =
+  \prob{\rvar{x}|\rvar{z}}(\set{A}\gvn\set{C})
+  \prob{\rvar{y}|\rvar{z}}(\set{B}\gvn\set{C})
+  \\ \forall 
+  \set{A} \in \sset{F}_{\rvar{x}},\,
+  \set{B} \in \sset{F}_{\rvar{y}},\,
+  \set{C} \in \sset{F}_{\rvar{z}}.
+\end{split}	
+\end{equation}
+%Equivalently if $\rvar{x}$ and $\rvar{y}$ are conditionally independent given $\rvar{z}$ then
+%\begin{equation}\label{eq:conditional-independence-property-2}
+%\begin{split}
+%  \prob{\rvar{x}|\rvar{y},\rvar{z}}(\set{A}\gvn\set{B},\set{C}) =
+%  \prob{\rvar{x}|\rvar{z}}(\set{A}\gvn\set{C})
+%  \quad
+%  \prob{\rvar{y}|\rvar{x},\rvar{z}}(\set{B}\gvn\set{A},\,\set{C}) =
+%   \prob{\rvar{y}|\rvar{z}}(\set{B}\gvn\set{C})
+%\end{split}	
+%\end{equation}
+An equivalent property can also be defined for conditional densities
+\begin{equation}\label{eq:conditional-independence-densities}
+\begin{split}
+  \rvar{x} \perp \rvar{y} \gvn \rvar{z} \iff
+  \pden{\rvar{x},\rvar{y}|\rvar{z}}(x,y \gvn z) =
+  \pden{\rvar{x}|\rvar{z}}(x \gvn z)
+  \pden{\rvar{y}|\rvar{z}}(y \gvn z)
+  \\ \forall 
+  x \in \set{X},\,
+  y \in \set{Y},\,
+  z \in \set{Z}.
+\end{split}	
+\end{equation}
+These definitions can be naturally extended to conditional independence of more than two random variables and when conditioning on more than one random variable, for example if $\rvar{u} \perp \rvar{v} \perp \rvar{x} \gvn \rvar{y},\,\rvar{z}$
+\begin{equation}\label{eq:conditional-independence-many-vars}
+  \pden{\rvar{u},\rvar{v},\rvar{x}|\rvar{y},\rvar{z}}(u,v,x \gvn y,z) =
+  \pden{\rvar{u}|\rvar{y},\rvar{z}}(u \gvn y,z)
+  \pden{\rvar{v}|\rvar{y},\rvar{z}}(v \gvn y,z)
+  \pden{\rvar{x}|\rvar{y},\rvar{z}}(x \gvn y,z).
+\end{equation}
+
+% conditional independence and independence
 
 \subsection{Directed and undirected graphical models}
 
+\begin{figure}[!h]
+\centering
+\begin{subfigure}[b]{.5\linewidth}
+\vskip 0pt
+\centering
+\begin{tikzpicture}
+  \node[latent] (x3) {$\rvar{x}_3$} ; %
+  \node[latent, above=of x3, xshift=-1cm] (x1) {$\rvar{x}_1$} ; %
+  \node[latent, above=of x3,  xshift=1cm] (x2) {$\rvar{x}_2$} ; %
+  \edge {x1} {x3} ; %
+  \edge {x2} {x3} ; %
+\end{tikzpicture}
+%\vskip 5pt
+\caption{Directed graphical model.}
+\label{sfig:example-directed-graphical-model}
+\end{subfigure}%
+\begin{subfigure}[b]{.5\linewidth}
+\vskip 0pt
+\centering
+\begin{tikzpicture}
+  \node[latent] (x1) {$\rvar{x}_1$} ; %
+  \node[latent, right=of x1] (x2) {$\rvar{x}_2$} ; %
+  \node[latent, below=of x1] (x3) {$\rvar{x}_3$} ; %
+  \node[latent, right=of x3] (x4) {$\rvar{x}_4$} ; %
+  \edge[-] {x1} {x2} ; %
+  \edge[-] {x1} {x3} ; %
+  \edge[-] {x2} {x4} ; %
+  \edge[-] {x3} {x4} ; %
+\end{tikzpicture}
+%\vskip 5pt
+\caption{Undirected graphical model.}
+\label{sfig:example-undirected-graphical-model}
+\end{subfigure}%
+\caption[Directed and undirected graphical models.]{Examples of directed and undirected graphical models.}% \subref{sfig:example-directed-graphical-model} Shows a directed graphical model on three random variables. The graph indicates that $\rvar{x}_1 \perp \rvar{x}_2 \gvn \emptyset$. \subref{sfig:example-undirected-graphical-model} Shows a undirected graphical model on four random variables. The model indicates that $\rvar{x}_1 \perp \rvar{x}_4 \gvn \rvar{x}_2,\rvar{x}_3$ and $\rvar{x}_2\perp \rvar{x}_3 \gvn \rvar{x}_1,\rvar{x}_4$.}
+\label{fig:example-graphical-models}
+\end{figure}
+
+Several different graphical frameworks have been proposed for representing conditional independency relationships (and other information) in probabilistic models. 
+
+\emph{Directed graphical models}\citep{}, also known as \emph{Bayesian networks}, represent probabilistic models as \emph{directed acyclic graphs} (i.e. a directed graph in which there are no directed cycles), with the nodes in the graph representing random variables in the model and the edges of the graph defining a factorisation of the joint density over these variables into a product of conditional and marginal densities. In particular a conditional density factor is included for each node with parents (on the node random variable value given the parent variable values) and a marginal density factor for each root node without any parents.
+
+An example directed graphical model for three random variables, $\rvar{x}_1$, $\rvar{x}_2$ and $\rvar{x}_3$, is shown in Figure \ref{sfig:example-directed-graphical-model}. The graph implies that the joint density can be factorised as
+\begin{equation}\label{eq:example-directed-graphical-model-factorisation}
+  \pden{\rvar{x}_1,\rvar{x}_2,\rvar{x}_3}(x_1,x_2,x_3) = 
+  \pden{\rvar{x}_3|\rvar{x}_1,\rvar{x}_2}(x_3 \gvn x_1,x_2) \,
+  \pden{\rvar{x}_1}(x_1) \, \pden{\rvar{x}_2}(x_2).
+\end{equation}
+Note that this factorisation would not be valid for all joint densities on the three variables; in particular we have that $\rvar{x}_1$ and $\rvar{x}_2$ are (unconditionally) independent and so that the joint density $\pden{\rvar{x}_1,\rvar{x}_2}$ can be written as the product of the two marginals $\pden{\rvar{x}_1}$ and $\pden{\rvar{x}_2}$.
+
+Directed graphical models are a natural way of specifying \emph{generative models} - i.e. probabilistic models which can be used to generate simulated observable quantities. Typically the factorisation specified by a directed graphical model gives a natural way to generate values from the joint density, via \emph{ancestral sampling}. \marginpar{Ancestral sampling in a directed graphical model corresponds to first sampling values from all the root nodes from their marginal densities, then iteratively sampling from the conditional densities on each node for which all the parents nodes already have sampled values to condition on.}
+
+An alternative formalism for graphically representing probabilistic models is that of \emph{undirected graphical models}\citep{}, which are also known as \emph{Markov networks}. As with directed graphical models, each node in the graph represents a random variable, but here the edges connecting nodes are undirected. Rather than describing a factorisation of a joint density into conditional and marginal densities, an undirected graphical model indicates the factorisation of a joint density into a product of \emph{clique potentials} on each of the \emph{maximal cliques} in the graph.
+
+A \emph{clique} is a fully connected component of the graph - i.e. a subset of nodes in the graph such that all pairs of nodes in the subset are connected by an edge. A \emph{maximal clique} is a clique which is not a strict subset of any other clique. A \emph{clique potential} is a non-negative function of the values of the random variables in the clique; it does necessarily correspond to any conditional or marginal probabilty density. 
+
+An example undirected graphical model on four random variables, $\rvar{x}_1$, $\rvar{x}_2$, $\rvar{x}_3$ and $\rvar{x}_4$, is shown in Figure \ref{sfig:example-undirected-graphical-model}. Here the (maximal) cliques correspond to all the connected pairs of nodes. If $\psi_{a,b}$ denotes the clique potential on the pair $(a,\,b)$ then the graphical model implies the joint density can be factorised as
+\begin{equation}\label{eq:example-undirected-graphical-model-factorisation}
+\begin{split}
+  \pden{\rvar{x}_1,\rvar{x}_2,\rvar{x}_3,\rvar{x}_4}(x_1,x_2,x_3,x_4) =\\
+  \frac{1}{Z} 
+  \psi_{\rvar{x}_1,\rvar{x}_2}(x_1,x_2)
+  \psi_{\rvar{x}_1,\rvar{x}_3}(x_1,x_3)
+  \psi_{\rvar{x}_2,\rvar{x}_4}(x_2,x_4)
+  \psi_{\rvar{x}_3,\rvar{x}_4}(x_3,x_4),
+\end{split}
+\end{equation}
+with $Z$ a normalising constant such that the density integrates to 1 and so defines a valid probability measure.
+
+Undirected graphical models are a natural representation for models of systems of mutually interacting components. For example they are commonly used in models of images to represent dependencies between pixel values and models of ferromagnetism to represent interactions between lattices of particles. 
+
+Unlike directed models, generating joint configurations of the random variables in an undirected graphical model from the implied joint distribution is typically a non-trivial task, with no general equivalent to ancestral sampling. Further the joint density can typically only be evaluated upto an unknown normalising constant, with the integral needed to evaluate this constant often intractable for models involving a large number of variables or complex potentials. These properties mean that inference in distributions defined by undirected graphical models is often particularly challenging.
+
+As suggested at the start of this section, both directed and undirected graphical models encode conditional independence properties of probabilistic models. In particular the rules of \emph{D-separation} for directed graphical models and \emph{U-separation} for undirected model give algorithmic descriptions of how to determine whether a pair of random variables are conditionally independent for a given conditioning set of random variables in terms of graph based operations. 
+
+For example the directed graphical model in Figure \ref{sfig:example-directed-graphical-model} encodes the (un)conditional independence property $\rvar{x}_1 \perp \rvar{x}_2 \gvn \emptyset = \rvar{x}_1 \perp \rvar{x}_2$ i.e. that $\rvar{x}_1$ and $\rvar{x}_2$ are independent if the value of $\rvar{x}_3$ is \emph{not} conditioned on. The undirected graphical model in Figure \ref{sfig:example-undirected-graphical-model} encodes the conditional independence properties $\rvar{x}_1 \perp \rvar{x}_4 \gvn \rvar{x_2},\,\rvar{x}_3$ and $\rvar{x}_2 \perp \rvar{x}_3 \gvn \rvar{x_1},\,\rvar{x}_4$.
+
+Although there are method to convert a directed graphical model to an undirected one and vice versa, in general these transformations are lossy - not all of the conditional independence relationships encoded in the original graph will necessarily be maintained in the transformed graph. For example there is no undirected graphical model which will represent the exact set of conditional independence properties represented by the directed graphical model in Figure \ref{sfig:example-directed-graphical-model}. Likewise there is no directed graphical model which will represent the exact set of conditional independence properties represented by the undirected graphical model in Figure \ref{sfig:example-undirected-graphical-model}. Further there are distributions with dependency structures and factorisations which cannot be well represented by either directed or undirected graphical models \citep{}.
+
 \subsection{Factor graphs}
 
+An alternative graphical model format which overcomes some of the just mentioned limitations of traditional directed and undirected graphical models is factor graphs \citep{}.
+
+\begin{figure}[!h]
+\centering
+\begin{subfigure}[b]{.45\linewidth}
+\vskip 0pt
+\centering
+\begin{tikzpicture}
+  \node[latent] (x3) {$\rvar{x}_3$} ; %
+  \node[latent, above=of x3, xshift=-1cm] (x1) {$\rvar{x}_1$} ; %
+  \node[latent, above=of x3,  xshift=1cm] (x2) {$\rvar{x}_2$} ; %
+  \factor[above=of x3] {f} {} {x1,x2} {x3} ; %
+\end{tikzpicture}
+%\vskip 5pt
+\caption{A factor graph equivalent of the directed model in Figure \ref{sfig:example-directed-graphical-model}.}
+\label{sfig:example-directed-factor-graph}
+\end{subfigure}%
+ \hspace*{\fill}
+\begin{subfigure}[b]{.45\linewidth}
+\vskip 0pt
+\centering
+\begin{tikzpicture}[text height=1ex]
+  \node[latent] (x1) {$\rvar{x}_1$} ; %
+  \node[latent, right=of x1] (x2) {$\rvar{x}_2$} ; %
+  \node[latent, below=of x1] (x3) {$\rvar{x}_3$} ; %
+  \node[latent, right=of x3] (x4) {$\rvar{x}_4$} ; %
+  \factor[right=of x1] {x1_x2} {} {x1,x2} {} ; %
+  \factor[above=of x3] {x1_x3} {} {x1,x3} {} ; %
+  \factor[right=of x3] {x3_x4} {} {x3,x4} {} ; %
+  \factor[above=of x4] {x2_x4} {} {x2,x4} {} ; %
+\end{tikzpicture}
+%\vskip 5pt
+\caption{A factor graph equivalent to the undirected model in Figure \ref{sfig:example-undirected-graphical-model}.}
+\label{sfig:example-undirected-factor-graph}
+\end{subfigure}%
+\caption[Factor graph examples.]{Examples of factor graphs corresponding to the directed and undirected graphical models in Figure \ref{fig:example-graphical-models}}.
+\label{fig:example-factor-graphs}
+\end{figure}
+
+\begin{figure}[!h]
+\vskip 0pt
+\centering
+\begin{tikzpicture}
+	\node[obs] (y) {$\rvar{y}^{(i)}$} ; %
+	\factor[left=of y] {epsilon-y-yhat} {below:\tiny$\nrm{\hat{\rvar{y}}^{(i)},\,\rvar{s}^2}$} {} {}; %
+	\node[latent, left=of epsilon-y-yhat, xshift=5mm, yshift=10mm] (epsilon) {$\rvar{s}$} ; %
+	\node[latent, left=of epsilon-y-yhat, xshift=5mm] (yhat) {$\hat{\rvar{y}}^{(i)}$} ; %
+	\factor[left=of epsilon] {pr-epsilon} {\tiny$\mathcal{C}_{\geq 0}(2.5)$} {} {}; %
+	\factor[left=of yhat, xshift=-4mm] {alpha-yhat-beta}
+	{below:\tiny$\delta\lpa\rvct{a}[c^{(i)}] + \rvct{b}\tr\vct{x}^{(i)}\rpa$} {} {}; %
+	\node[const, left=of alpha-yhat-beta, xshift=2mm, yshift=-6mm] (dummy) {} ; %
+	\plate {platedata} {(y)(yhat)(alpha-yhat-beta)(dummy)} {\tiny $i\in\fset{1\dots N}$}; %
+	\node[latent, above left=of alpha-yhat-beta, xshift=-5mm] (alpha) {$\rvct{a}$} ; %
+	\node[latent, below left=of alpha-yhat-beta, xshift=-5mm] (beta) {$\rvct{b}$} ; %
+	\factor[left=of alpha, xshift=-2mm] {sigmaalpha-alpha-mualpha} 
+	{\tiny $\nrm{\rvar{m}_{\rvar{a}}\vct{1},\,\rvar{s}_{\rvar{a}}^2\mtx{I}}$} {} {} ; %
+	\node[latent, left=of sigmaalpha-alpha-mualpha, yshift=5mm] (sigmaalpha) {$\rvar{s}_{\rvar{a}}$} ; %
+	\node[latent, left=of sigmaalpha-alpha-mualpha, yshift=-5mm] (mualpha) {$\rvar{m}_{\rvar{a}}$} ; %
+    \factor[left=of sigmaalpha] {pr-sigmaalpha} {\tiny $\mathcal{C}_{\geq 0}(2.5)$} {} {} ; %
+    \factor[left=of mualpha] {pr-mualpha} {\tiny $\nrm{0,\,1}$} {} {} ; %
+	\factor[left=of beta, xshift=-2mm] {sigmabeta-beta-mubeta} 
+	{\tiny $\nrm{\rvar{m}_{\rvar{b}}\vct{1},\,\rvar{s}_{\rvar{b}}^2\mtx{I}}$} {} {} ; %
+	\node[latent, left=of sigmabeta-beta-mubeta, yshift=5mm] (sigmabeta) {$\rvar{s}_\rvar{b}$} ; %
+	\node[latent, left=of sigmabeta-beta-mubeta, yshift=-5mm] (mubeta) {$\rvar{m}_\rvar{b}$} ; %
+    \factor[left=of sigmabeta] {pr-sigmabeta} {\tiny $\mathcal{C}_{\geq 0}(2.5)$} {} {} ; %
+    \factor[left=of mubeta] {pr-mubeta} {\tiny $\nrm{0,\,1}$} {} {} ; %
+	\edge[-] {epsilon} {epsilon-y-yhat} ; %
+	\edge[-] {yhat} {epsilon-y-yhat} ; %
+	\edge {epsilon-y-yhat} {y} ; %
+	\edge {pr-epsilon} {epsilon} ; %
+	\edge[-] {alpha} {alpha-yhat-beta} ; %
+	\draw[-] (beta) to[bend left=30] (alpha-yhat-beta);
+	\edge {alpha-yhat-beta} {yhat} ; %
+	\edge[-] {sigmaalpha} {sigmaalpha-alpha-mualpha} ; %
+	\edge[-] {mualpha} {sigmaalpha-alpha-mualpha} ; %
+	\edge {sigmaalpha-alpha-mualpha} {alpha} ; %
+	\edge {pr-sigmaalpha} {sigmaalpha} ; %
+	\edge {pr-mualpha} {mualpha} ; %
+	\edge[-] {sigmabeta} {sigmabeta-beta-mubeta} ; %
+	\edge[-] {mubeta} {sigmabeta-beta-mubeta} ; %
+	\edge {sigmabeta-beta-mubeta} {beta} ; %
+	\edge {pr-sigmabeta} {sigmabeta} ; %
+	\edge {pr-mubeta} {mubeta} ; %
+\end{tikzpicture}
+\vskip 5pt
+\caption{Hierarchical linear regression model factor graph.}
+\label{sfig:hier-lin-regression-factor-graph}
+\end{figure}
+
+\begin{figure}[!h]
+\vskip 0pt
+\centering
+\begin{tikzpicture}
+
+	\node[obs] (y) {$\rvar{y}^{(i)}$} ; %
+	\node[latent, left=of y, xshift=-5mm, yshift=10mm] (s) {$\rvar{s}$} ; %
+	\factor[left=of s] {pr-s} {\tiny $\mathcal{C}_{\geq 0}(2.5)$} {} {s}; %
+	\node[latent, left=of y, xshift=-5mm, yshift=0mm] (yhat) {$\hat{\rvar{y}}^{(i)}$} ; %
+	\node[latent, left=of y, xshift=-5mm, yshift=-10mm] (n) {$\rvar{n}^{(i)}$} ; %
+	\factor[left=of n] {pr-n} {below:$\nrm{0,1}$} {} {n}; %
+    \op[left=of y] {s_yhat_n-y} 
+	  {below:$~\hat{\rvar{y}}^{(i)} + \rvar{s}\rvar{n}$} {s,yhat,n} {y}; %
+
+	\node[latent, left=of yhat, xshift=-10mm, yshift=15mm] (a) {$\rvct{a}$} ; %
+	\node[latent, left=of yhat, xshift=-10mm, yshift=-15mm] (b) {$\rvct{b}$} ; %
+	
+	\op[left=of yhat, xshift=-2mm] {a_b-yhat}
+	  {below:$\rvct{a}[c^{(i)}] + \rvct{b}\tr\vct{x}^{(i)}$} {a} {yhat}; %
+    \draw[-] (b) to[bend left=30] (a_b-yhat);
+	\node[const, left=of a_b-yhat, xshift=5mm, yshift=-10mm] (dummy) {} ; %
+	\plate {platedata} {(y)(yhat)(a_b-yhat)(dummy)} {\tiny $i\in\fset{1\dots N}$}; %
+	
+	\node[latent, left=of a, xshift=-10mm, yshift=8mm] (sa) {$\rvar{s}_{\rvar{a}}$} ; %
+	\node[latent, left=of a, xshift=-10mm, yshift=0mm] (ma) {$\rvar{m}_{\rvar{a}}$} ; %
+	\node[latent, left=of a, xshift=-10mm, yshift=-8mm] (na) {$\rvct{n}_\rvar{a}$} ; %
+    \factor[left=of sa] {pr-sa} {\tiny $\mathcal{C}_{\geq 0}(2.5)$} {} {sa} ; %
+    \factor[left=of ma] {pr-ma} {\tiny $\nrm{0,1}$} {} {ma} ; %
+    \factor[left=of na] {pr-na} {\tiny $\nrm{\vct{0},\mtx{I}}$} {} {na} ; %
+	\op[left=of a, xshift=-2mm] {sa_ma_na-a} 
+	  {\tiny $\rvar{m}_{\rvar{a}} + \rvar{s}_{\rvar{a}} \rvct{n}_{\rvar{a}}$} {sa,ma,na} {a} ; %
+
+	\node[latent, left=of b, xshift=-10mm, yshift=8mm] (sb) {$\rvar{s}_\rvar{b}$} ; %
+	\node[latent, left=of b, xshift=-10mm, yshift=0mm] (mb) {$\rvar{m}_\rvar{b}$} ; %
+	\node[latent, left=of b, xshift=-10mm, yshift=-8mm] (nb) {$\rvct{n}_\rvar{b}$} ; %
+    \factor[left=of sb] {pr-sb} {$\mathcal{C}_{\geq 0}(2.5)$} {} {sb} ; %
+    \factor[left=of mb] {pr-mb} {$\nrm{0,1}$} {} {mb} ; %
+    \factor[left=of nb] {pr-nb} {$\nrm{\vct{0},\mtx{I}}$} {} {nb} ; %
+	\op[left=of b, xshift=-2mm] {sb_mb_nb-b} 
+	  {\tiny $\rvar{m}_{\rvar{b}} + \rvar{s}_{\rvar{b}}\rvct{n}_{\rvar{b}}$} {sb,mb,nb} {b} ; %
+\end{tikzpicture}
+\vskip 5pt
+\caption{Hierarchical linear regression model stochastic computation graph.}
+\label{sfig:hier-lin-regression-stochastic-computation-graph}
+\end{figure}
+
+% superset of directed and undirected graphical models
+% labelled factors
+% plate notation
+% conditional indepence rules
+
 \subsection{Stochastic computation graphs}
+
+% reverse mode-automatic differentiation
+% reparametrisation
+% partial reparameterisation
 
 \section{Inference}
 

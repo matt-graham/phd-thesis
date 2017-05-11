@@ -131,3 +131,56 @@
     \psi\Psi
     \omega\Omega
   }
+
+\usepackage{scalerel}
+\newsavebox{\foobox}
+\newcommand{\slantbox}[2][0]{\colorlet{slantcolor}{.}\mbox{%
+        \sbox{\foobox}{\color{slantcolor}#2}%
+        \hskip\wd\foobox
+        \pdfsave
+        \pdfsetmatrix{1 0 #1 1}%
+        \llap{\usebox{\foobox}}%
+        \pdfrestore
+}}
+\newcommand\unslant[2][-.2]{%
+  \mkern1mu%
+  \ThisStyle{\slantbox[#1]{$\SavedStyle#2$}}%
+  \mkern-1mu%
+}
+
+%\DeclareSymbolFont{sfletters}{U}{eur}{m}{n}
+%\SetSymbolFont{sfletters}{sans}{U}{eur}{m}{n}
+
+\DeclareSymbolFont{sfletters}{OML}{cmssm}{m}{it}
+
+\DeclareMathSymbol{\sfalpha}{\mathord}{sfletters}{"0B}
+\DeclareMathSymbol{\sfbeta}{\mathord}{sfletters}{"0C}
+\DeclareMathSymbol{\sfgamma}{\mathord}{sfletters}{"0D}
+\DeclareMathSymbol{\sfdelta}{\mathord}{sfletters}{"0E}
+\DeclareMathSymbol{\sfepsilon}{\mathord}{sfletters}{"0F}
+\DeclareMathSymbol{\sfzeta}{\mathord}{sfletters}{"10}
+\DeclareMathSymbol{\sfeta}{\mathord}{sfletters}{"11}
+\DeclareMathSymbol{\sftheta}{\mathord}{sfletters}{"12}
+\DeclareMathSymbol{\sfiota}{\mathord}{sfletters}{"13}
+\DeclareMathSymbol{\sfkappa}{\mathord}{sfletters}{"14}
+\DeclareMathSymbol{\sflambda}{\mathord}{sfletters}{"15}
+\DeclareMathSymbol{\sfmu}{\mathord}{sfletters}{"16}
+\DeclareMathSymbol{\sfnu}{\mathord}{sfletters}{"17}
+\DeclareMathSymbol{\sfxi}{\mathord}{sfletters}{"18}
+\DeclareMathSymbol{\sfpi}{\mathord}{sfletters}{"19}
+\DeclareMathSymbol{\sfrho}{\mathord}{sfletters}{"1A}
+\DeclareMathSymbol{\sfsigma}{\mathord}{sfletters}{"1B}
+\DeclareMathSymbol{\sftau}{\mathord}{sfletters}{"1C}
+\DeclareMathSymbol{\sfupsilon}{\mathord}{sfletters}{"1D}
+\DeclareMathSymbol{\sfphi}{\mathord}{sfletters}{"1E}
+\DeclareMathSymbol{\sfchi}{\mathord}{sfletters}{"1F}
+\DeclareMathSymbol{\sfpsi}{\mathord}{sfletters}{"20}
+\DeclareMathSymbol{\sfomega}{\mathord}{sfletters}{"21}
+\DeclareMathSymbol{\sfvarepsilon}{\mathord}{sfletters}{"22}
+\DeclareMathSymbol{\sfvartheta}{\mathord}{sfletters}{"23}
+\DeclareMathSymbol{\sfvarpi}{\mathord}{sfletters}{"24}
+\DeclareMathSymbol{\sfvarrho}{\mathord}{sfletters}{"25}
+\DeclareMathSymbol{\sfvarsigma}{\mathord}{sfletters}{"26}
+\DeclareMathSymbol{\sfvarphi}{\mathord}{sfletters}{"27}
+
+\newcommand{\upsfalpha}{\unslant\sfalpha}
