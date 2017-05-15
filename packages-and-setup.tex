@@ -124,24 +124,7 @@
 
 \usepackage[subrefformat=parens]{subcaption}
 \usepackage{tikz}
-\usetikzlibrary{bayesnet,arrows,calc,positioning}
-
-% Caption node
-\tikzstyle{caption} = [font=\tiny, node distance=0] %
-\tikzstyle{plate caption} = [caption, node distance=0, inner sep=0pt,
-below left=5pt and 0pt of #1.south east] %
-\tikzstyle{factor caption} = [caption] %
-\tikzstyle{every label} += [caption] %
-
-\tikzstyle{op} = [diamond, fill=white, draw=black, minimum size=8pt, inner sep=1pt, node distance=0.4]
-% \det [options] {name} {caption} {inputs} {outputs}
-\newcommand{\op}[5][]{ %
-  % Draw the factor node. Use alias to allow empty names.
-  \node[op, label={[name=#2-caption]#3}, name=#2, #1,
-  alias=#2-alias] {} ; %
-  % Connect all inputs to outputs via this factor
-  \factoredge {#4} {#2-alias} {#5} ; %
-}
+\usetikzlibrary{bayesnet,arrows.meta,calc,positioning}
 
 % Necessary for correct hyperlinks (to index, bib, etc.)                                  
 \newcounter{dummy} 
