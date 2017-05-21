@@ -31,6 +31,9 @@
 \pdfcompresslevel=9
 \pdfadjustspacing=1 
 \usepackage[pdftex]{graphicx} 
+\usepackage{pdflscape}
+\usepackage{enumitem}
+\usepackage[noend]{algpseudocode}
 \usepackage[%
   %drafting, % prints the date and time at the bottom of each page
   %parts, % use part divisions in document (cannot be used with no chapters)
@@ -123,6 +126,16 @@
 \usepackage[parfill]{parskip}
 
 \usepackage[subrefformat=parens]{subcaption}
+
+\usepackage{pgfplots}
+\usepgfplotslibrary{colorbrewer}
+
+\definecolor{edblue}{RGB}{0, 50, 95}
+\definecolor{edred}{RGB}{193, 0, 67}
+\definecolor{s3}{RGB}{77, 175, 74}
+\definecolor{s4}{RGB}{152, 78, 163}
+\definecolor{s5}{RGB}{255, 127, 0}
+
 \usepackage{tikz}
 \usetikzlibrary{bayesnet,arrows.meta,calc,positioning}
 
