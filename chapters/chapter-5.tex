@@ -1,0 +1,271 @@
+\chapter{\mbox{Reparameterisation}}\label{ch:reparameterisation}
+
+Just as there are multiple ways to formulate a computation graph depending on what are used as the intermediate variables and operations, there is flexibility in how we parametrise probabilistic factors in a factor graph. One immediate example of this comes from the above discussion of simulator models. Typically all random number generator routines in a numerical computing library for distributions on real random variables or vectors will be implemented by generating a set of standard uniform random variables using a base pseudo-random number generator and then performing a series of deterministic operations to the uniform variables to produce random variables with the required density. Therefore rather than directly representing a non-uniform directed factor with output $\rvar{x}$ in a factor graph, we could instead choose to \emph{reparametrise} the factor graph in terms of the the uniform random variables $\rvct{u}$ which are used to generate $\rvar{x}$, with $\rvar{x}$ now the output of a deterministic factor with input $\rvct{u}$ corresponding to the deterministic transformation used to produce $\rvar{x}$ with the required density - pictorally \tikz[baseline]{\node[latent, minimum size=11pt,anchor=base, outer xsep=-2pt] (x) {$\rvar{x}$} ; \factor[left=of x] {pr-x} {} {} {x};} is transformed to \tikz[baseline]{\node[latent, minimum size=11pt, anchor=base, outer xsep=-2pt] (u) {$\rvct{u}$} ; \factor[left=of u] {pr-u} {} {} {u}; \node[latent, minimum size=11pt, anchor=base, right=of u,] (x) {$\rvar{x}$}; \op[left=of x] {u-x} {} {u} {x};}.
+
+More generally by applying the change of variables formulae from Section \ref{subsec:change-of-variables} we can find transformations of random variables such that the transformed random variable has a density of interest.  A common motivation we will have for reparameterising a probabilistic model is to `standardise' the joint density prior to conditioning on any observed values. In particular when performing inference it will often be helpful to parameterise  models as far as possible in terms independent unit-variance random variables with unbounded support, for instance $\nrm{0,1}$, $\textrm{InvCosh}(0,1)$ or $\textrm{Logistic}(0,\sqrt{3}/\uppi)$. The densities for all three shown for comparison in Figure \ref{fig:unit-variance-densities}. Transforming variables to have unbounded support is usually helpful as its avoids the difficulties of working with constrained spaces. Setting all variables to have unit-variance a-priori helps to normalise the scale of variables, which will often for example simplify choosing step size parameters. Parameterising in terms of independent random variables removes any dependencies prior to conditioning on observations, with the resulting joint densities typically having geometries which are easier for inference algorithms to handle. 
+
+\begin{figure}[!t]
+\centering
+\pgfplotsset{cycle list/Dark2-3}
+\begin{tikzpicture}
+  \begin{axis}[
+    name=dens,
+    cycle list name={Dark2-3},
+    domain=-5:5,
+    xmin=-5, xmax=5,
+    ymin=0, ymax=0.7,
+    ytick={0.5},
+    samples=200,
+    width=6.5cm,
+    height=4cm,
+    xlabel={\small $x$},
+    ylabel={\small $\pden{\rvar{x}}$},
+    every tick label/.append style={font=\tiny},
+    axis y line=center,
+    axis x line=middle,
+    legend image post style={scale=0.75},
+    legend style={
+      at={(0.5,-0.2)},
+      anchor=north west,
+      draw=none, 
+      legend columns=-1, 
+      column sep=2ex,
+      /tikz/nodes={anchor=base},
+      /tikz/every odd column/.style={yshift=2pt},
+      font=\scriptsize,
+      legend to name=grouplegend
+    }
+  ]
+    \addplot+[mark=none, thick] {exp(-0.5 * x^2) / sqrt(2 * pi)};
+    \addlegendentry{$\nrm{x \gvn 0,1}$};
+    \addplot+[mark=none, densely dashed, thick] 
+      {pi / (4 * sqrt(3) * cosh(pi * x / (2 * sqrt(3)))^2)};
+    \addlegendentry{$\textrm{Logistic}(x \gvn 0, \sqrt{3}/\uppi)$};
+    \addplot+[mark=none, densely dotted, thick] {0.5 / cosh(pi * x / 2)};
+    \addlegendentry{$\textrm{InvCosh}(x \gvn 0, 1)$};
+  \end{axis}
+  \begin{axis}[
+    name=logdens,
+    cycle list name={Dark2-3},
+    at=(dens.right of south east),
+    xshift=4mm,
+    anchor=left of south west,
+    domain=-5:5,
+    xmin=-5, xmax=5,
+    ymin=0, ymax=8,
+    ytick={2,4,6},
+    samples=200,
+    width=6.5cm,
+    height=4cm,
+    xlabel={\small $x$},
+    ylabel={\small $-\log\pden{\rvar{x}}$},
+    every tick label/.append style={font=\tiny},
+    axis y line=center,
+    axis x line=middle,
+  ]
+    \addplot+[mark=none, solid, thick] {0.5 * x^2 + 0.5 * ln(2 * pi)};
+    \addplot+[mark=none, densely dashed, thick] 
+      {ln(4 * sqrt(3)) - ln(pi) + 2 * ln(cosh(pi * x / (2 * sqrt(3))))};
+    \addplot+[mark=none, densely dotted, thick] {ln(2) + ln(cosh(pi * x / 2))};
+  \end{axis}
+  \node[anchor=north] at ($(dens.south east) + (2mm,-3mm)$) {\ref*{grouplegend}}; 
+\end{tikzpicture}
+\vspace{-1mm}
+\caption[Unbounded unit variance densities.]{Unit variance densities with unbounded support.}
+\label{fig:unit-variance-densities}
+\end{figure}
+
+\begin{table}[!t]
+\centering
+\begin{tabular}{rr}
+  \toprule
+  \textsf{Original factor} & \textsf{Reparametrisation} \\
+  \midrule
+  \tikz{
+    \node[latent] (x) {$\rvar{x}$} ; %
+    \factor[left=of x, xshift=-3mm] {p-x} {$\nrm{\mu,\sigma^2}$} {} {x} ; %
+  } &
+  \tikz{
+    \node[latent] (u) {$\rvar{u}$} ; %
+    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{x}$} ; %
+    \factor[left=of u, xshift=-3mm] {p-u} 
+      {$\nrm{0,1}$} {} {u} ; %
+    \op[left=of x, xshift=-6mm] {u-x} 
+      {$\mu + \sigma \rvar{u}$} {u} {x} ; %
+  } 
+  \\
+  \tikz{
+    \node[latent] (x) {$\rvar{x}$} ; %
+    \factor[left=of x, xshift=-3mm] {p-x} {$\textrm{LogNorm}(\mu,\sigma^2)$} {} {x} ; %
+  } &
+  \tikz{
+    \node[latent] (u) {$\rvar{u}$} ; %
+    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{x}$} ; %
+    \factor[left=of u, xshift=-3mm] {p-u} 
+      {$\nrm{0,1}$} {} {u} ; %
+    \op[left=of x, xshift=-6mm] {u-x} 
+      {$\exp(\mu + \sigma \rvar{u})$} {u} {x} ; %
+  } 
+  \\
+  \tikz{
+    \node[latent] (x) {$\rvct{x}$} ; %
+    \factor[left=of x, xshift=-3mm] {p-x} {$\nrm{\vct{\mu},\mtx{\Sigma}}$} {} {x} ; %
+  } &
+  \tikz{
+    \node[latent] (u) {$\rvct{u}$} ; %
+    \node[latent, right=of u, xshift=13mm] (x) {$\rvct{x}$} ; %
+    \factor[left=of u, xshift=-3mm] {p-u} 
+      {$\nrm{\vct{0},\mathbf{I}}$} {} {u} ; %
+    \op[left=of x, xshift=-6mm] {u-x} 
+      {$\vct{\mu} + \chol(\mtx{\Sigma}) \rvct{u}$} {u} {x} ; %
+  } 
+  \\
+  \tikz{
+    \node[latent] (x) {$\rvar{x}$} ; %
+    \factor[left=of x, xshift=-3mm] {p-x} {$\mathrm{Exp}(\lambda)$} {} {x} ; %
+  } &
+  \tikz{
+    \node[latent] (u) {$\rvar{u}$} ; %
+    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{x}$} ; %
+    \factor[left=of u, xshift=-3mm] {p-u} 
+      {$\mathrm{Logistic}\lpa 0, \frac{\sqrt{3}}{\uppi}\rpa$} {} {u} ; %
+    \op[left=of x, xshift=-6mm] {u-x} 
+      {$\frac{1}{\lambda}\log\lpa 1 + \exp\lpa\frac{\uppi\rvar{u}}{\sqrt{3}}\rpa\rpa$} {u} {x} ; %
+  } 
+  \\
+  \tikz{
+    \node[latent] (x) {$\rvar{x}$} ; %
+    \factor[left=of x, xshift=-3mm] {p-x} {$\mathcal{U}(a,b)$} {} {x} ; %
+  } &
+  \tikz{
+    \node[latent] (u) {$\rvar{u}$} ; %
+    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{x}$} ; %
+    \factor[left=of u, xshift=-3mm] {p-u} 
+      {$\mathrm{Logistic}\lpa 0, \frac{\sqrt{3}}{\uppi}\rpa$} {} {u} ; %
+    \op[left=of x, xshift=-6mm] {u-x} 
+      {$a + (b-a)\lpa 1 + \exp\lpa\frac{\uppi\rvar{u}}{\sqrt{3}}\rpa\rpa^{-1}$} {u} {x} ; %
+  } 
+  \\
+  \tikz{
+    \node[latent] (x) {$\rvar{x}$} ; %
+    \factor[left=of x, xshift=-3mm] {p-x} {$\mathcal{C}_{\geq 0}(\gamma)$} {} {x} ; %
+  } &
+  \tikz{
+    \node[latent] (u) {$\rvar{u}$} ; %
+    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{x}$} ; %
+    \factor[left=of u, xshift=-3mm] {p-u} 
+      {$\mathrm{InvCosh}( 0, 1)$} {} {u} ; %
+    \op[left=of x, xshift=-6mm] {u-x} 
+      {$\gamma\exp\lpa \frac{\uppi \rvar{u}}{2} \rpa$} {u} {x} ; %
+  } 
+  \\
+  \bottomrule
+\end{tabular}
+\caption{Standardisation reparametrisations.}
+\label{tab:standardisation-reparametrisations}
+\end{table}
+
+\begin{figure}[!t]
+\centering
+\begin{subfigure}[b]{.23\linewidth}
+\vskip 0pt
+\centering
+\begin{tikzpicture}
+  \node[latent] (z) {$\rvct{z}$} ; %
+  \node[latent, below=of z] (x) {$\rvct{x}$} ; %
+  \factor[above=of x] {f} {right:$\pden{\rvct{x}|\rvct{z}}$} {z} {x} ; %
+\end{tikzpicture}
+%\vskip 5pt
+\caption{Original factor}
+\label{sfig:reparam-factor-original}
+\end{subfigure}%
+\hspace*{\fill}
+\begin{subfigure}[b]{.32\linewidth}
+\vskip 0pt
+\centering
+\begin{tikzpicture}
+  \node[latent] (x) {$\rvct{x}$} ; %
+  \node[latent, above=of x, xshift=-10mm] (z) {$\rvct{z}$} ; %
+  \node[latent, above=of x, xshift=10mm] (n) {$\rvct{n}$} ; %
+  \factor[left=of n] {pr-n} {$\pden{\rvct{n}}$} {} {n} ; %
+  \op[above=of x] {z_n-x} {$\vct{h}(\rvct{n},\rvct{z})$} {z,n} {x} ; %
+\end{tikzpicture}
+%\vskip 5pt
+\caption{Fully reparameterised}
+\label{sfig:reparam-factor-full}
+\end{subfigure}%
+\hspace*{\fill}
+\begin{subfigure}[b]{.37\linewidth}
+\vskip 0pt
+\centering
+\begin{tikzpicture}
+  \node[latent] (x) {$\rvct{x}$} ; %
+  \node[latent, above=of x, xshift=-10mm] (z) {$\rvct{z}$} ; %
+  \node[latent, above=of x, xshift=10mm] (n) {$\rvct{n}$} ; %
+  \factor[left=of n]{z-n} {$\pden{\rvct{n}|\rvct{z}}$} {z} {n} ; %
+  \op[above=of x] {z_n-x} {$\vct{h}(\rvct{n},\rvct{z})$} {z,n} {x} ; %
+\end{tikzpicture}
+%\vskip 5pt
+\caption{Partially reparameterised}
+\label{sfig:reparam-factor-partial}
+\end{subfigure}%
+\caption[Auxiliary reparameterisations of a directed factor.]{Full and partial auxiliary reparameterisation transforms of a directed factor node representing a conditional density $\pden{\rvct{x}|\rvct{z}}$. In full auxiliary reparameterisation an auxiliary random variable $\rvct{n}$ is introduced which is (unconditionally) independent of $\rvct{z}$ such that the output of a deterministic transformation $\rvct{x} = \vct{h}(\rvct{n},\rvct{z})$ has the same conditional density given $\rvct{z}$ as the original factor output. In partial auxiliary reparameterisation the auxiliary random variable $\rvct{n}$ is instead conditionally dependent on $\rvct{z}$.
+}
+\label{fig:factor-node-reparameterisation}
+\end{figure}
+
+\begin{figure}[!t]
+\vskip 0pt
+\centering
+\begin{tikzpicture}
+
+  \node[obs] (y) {$\rvct{y}$} ; %
+  \node[latent, left=of y, xshift=-5mm, yshift=10mm] (s) {$\rvar{s}$} ; %
+  \node[latent, above left=of s] (u) {$\rvar{u}$} ; %
+  \op[above left=of s] {u-s} {above right:	$\frac{5}{2}\exp(\frac{\uppi \rvar{u}}{2})$} {u} {s} ; %
+  \factor[left=of u] {pr-u} {$\textrm{InvCosh}(0,1)~~$} {} {u}; %
+  \node[latent, left=of y, xshift=-5mm, yshift=0mm] (yhat) {$\hat{\rvct{y}}$} ; %
+%  \node[latent, left=of y, xshift=-5mm, yshift=-10mm] (n) {$\rvct{n}$} ; %
+%  \factor[left=of n] {pr-n} {below:$\nrm{0,1}$} {} {n}; %
+  \factor[left=of y] {s_yhat-y} 
+    {below:$\nrm{\hat{\rvct{y}}, \rvar{s}\mathbf{I}}$} {s,yhat} {y}; %
+
+  \node[latent, left=of yhat, xshift=-5mm, yshift=15mm] (a) {$\rvct{a}$} ; %
+  \node[latent, left=of yhat, xshift=-5mm, yshift=-15mm] (b) {$\rvct{b}$} ; %
+	
+  \node[const, left=of yhat, xshift=-5mm, yshift=1.5mm] (x) {\tiny $\mtx{X}$} ; %
+  \node[const, left=of yhat, xshift=-5mm, yshift=-1.5mm] (c) {\tiny $\vct{c}$} ; %
+
+  \op[left=of yhat, xshift=-2mm] {a_b-yhat}
+    {below:$\rvct{a}[\vct{c}] + \mtx{X}\tr\rvct{b}$} {a,x,c} {yhat}; %
+  \draw[-] (b) to[bend left=25] (a_b-yhat);
+	
+  \node[latent, left=of a, xshift=-10mm, yshift=8mm] (sa) {$\rvar{s}_{\rvar{a}}$} ; %
+  \node[latent, left=of a, xshift=-10mm, yshift=0mm] (ma) {$\rvar{m}_{\rvar{a}}$} ; %
+  \node[latent, left=of a, xshift=-10mm, yshift=-8mm] (na) {$\rvct{n}_\rvar{a}$} ; %
+	
+  \node[latent, left=of sa] (ua) {$\rvar{u}_{\rvar{a}}$} ; %
+  \op[left=of sa] {ua-sa} {$\frac{5}{2}\exp(\frac{\uppi \rvar{u}_{\rvar{a}}}{2})$} {ua} {sa} ; %
+  \factor[left=of ua] {pr-ua} {$\textrm{InvCosh}(0,1)~~$} {} {ua} ; %
+  \factor[left=of ma] {pr-ma} {$\nrm{0,1}$} {} {ma} ; %
+  \factor[left=of na] {pr-na} {$\nrm{\vct{0},\mathbf{I}}$} {} {na} ; %
+  \op[left=of a, xshift=-2mm] {sa_ma_na-a} 
+    {$\rvar{m}_{\rvar{a}} + \rvar{s}_{\rvar{a}} \rvct{n}_{\rvar{a}}$} {sa,ma,na} {a} ; %
+
+  \node[latent, left=of b, xshift=-10mm, yshift=8mm] (sb) {$\rvar{s}_\rvar{b}$} ; %
+  \node[latent, left=of b, xshift=-10mm, yshift=0mm] (mb) {$\rvar{m}_\rvar{b}$} ; %
+  \node[latent, left=of b, xshift=-10mm, yshift=-8mm] (nb) {$\rvct{n}_\rvar{b}$} ; %
+
+  \node[latent, left=of sb] (ub) {$\rvar{u}_{\rvar{b}}$} ; %
+  \op[left=of sb] {ub-sb} {$\frac{5}{2}\exp(\frac{\uppi \rvar{u}_{\rvar{b}}}{2})$} {ub} {sb} ; %	
+  \factor[left=of ub] {pr-ub} {$\textrm{InvCosh}(0,1)~~$} {} {ub} ; %
+  \factor[left=of mb] {pr-mb} {$\nrm{0,1}$} {} {mb} ; %
+  \factor[left=of nb] {pr-nb} {$\nrm{\vct{0},\mathbf{I}}$} {} {nb} ; %
+  \op[left=of b, xshift=-2mm] {sb_mb_nb-b} 
+    {\tiny $\rvar{m}_{\rvar{b}} + \rvar{s}_{\rvar{b}}\rvct{n}_{\rvar{b}}$} {sb,mb,nb} {b} ; %
+
+\end{tikzpicture}
+\vskip 5pt
+\caption[Reparametrised hierarchical model factor graph.]{Reparametrised hierarchical linear regression model factor graph.}
+\label{fig:reparameterised-hier-lin-factor-graph}
+\end{figure}

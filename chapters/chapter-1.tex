@@ -230,7 +230,7 @@ Table \ref{tab:standard-distributions} gives definitions of the densities and sh
   \setlength\tabcolsep{0pt}
   \begin{tabular}{ll}
   $\vct{\mu} \in \reals^D$ &~: mean vector \\
-$\mtx{\Sigma} \in \set{S}^{D}_{++}$ &~: covariance matrix
+$\mtx{\Sigma} \in \sset{S}^{D}_{++}$ &~: covariance matrix
   \end{tabular} &
   $\nrm{\vct{x} \gvn \vct{\mu}, \mtx{\Sigma}}$ & 
   $\frac{1}{\sqrt{(2\uppi)^D|\mtx{\Sigma}|}} \exp\lpa -\frac{1}{2} (\vct{x}-\vct{\mu})\tr\mtx{\Sigma}^{-1}(\vct{x}-\vct{\mu})\rpa$ & $\vct{x} \in \reals^D$ \\
@@ -463,8 +463,9 @@ $\expc{\rvar{x}\gvn\rvar{y}}$ is guaranteed to be uniquely defined almost everyw
   \expc{\rvar{x}} =
   \expc{\expc{\rvar{x}\gvn\rvar{y}}\circ\rvar{y}}.
 \end{equation}
+We will also use an alternative notation for the conditional expectation evaluated at point $\expc{\rvar{x}\gvn\rvar{y} = y} \equiv \expc{\rvar{x}\gvn\rvar{y}}(y)$ but use the latter in this section to stress its definition as a measurable function.
 
-We can also motivate a definition of conditional density in terms of conditional expectation. Assume a joint density $\pden{\rvar{x},\rvar{y}} = \td{\prob{\rvar{x},\rvar{y}}}{(\mu_{\rvar{x}}\times\mu_{\rvar{y}})}$ exists and has marginal density $\pden{\rvar{y}} = \td{\prob{\rvar{y}}}{\mu_{\rvar{y}}}$. Then for all $\set{A} \in \sset{G}$
+We can use conditional expectation to motivate the definition of a conditional density. Assume a joint density $\pden{\rvar{x},\rvar{y}} = \td{\prob{\rvar{x},\rvar{y}}}{(\mu_{\rvar{x}}\times\mu_{\rvar{y}})}$ exists and has marginal density $\pden{\rvar{y}} = \td{\prob{\rvar{y}}}{\mu_{\rvar{y}}}$. Then for all $\set{A} \in \sset{G}$
 \begin{align}
   \int_{\rvar{y}^{-1}(\set{A})} \rvar{x}(s) \, \dr\probability(s) 
     &= \int_{\set{S}} \rvar{x}(s) \ind{\set{A}} \circ \, \rvar{y}(s) \,\dr\probability(s)\\
@@ -599,9 +600,10 @@ An example directed graphical model for three random variables, $\rvar{x}_1$, $\
 \end{equation}
 Note that this factorisation would not be valid for all joint densities on the three variables; in particular we have that $\rvar{x}_1$ and $\rvar{x}_2$ are (unconditionally) independent and so that the joint density $\pden{\rvar{x}_1,\rvar{x}_2}$ can be written as the product of the two marginals $\pden{\rvar{x}_1}$ and $\pden{\rvar{x}_2}$.
 
-Directed graphical models are a natural way of specifying \emph{generative models} - i.e. probabilistic models which can be used to generate simulated observable quantities. Typically the factorisation specified by a directed graphical model gives a straightforward method to generate values from the joint density via \emph{ancestral sampling}. \marginpar{Ancestral sampling in a directed graphical model corresponds to first sampling values from all the root nodes from their marginal densities, then iteratively sampling from the conditional densities on each node for which all the parents nodes already have sampled values to condition on.}
+\marginpar{Ancestral sampling in a directed graphical model corresponds to first sampling values from all the root nodes from their marginal densities, then iteratively sampling from the conditional densities on each node for which all the parents nodes already have sampled values to condition on.}
+Directed graphical models are a natural way of specifying \emph{generative models} - i.e. probabilistic models which can be used to generate simulated observable quantities. Typically the factorisation specified by a directed graphical model gives a straightforward method to generate values from the joint density via \emph{ancestral sampling}.
 
-An alternative formalism for graphically representing probabilistic models is that of \emph{undirected graphical models} \citep{kindermann1980markov}, which are also known as \emph{Markov random fields}. As with directed graphical models, each node in the graph represents a random variable, but here the edges connecting nodes are undirected. Rather than describing a factorisation of a joint density into conditional and marginal densities, an undirected graphical model indicates the factorisation of a joint density into a product of \emph{clique potentials} on each of the \emph{maximal cliques} in the graph.
+An alternative formalism for graphically representing probabilistic models is that of \emph{undirected graphical models} \citep{kindermann1980markov}, which are also known as \emph{Markov random fields}. As with directed graphical models, each node in the graph represents a random variable, but here the edges connecting nodes are undirected. Rather than describing a factorisation of a joint density into conditional and marginal densities, an undirected graphical model indicates the factorisation of a joint density into a product of clique potentials on each of the maximal cliques in the graph.
 
 A \emph{clique} is a fully connected component of the graph - i.e. a subset of nodes in the graph such that all pairs of nodes in the subset are connected by an edge. A \emph{maximal clique} is a clique which is not a strict subset of any other clique. A \emph{clique potential} is a non-negative function of the values of the random variables in the clique; it does necessarily correspond to any conditional or marginal probabilty density. 
 
@@ -620,7 +622,7 @@ with $Z$ a normalising constant such that the density integrates to 1 and so def
 
 Undirected graphical models are a natural representation for models of systems of mutually interacting components. For example they are commonly used in models of images to represent dependencies between pixel values and models of ferromagnetism to represent interactions between lattices of particles. 
 
-Unlike directed models, generating joint configurations of the random variables in an undirected graphical model from the implied joint distribution is typically a non-trivial task, with no general equivalent to ancestral sampling. Further the joint density can typically only be evaluated up to an unknown normalising constant, with the integral needed to evaluate this constant often intractable for models involving a large number of variables or complex potentials. These properties mean that inference in distributions defined by undirected graphical models is often particularly challenging.
+Unlike directed models, generating joint configurations of the random variables in an undirected graphical model from the implied joint distribution is typically a non-trivial task, with no general equivalent to ancestral sampling. Further the joint density can typically only be evaluated up to an unknown normalising constant, with the integral needed to evaluate this constant often intractable for models involving a large number of variables or complex potentials. As we will see, these properties mean that inference in distributions defined by undirected graphical models is often particularly challenging.
 
 \marginpar{
 D-separation:\\
@@ -684,7 +686,7 @@ Factors may be either directed or undirected. Undirected factors, denoted by fac
 
 Edges between nodes in a factor graph are always between nodes of disparate types i.e. between factor and variable nodes, but never between factor and factor or variable and variable nodes. As with directed graphical models, factor graphs with directed factors must not contain any directed cycles (i.e. a connected loop of edges in which one of every pair of edges connected to a factor on the loop is directed and all of the directed edges point in the same sense around the loop). 
 
-In the original extension of undirected factor graphs \citep{frey1997factor} to include directivity \citep{frey2002extending}, it was proposed to allow multiple directed factors to connect via directed edges to the same variable node, representing multiple factors in a conditional density on that node. This generalisation introduces extra normalisation requirements and looses the interpretation of a directed factor as directly representing a conditional density, and so we will here only use directed factor graphs in which there is at most one directed edge connecting from a factor to a node.
+In the original extension of undirected factor graphs \citep{frey1997factor} to include directivity \citep{frey2002extending}, it was proposed to allow multiple directed factors to connect via directed edges to the same variable node, representing multiple factors in a conditional density on that varaiable. This generalisation introduces extra normalisation requirements and looses the interpretation of a directed factor as directly representing a conditional density, and so we will here only use directed factor graphs in which there is at most one directed edge connecting from a factor to a node.
 
 Whether two variables are conditionally independent given a set of other variables can be checked from a factor graph by checking if all paths (i.e. connected series of edges and nodes) between the two corresponding variables nodes in the factor graph are \emph{blocked}. A path is blocked if at least one of the following conditions is satisfied \citep{frey2002extending}
 \begin{enumerate}
@@ -898,7 +900,7 @@ As with directed graphical models and directed factor graphs, computation graphs
   \op[left=of c] {a_b-c} {$\rvar{a} + \rvar{b}$} {a,b} {c} ; %
 \end{tikzpicture}
 \vskip 0pt
-\caption[Example computation graph.]{Example computation graph corresponding to calculation of the negative log density of a univariate Gaussian distribution.
+\caption[Example computation graph.]{Example computation graph corresponding to calculation of the negative log density of a univariate normal distribution.
 %\\ 
 %$c = -\log\nrm{x \gvn m,\,\exp(u)^2} = \frac{1}{2}\lpa\frac{x - m}{\exp(u)}\rpa^2 + u + \frac{1}{2}\log(2\uppi)$.
 }
@@ -933,7 +935,7 @@ As with directed graphical models and directed factor graphs, computation graphs
 %\label{fig:gaussian-density-computation-graph}
 %\end{figure}
 
-An example of a computation graph representing the calculation of the negative log density of a univariate Gaussian distribution, i.e.
+An example of a computation graph representing the calculation of the negative log density of a univariate normal distribution, i.e.
 \begin{equation}\label{eq:gaussian-nld-computation-graph-expression}
   \rvar{c} =
   \frac{1}{2}\lpa\frac{\rvar{x} - \rvar{m}}{\rvar{s}}\rpa^2 + \log\rvar{s} + \frac{1}{2}\log(2\uppi)
@@ -1011,7 +1013,7 @@ Depending on how the computation graph is traversed to accumulate the derivative
 \label{fig:gaussian-density-gradient-computation-graph}
 \end{figure}
 
-As an example the partial derivatives of the expression for univariate Gaussian log density given in \eqref{eq:gaussian-nld-computation-graph-expression} with respect to $\rvar{x}$, $\rvar{m}$ and $\rvar{s}$ can be decomposed using the chain rule in terms of the intermediate variables in the computation graph shown in Figure \ref{fig:gaussian-density-computation-graph} as
+As an example the partial derivatives of the expression for univariate normal log density given in \eqref{eq:gaussian-nld-computation-graph-expression} with respect to $\rvar{x}$, $\rvar{m}$ and $\rvar{s}$ can be decomposed using the chain rule in terms of the intermediate variables in the computation graph shown in Figure \ref{fig:gaussian-density-computation-graph} as
 \begin{align}
   \pd{\rvar{c}}{\rvar{x}} &=
   \pd{\rvar{c}}{\rvar{a}} 
@@ -1082,7 +1084,7 @@ Like directed graphical models, a directed factor graph naturally specifies a ge
 \hrule
 \vskip 3pt
 \captionsetup{justification=centering}
-\caption{Pseudo-code for Euler-Maruyama simulation of \ac{SDE} model.} %
+\caption{Pseudo-code for Euler-Maruyama simulation of \ac{SDE} model. } %
 \label{sfig:sim-model-code} %
 \end{subfigure}%
 \\[2ex]
@@ -1113,285 +1115,13 @@ Like directed graphical models, a directed factor graph naturally specifies a ge
 \caption{Directed factor graph of 3 time steps of \ac{SDE} simulation.}
 \label{sfig:sim-model-factor-graph}
 \end{subfigure}%
-\caption[Simulator model example.]{Example of a simulator model corresponding to Euler-Maruyma integration of a set of \acfp{SDE}, \\$\dr \rvct{y}(t) = \vct{m}\lpa\rvct{y}(t),\rvct{z}\rpa \,\dr t + \mtx{S}\lpa\rvct{y}(t),\rvct{z}\rpa \, \dr\rvct{n}(t)$, specified as pseudo-code in \subref{sfig:sim-model-code} and a directed factor graph in \subref{sfig:sim-model-factor-graph}.} %
+\caption[Simulator model example.]{Example of a simulator model corresponding to Euler-Maruyma integration of a set of \acfp{SDE}, \\$\dr \rvct{y}(t) = \vct{m}\lpa\rvct{y}(t),\rvct{z}\rpa \,\dr t + \mtx{S}\lpa\rvct{y}(t),\rvct{z}\rpa \, \dr\rvct{n}(t)$, specified as pseudo-code in \subref{sfig:sim-model-code} and a directed factor graph in \subref{sfig:sim-model-factor-graph}. In the pseudo-code the notation $\gets$ followed by a distribution shorthand represents generating a value from the associated distribution and assigning it to a variable.} %
 \label{fig:simulator-model-example}
 \end{figure}
 
-Rather than specifying a generative model via a directed factor graph (or graphical model), it is common for complex models to instead be specified procedurally in code as a \emph{simulator}. Often such simulators may involve a mechanistic model of a physical process for example described by a set of \acfp{SDE}. Any stochasticity in a simulator model will be introduced via draws from a (pseudo-)random number generator in the programming language used to specify the model. Given these random inputs, the output of the simulator is then calculated as a series of determinstic operations performed to the inputs and so can be described by a computation graph. The overall composition of directed factor nodes specifying the generation of random inputs from known densities by the random number generator and computation graph describing the operations performed by the simulator code together therefore define a directed factor graph from which we can extract a joint density on all the variables in the models as the product of all factors.  An example of a simulator model corresponding to Euler-Maruyma approximate integration of a set of \acp{SDE} is shown as both pseudo-code and a corresponding factor graph in Figure \ref{fig:simulator-model-example}.
+Rather than specifying a generative model via a directed factor graph (or graphical model), it is common for complex models to instead be specified procedurally in code as a \emph{simulator}. Often such simulators may involve a mechanistic model of a physical process for example described by a set of \acfp{SDE}. Any stochasticity in a simulator model will be introduced via draws from a (pseudo-)random number generator in the programming language used to specify the model. Given these random inputs, the output of the simulator is then calculated as a series of determinstic operations performed to the inputs and so can be described by a computation graph. The overall composition of directed factor nodes specifying the generation of random inputs from known densities by the random number generator and computation graph describing the operations performed by the simulator code together therefore define a directed factor graph from which we can extract a joint density on all the variables in the models as the product of all factors (with implicit Dirac delta terms on the outputs of deterministic factors).  An example of a simulator model corresponding to Euler-Maruyma approximate integration of a set of \acp{SDE} is shown as both pseudo-code and a corresponding factor graph in Figure \ref{fig:simulator-model-example}.
 
-A key difference of simulator models from more typical probabilistic models is that the variables corresponding to observables in the factor graph a simulator model may be the output of deterministic factors (operations) rather than a probabilistic directed factor. As we will see later in the thesis this can complicate inference in such models. 
-
-Just as there are multiple ways to formulate a computation graph depending on what are used as the intermediate variables and operations, there is flexibility in how we parameterise probabilistic factors in a factor graph. One immediate example of this comes from the above discussion of simulator models. Typically all random number generator routines in a numerical computing library for densities on real random variables or vectors will be implemented by generating a set of standard uniform random variables using a base pseudo-random number generator and then performing a series of deterministic operations to the uniform variates to produce random variables with the required density. Therefore rather than directly representing a non-uniform directed factor with output $\rvct{x}$ in a factor graph, we could instead choose to \emph{reparametrise} the factor graph in terms of the the uniform random variables $\rvct{u}$ which are used to generate $\rvct{x}$, with $\rvct{x}$ now the output of a deterministic factor with input $\rvct{u}$ corresponding to the deterministic transformation used to produce $\rvct{x}$ with the required density - pictorally \tikz[baseline]{\node[latent, minimum size=11pt,anchor=base, outer xsep=-2pt] (x) {$\rvct{x}$} ; \factor[left=of x] {pr-x} {} {} {x};} is transformed to \tikz[baseline]{\node[latent, minimum size=11pt, anchor=base, outer xsep=-2pt] (u) {$\rvct{u}$} ; \factor[left=of u] {pr-u} {} {} {u}; \node[latent, minimum size=11pt, anchor=base, right=of u,] (x) {$\rvct{x}$}; \op[left=of x] {u-x} {} {u} {x};}.
-
-\begin{figure}[!t]
-\centering
-\pgfplotsset{cycle list/Dark2-3}
-\begin{tikzpicture}
-  \begin{axis}[
-    name=dens,
-    cycle list name={Dark2-3},
-    domain=-5:5,
-    xmin=-5, xmax=5,
-    ymin=0, ymax=0.7,
-    ytick={0.5},
-    samples=200,
-    width=6.5cm,
-    height=4cm,
-    xlabel={\small $x$},
-    ylabel={\small $\pden{\rvar{x}}$},
-    every tick label/.append style={font=\tiny},
-    axis y line=center,
-    axis x line=middle,
-    legend image post style={scale=0.75},
-    legend style={
-      at={(0.5,-0.2)},
-      anchor=north west,
-      draw=none, 
-      legend columns=-1, 
-      column sep=2ex,
-      /tikz/nodes={anchor=base},
-      /tikz/every odd column/.style={yshift=2pt},
-      font=\scriptsize,
-      legend to name=grouplegend
-    }
-  ]
-    \addplot+[mark=none, thick] {exp(-0.5 * x^2) / sqrt(2 * pi)};
-    \addlegendentry{$\nrm{x \gvn 0,1}$};
-    \addplot+[mark=none, densely dashed, thick] 
-      {pi / (4 * sqrt(3) * cosh(pi * x / (2 * sqrt(3)))^2)};
-    \addlegendentry{$\textrm{Logistic}(x \gvn 0, \sqrt{3}/\uppi)$};
-    \addplot+[mark=none, densely dotted, thick] {0.5 / cosh(pi * x / 2)};
-    \addlegendentry{$\textrm{InvCosh}(x \gvn 0, 1)$};
-  \end{axis}
-  \begin{axis}[
-    name=logdens,
-    cycle list name={Dark2-3},
-    at=(dens.right of south east),
-    xshift=4mm,
-    anchor=left of south west,
-    domain=-5:5,
-    xmin=-5, xmax=5,
-    ymin=0, ymax=8,
-    ytick={2,4,6},
-    samples=200,
-    width=6.5cm,
-    height=4cm,
-    xlabel={\small $x$},
-    ylabel={\small $-\log\pden{\rvar{x}}$},
-    every tick label/.append style={font=\tiny},
-    axis y line=center,
-    axis x line=middle,
-  ]
-    \addplot+[mark=none, solid, thick] {0.5 * x^2 + 0.5 * ln(2 * pi)};
-    \addplot+[mark=none, densely dashed, thick] 
-      {ln(4 * sqrt(3)) - ln(pi) + 2 * ln(cosh(pi * x / (2 * sqrt(3))))};
-    \addplot+[mark=none, densely dotted, thick] {ln(2) + ln(cosh(pi * x / 2))};
-  \end{axis}
-  \node[anchor=north] at ($(dens.south east) + (2mm,-3mm)$) {\ref*{grouplegend}}; 
-\end{tikzpicture}
-\vspace{-1mm}
-\caption[Unit variance densities with unbounded support.]{Unit variance densities with unbounded support.}
-\label{fig:unit-variance-densities}
-\end{figure}
-
-
-
-A common motivation we will have for reparameterising a probabilistic model is to `standardise' the joint density prior to conditioning on any observed values. In particular it will often be helpful to parameterise  models as far as possible in terms independent unit-variance random variables with unbounded support, for instance $\nrm{0,1}$, $\textrm{InvCosh}(0,1)$ or $\textrm{Logistic}(0,\sqrt{3}/\uppi)$. The densities for all three shown for comparison in Figure \ref{fig:unit-variance-densities}. Transforming variables to have unbounded support is usually helpful as its avoids the difficulties of working with constrained spaces. Setting all variables to have unit-variance a-priori helps to normalise the scale of variables, which will often for example simplify choosing step size parameters. Parameterising in terms of independent random variables removes any dependencies prior to conditioning on observations, with the resulting joint densities typically having geometries which are easier for inference algorithms to handle. 
-
-\begin{table}[!t]
-\centering
-\begin{tabular}{rr}
-  \toprule
-  \textsf{Original factor} & \textsf{Reparametrisation} \\
-  \midrule
-  \tikz{
-    \node[latent] (x) {$\rvar{x}$} ; %
-    \factor[left=of x, xshift=-3mm] {p-x} {$\nrm{\mu,\sigma^2}$} {} {x} ; %
-  } &
-  \tikz{
-    \node[latent] (u) {$\rvar{u}$} ; %
-    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{x}$} ; %
-    \factor[left=of u, xshift=-3mm] {p-u} 
-      {$\nrm{0,1}$} {} {u} ; %
-    \op[left=of x, xshift=-6mm] {u-x} 
-      {$\mu + \sigma \rvar{u}$} {u} {x} ; %
-  } 
-  \\
-  \tikz{
-    \node[latent] (x) {$\rvar{x}$} ; %
-    \factor[left=of x, xshift=-3mm] {p-x} {$\textrm{LogNorm}(\mu,\sigma^2)$} {} {x} ; %
-  } &
-  \tikz{
-    \node[latent] (u) {$\rvar{u}$} ; %
-    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{x}$} ; %
-    \factor[left=of u, xshift=-3mm] {p-u} 
-      {$\nrm{0,1}$} {} {u} ; %
-    \op[left=of x, xshift=-6mm] {u-x} 
-      {$\exp(\mu + \sigma \rvar{u})$} {u} {x} ; %
-  } 
-  \\
-  \tikz{
-    \node[latent] (x) {$\rvct{x}$} ; %
-    \factor[left=of x, xshift=-3mm] {p-x} {$\nrm{\vct{\mu},\mtx{\Sigma}}$} {} {x} ; %
-  } &
-  \tikz{
-    \node[latent] (u) {$\rvct{u}$} ; %
-    \node[latent, right=of u, xshift=13mm] (x) {$\rvct{x}$} ; %
-    \factor[left=of u, xshift=-3mm] {p-u} 
-      {$\nrm{\vct{0},\mathbf{I}}$} {} {u} ; %
-    \op[left=of x, xshift=-6mm] {u-x} 
-      {$\vct{\mu} + \chol(\mtx{\Sigma}) \rvct{u}$} {u} {x} ; %
-  } 
-  \\
-  \tikz{
-    \node[latent] (x) {$\rvar{x}$} ; %
-    \factor[left=of x, xshift=-3mm] {p-x} {$\mathrm{Exp}(\lambda)$} {} {x} ; %
-  } &
-  \tikz{
-    \node[latent] (u) {$\rvar{u}$} ; %
-    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{x}$} ; %
-    \factor[left=of u, xshift=-3mm] {p-u} 
-      {$\mathrm{Logistic}\lpa 0, \frac{\sqrt{3}}{\uppi}\rpa$} {} {u} ; %
-    \op[left=of x, xshift=-6mm] {u-x} 
-      {$\frac{1}{\lambda}\log\lpa 1 + \exp\lpa\frac{\uppi\rvar{u}}{\sqrt{3}}\rpa\rpa$} {u} {x} ; %
-  } 
-  \\
-  \tikz{
-    \node[latent] (x) {$\rvar{x}$} ; %
-    \factor[left=of x, xshift=-3mm] {p-x} {$\mathcal{U}(a,b)$} {} {x} ; %
-  } &
-  \tikz{
-    \node[latent] (u) {$\rvar{u}$} ; %
-    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{x}$} ; %
-    \factor[left=of u, xshift=-3mm] {p-u} 
-      {$\mathrm{Logistic}\lpa 0, \frac{\sqrt{3}}{\uppi}\rpa$} {} {u} ; %
-    \op[left=of x, xshift=-6mm] {u-x} 
-      {$a + (b-a)\lpa 1 + \exp\lpa\frac{\uppi\rvar{u}}{\sqrt{3}}\rpa\rpa^{-1}$} {u} {x} ; %
-  } 
-  \\
-  \tikz{
-    \node[latent] (x) {$\rvar{x}$} ; %
-    \factor[left=of x, xshift=-3mm] {p-x} {$\mathcal{C}_{\geq 0}(\gamma)$} {} {x} ; %
-  } &
-  \tikz{
-    \node[latent] (u) {$\rvar{u}$} ; %
-    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{x}$} ; %
-    \factor[left=of u, xshift=-3mm] {p-u} 
-      {$\mathrm{InvCosh}( 0, 1)$} {} {u} ; %
-    \op[left=of x, xshift=-6mm] {u-x} 
-      {$\gamma\exp\lpa \frac{\pi \rvar{u}}{2} \rpa$} {u} {x} ; %
-  } 
-  \\
-  \bottomrule
-\end{tabular}
-\caption{Standardisation reparametrisations.}
-\label{tab:standardisation-reparametrisations}
-\end{table}
-
-\begin{figure}[!t]
-\centering
-\begin{subfigure}[b]{.23\linewidth}
-\vskip 0pt
-\centering
-\begin{tikzpicture}
-  \node[latent] (z) {$\rvct{z}$} ; %
-  \node[latent, below=of z] (x) {$\rvct{x}$} ; %
-  \factor[above=of x] {f} {right:$\pden{\rvct{x}|\rvct{z}}$} {z} {x} ; %
-\end{tikzpicture}
-%\vskip 5pt
-\caption{Original factor}
-\label{sfig:reparam-factor-original}
-\end{subfigure}%
-\hspace*{\fill}
-\begin{subfigure}[b]{.32\linewidth}
-\vskip 0pt
-\centering
-\begin{tikzpicture}
-  \node[latent] (x) {$\rvct{x}$} ; %
-  \node[latent, above=of x, xshift=-10mm] (z) {$\rvct{z}$} ; %
-  \node[latent, above=of x, xshift=10mm] (n) {$\rvct{n}$} ; %
-  \factor[left=of n] {pr-n} {$\pden{\rvct{n}}$} {} {n} ; %
-  \op[above=of x] {z_n-x} {$\vct{h}(\rvct{n},\rvct{z})$} {z,n} {x} ; %
-\end{tikzpicture}
-%\vskip 5pt
-\caption{Fully reparameterised}
-\label{sfig:reparam-factor-full}
-\end{subfigure}%
-\hspace*{\fill}
-\begin{subfigure}[b]{.37\linewidth}
-\vskip 0pt
-\centering
-\begin{tikzpicture}
-  \node[latent] (x) {$\rvct{x}$} ; %
-  \node[latent, above=of x, xshift=-10mm] (z) {$\rvct{z}$} ; %
-  \node[latent, above=of x, xshift=10mm] (n) {$\rvct{n}$} ; %
-  \factor[left=of n]{z-n} {$\pden{\rvct{n}|\rvct{z}}$} {z} {n} ; %
-  \op[above=of x] {z_n-x} {$\vct{h}(\rvct{n},\rvct{z})$} {z,n} {x} ; %
-\end{tikzpicture}
-%\vskip 5pt
-\caption{Partially reparameterised}
-\label{sfig:reparam-factor-partial}
-\end{subfigure}%
-\caption[Auxiliary reparameterisations of a directed factor.]{Full and partial auxiliary reparameterisation transforms of a directed factor node representing a conditional density $\pden{\rvct{x}|\rvct{z}}$. In full auxiliary reparameterisation an auxiliary random variable $\rvct{n}$ is introduced which is (unconditionally) independent of $\rvct{z}$ such that the output of a deterministic transformation $\rvct{x} = \vct{h}(\rvct{n},\rvct{z})$ has the same conditional density given $\rvct{z}$ as the original factor output. In partial auxiliary reparameterisation the auxiliary random variable $\rvct{n}$ is instead conditionally dependent on $\rvct{z}$.
-}
-\label{fig:factor-node-reparameterisation}
-\end{figure}
-
-\begin{figure}[!t]
-\vskip 0pt
-\centering
-\begin{tikzpicture}
-
-  \node[obs] (y) {$\rvct{y}$} ; %
-  \node[latent, left=of y, xshift=-5mm, yshift=10mm] (s) {$\rvar{s}$} ; %
-  \node[latent, above left=of s] (u) {$\rvar{u}$} ; %
-  \op[above left=of s] {u-s} {above right:	$2.5\exp(\rvar{u})$} {u} {s} ; %
-  \factor[left=of u] {pr-u} {$\textrm{InvCosh}(0,1)~~$} {} {u}; %
-  \node[latent, left=of y, xshift=-5mm, yshift=0mm] (yhat) {$\hat{\rvct{y}}$} ; %
-%  \node[latent, left=of y, xshift=-5mm, yshift=-10mm] (n) {$\rvct{n}$} ; %
-%  \factor[left=of n] {pr-n} {below:$\nrm{0,1}$} {} {n}; %
-  \factor[left=of y] {s_yhat-y} 
-    {below:$\nrm{\hat{\rvct{y}}, \rvar{s}\mathbf{I}}$} {s,yhat} {y}; %
-
-  \node[latent, left=of yhat, xshift=-5mm, yshift=15mm] (a) {$\rvct{a}$} ; %
-  \node[latent, left=of yhat, xshift=-5mm, yshift=-15mm] (b) {$\rvct{b}$} ; %
-	
-  \node[const, left=of yhat, xshift=-5mm, yshift=1.5mm] (x) {\tiny $\mtx{X}$} ; %
-  \node[const, left=of yhat, xshift=-5mm, yshift=-1.5mm] (c) {\tiny $\vct{c}$} ; %
-
-  \op[left=of yhat, xshift=-2mm] {a_b-yhat}
-    {below:$\rvct{a}[\vct{c}] + \mtx{X}\tr\rvct{b}$} {a,x,c} {yhat}; %
-  \draw[-] (b) to[bend left=25] (a_b-yhat);
-	
-  \node[latent, left=of a, xshift=-10mm, yshift=8mm] (sa) {$\rvar{s}_{\rvar{a}}$} ; %
-  \node[latent, left=of a, xshift=-10mm, yshift=0mm] (ma) {$\rvar{m}_{\rvar{a}}$} ; %
-  \node[latent, left=of a, xshift=-10mm, yshift=-8mm] (na) {$\rvct{n}_\rvar{a}$} ; %
-	
-  \node[latent, left=of sa] (ua) {$\rvar{u}_{\rvar{a}}$} ; %
-  \op[left=of sa] {ua-sa} {$2.5\exp(\rvar{u}_{\rvar{a}})$} {ua} {sa} ; %
-  \factor[left=of ua] {pr-ua} {$\textrm{InvCosh}(0,1)~~$} {} {ua} ; %
-  \factor[left=of ma] {pr-ma} {$\nrm{0,1}$} {} {ma} ; %
-  \factor[left=of na] {pr-na} {$\nrm{\vct{0},\mathbf{I}}$} {} {na} ; %
-  \op[left=of a, xshift=-2mm] {sa_ma_na-a} 
-    {$\rvar{m}_{\rvar{a}} + \rvar{s}_{\rvar{a}} \rvct{n}_{\rvar{a}}$} {sa,ma,na} {a} ; %
-
-  \node[latent, left=of b, xshift=-10mm, yshift=8mm] (sb) {$\rvar{s}_\rvar{b}$} ; %
-  \node[latent, left=of b, xshift=-10mm, yshift=0mm] (mb) {$\rvar{m}_\rvar{b}$} ; %
-  \node[latent, left=of b, xshift=-10mm, yshift=-8mm] (nb) {$\rvct{n}_\rvar{b}$} ; %
-
-  \node[latent, left=of sb] (ub) {$\rvar{u}_{\rvar{b}}$} ; %
-  \op[left=of sb] {ub-sb} {$2.5\exp(\rvar{u}_{\rvar{b}})$} {ub} {sb} ; %	
-  \factor[left=of ub] {pr-ub} {$\textrm{InvCosh}(0,1)~~$} {} {ub} ; %
-  \factor[left=of mb] {pr-mb} {$\nrm{0,1}$} {} {mb} ; %
-  \factor[left=of nb] {pr-nb} {$\nrm{\vct{0},\mathbf{I}}$} {} {nb} ; %
-  \op[left=of b, xshift=-2mm] {sb_mb_nb-b} 
-    {\tiny $\rvar{m}_{\rvar{b}} + \rvar{s}_{\rvar{b}}\rvct{n}_{\rvar{b}}$} {sb,mb,nb} {b} ; %
-
-\end{tikzpicture}
-\vskip 5pt
-\caption{Hierarchical linear regression model stochastic computation graph.}
-\label{fig:hier-lin-regression-stochastic-tensor-computation-graph}
-\end{figure}
+A key difference of simulator models from more typical probabilistic models is that the variables corresponding to observables in the factor graph of a simulator model may be the output of deterministic factors rather than probabilistic directed factors. As we will see later in the thesis this can complicate inference in such models. 
 
 % reverse mode-automatic differentiation
 % reparametrisation
@@ -1399,19 +1129,160 @@ A common motivation we will have for reparameterising a probabilistic model is t
 
 \section{Inference}
 
-Having now introduced the underlying theoretical tools we use to construct probabilistic models, we will now describe more concretely the problem of probabilistic inference.% which the methods described in the rest of this thesis are designed to help tackle.
+\begin{figure}[!t]
+\centering
+\begin{subfigure}[b]{.46\linewidth}
+\vskip 0pt
+\centering
+\includegraphics[width=\textwidth]{images/gravitation-lensing-macs-j1206-nasa-square-crop}
+\vskip 0pt
+\caption{Hubble Space Telescope image of galaxy cluster MACS J1206 showing visible distortion due to gravitational lensing. Image credit: ESA/Hubble.}
+\label{sfig:gravitational-lensing-photo}
+\end{subfigure}%
+\hspace*{\fill}
+\begin{subfigure}[b]{.46\linewidth}
+\vskip 0pt
+\centering
+\includegraphics[width=\textwidth]{images/simulated-galaxy-cluster}
+\vskip 0pt
+\caption{Simulated galaxy cluster image from \emph{Observing Dark Worlds} data \citep{kaggle2012observing} showing ellipticity of galaxies (black ellipses) distorted by dark matter halos (red circles).}
+\label{sfig:gravitational-lensing-simulated}
+\end{subfigure}%
+\caption[Examples of gravitational lensing.]{Gravitational lensing in real and simulated galaxy cluster images.}
+\label{fig:gravitational-lensing}
+\end{figure}
+
+Having now introduced the tools we use to construct probabilistic models, we will now describe more concretely the task of inference. To help motivate our exposition we will discuss inference in the context of a specific problem: inferring the location of dark matter halos from the observed gravitational lensing of light emitted by surrounding galaxies. This task was the inspiration for a Kaggle\footnote{An online platform for predictive modelling competitions \url{https://www.kaggle.com}.} competition, \emph{Observing Dark Worlds} \citep{kaggle2012observing,harvey2014observing} and we will use the simplified formulation of the task used in the competition as the basis for our discussion here.% and model we present is based on the reports of two of the winning participants of that competition \citep{murray2012bayesian,salimans2012observing}.
+
+\subsection{Example problem: Observing Dark Worlds}
+
+We will begin with a brief review of the motivation for the \emph{Observing Dark Worlds} inference problem. Dark matter is a hypothesised form of matter which does not emit electromagnetic radiation.  This prevents direct observation by telescopes as it produces no signal in any part of the electromagnetic spectrum \citep{massey2010dark}. General relativity however predicts that all objects with mass locally distort spacetime. If a very large concentration of mass lies between an observer and a light source the strong distortion of spacetime by the mass significantly alters the paths of photons emitted by the source and causes the apparent image of the source to the observer to be visibly distorted \citep{bartelmann2001weak}. This effect is analagous to placing a lens between the light source and observer and this motivates the term \emph{gravitational lensing} to describe the phenonemon. It is believed that large concentrations of dark matter around galaxy clusters termed \emph{dark matter halos}, cause gravitational lensing of the light emitted from background galaxies observed in telescope images of galaxy clusters. %Detection of instances of such distortion would therefore allow indirect observation of the presence and sky position of dark matter halos. 
+
+\marginpar{In the context of gravitational lensing ellipticity is defined as a complex quantity $\epsilon = \frac{a-b}{a+b} \exp(2i\phi)$ where $a$ is the length of the ellipse major axis, $b$ the minor axis length and $\phi$ the orientation of the major axis. Here we will parameterise ellipticity terms of $e_1 = \mathrm{Re}(\epsilon) $ and $e_2 = \mathrm{Im}(\epsilon)$.}
+Galaxies typically have approximately elliptical shapes in telescope images. It is assumed that the \emph{ellipticities} of observed galaxy images not subject to gravitational lensing are isotropically distributed \citep{bartelmann2001weak}: there is no preferred orientation of the galaxies to an observer on Earth. The presence of a large mass concentration such as a dark matter halo between background galaxies and a telescope however locally distorts the distribution of the ellipticities of the observed galaxy images. An example of this effect in a galaxy cluster image from the Hubble Space Telescope is shown in Figure \ref{sfig:gravitational-lensing-photo} with the galaxies showing a bias towards being oriented tangentially to bright region at the centre of the image. Local biases in the spatial distribution of galaxy ellipticities can therefore be used to infer the location of dark matter halos.
+
+The \emph{Observing Dark Worlds} inference task is formulated as follows. The observed data consists of the sky co-ordinates $\lbrace u_g, v_g \rbrace_{g=1}^G$ and ellipticity components $\lbrace e_{1,g}, e_{2,g} \rbrace_{g=1}^G$ of a set of $G$ galaxies. The task is given this data to infer the coordinates $\lbr \rvar{x}_h, \rvar{y}_h\rbr_{h=1}^H$ of the centers of a known number of dark matter halos present in the sky field of view. Galaxy coordinate and ellipticity data are provided for multiple cluster images each with a known number of halos present and the cluster image data are assumed to be \ac{iid}.
+
+The \emph{Observing Dark Worlds} data is simulated thus the ground truth positions of the dark matter halos are known in reality which was required for the purposes of evaluation in the competition. An example visualisation of one of the simulated galaxy cluster images in the data set is shown in Figure \ref{sfig:gravitational-lensing-simulated}. The known positions of the dark matter halos in this image are shown by red circles\footnote{A \emph{training set} of cluster image data was provided to competition participants for which the associated true dark matter halo positions were given. This data was distinct from the \emph{test set} cluster data were the halo positions are unknown and the basis of the described inference problem, with the training data intended to aid initial model exploration and evaluation.}. As can be seen the halo in the lower left of this image produces a strong visible distortion in the ellipticities, however the second halo at the top right has a much less visible effect on the surrounding galaxies. %, emphasising the challenging nature of even this toy version of the task. 
+
+The use of simulated data and provision of exact galaxy positions and ellipticities rather than also requiring these to be also inferred directly from telescope images significantly reduces the difficulty of the \emph{Observing Dark Worlds} inference task compared to working with real gravitational lensing data, however for the purposes of our exposition the task is still sufficiently complex to highlight the computational challenges inherent in probabilistic inference problems. Further the probabilistic approach we will describe here is similar to that used (albeit with significantly more complex models) in state of the art tools used to analyse gravitational lensing in real telescope images \citep{jullo2007bayesian}.
+
+%The provided data consististed of a set of $S=420$ simulated galaxy cluster images provided as vectors of the co-ordinates of each galaxy center $\lbr \vct{u}^{(s)}, \vct{v}^{(s)} \rbr_{s=1}^S$ and the associated two components of the ellipticity of each galaxy $\lbr \vct{e}^{(s)}_1, \vct{e}^{(s)}_2 \rbr_{s=1}^S$.
+
+%In the Kaggle competition simulated data was used however similar methods to those that will be discussed here (albeit with signficantly more complex models) are employed in tools used to analyse real gravitational lensing images \citep{jullo2007bayesian}.
+
+\subsection{Defining a model}
+
+\begin{figure}[!t]
+\vskip 0pt
+\centering
+\begin{tikzpicture}
+
+  \node[latent] (xh) {$\rvar{x}_h$} ; %
+  \factor[left=of xh, xshift=-5mm] {pr-xh} {$\mathcal{U}(0, x_{\textrm{max}})$} {} {xh} ; %
+  \node[latent, below=of xh, yshift=5mm] (yh) {$\rvar{y}_h$} ; %
+  \factor[left=of yh, xshift=-5mm] {pr-yh} {$\mathcal{U}(0, y_{\textrm{max}})$} {} {yh} ; %
+  \node[latent, below=2.5 of yh] (mh) {$\rvar{m}_h$} ; %
+  %\node[latent, left=1.5 of mh, yshift=5mm] (mum) {$\upsfmu_m$} ; %
+  %\node[latent, left=1.5 of mh, yshift=-5mm] (sigmam) {$\upsfsigma_m$} ; %
+  \factor[left=of mh, xshift=-5mm] {pr-mh} {$\mathrm{LogNorm}(\mu_m, \sigma_m)$} {} {mh} ; %
+  \node[latent, below= of mh, yshift=5mm] (th) {$\rvar{t}_h$} ; %
+  %\node[latent, left=1.5 of th, yshift=5mm] (mut) {$\upsfmu_t$} ; %
+  %\node[latent, left=1.5 of th, yshift=-5mm] (sigmat) {$\upsfsigma_t$} ; %
+  \factor[left=of th, xshift=-5mm] {pr-th} {$\mathrm{LogNorm}(\mu_t, \sigma_t)$} {} {th} ; %
+  \node[const, right=7.5 of xh] (dummy1) {} ; %
+  \node[const, left=1.7 of dummy1] (xg) {$u_g$} ; %
+  \node[const] (yg) at (yh -| xg) {$v_g$} ; %
+  \node[latent, below right=1.5 and 1 of yh] (rhg) {$\rvar{r}_{h,g}$} ; %
+  \node[latent, right=0.5 of rhg] (ahg) {$\rvar{a}_{h,g}$} ; %
+  \node[op, label={above:$\sqrt{(\rvar{x}_h - u_g)^2 + (\rvar{y}_h - v_g)^2}$}] 
+    (xh_yh_xg_yg-rhg) at (xh -| ahg) {} ; %
+  \factoredge {xh,xg,yh,yg} {xh_yh_xg_yg-rhg} {rhg} ; %
+  %\op[right=2 of xh] {xh_yh_xg_yg-rhg}
+  %  {above right:$\sqrt{(\rvar{x}_h - x_g)^2 + (\rvar{y}_h - y_g)^2}$} {xh,xg,yh,yg} {rhg}; %
+  \op[above=1.5 of ahg] {xh_yh_xg_yg-ahg}
+    {below right:$\textrm{atan2}\lpa v_g - \rvar{y}_h, u_g - \rvar{x}_h\rpa$} {xh,xg,yh,yg} {ahg}; %
+  \op[below=1.5 of rhg, yshift=2.5mm] {rhg_mh_th-fhg} 
+    {below:$\qquad\frac{\rvar{m}_{\scalebox{0.75}{$h$}}}{\max(\rvar{r}_{\scalebox{0.75}{$h,g$}}, \rvar{t}_{\scalebox{0.75}{$h$}})}$} {rhg,mh,th} {} ; %
+  \node[latent] (fhg) at (rhg_mh_th-fhg -| ahg) {$\rvar{f}_{h,g}$} ; %
+  \draw[-{Latex[length=2mm]}] (rhg_mh_th-fhg) -- (fhg) ; %
+  \node[obs] at (ahg -| dummy1) (e1g) {$\rvar{e}_{1,g}$} ; %
+  \node[obs] at (fhg -| dummy1) (e2g) {$\rvar{e}_{2,g}$} ; %
+  \node[latent, right=1.4 of ahg] (chg) {$\rvar{c}_{h,g}$} ; %
+  \node[latent, right=1.4 of fhg] (dhg) {$\rvar{d}_{h,g}$} ; %
+  \op[left=of chg, xshift=-2mm] {ahg_fhg-chg} 
+    {$\rvar{f}_{h,g} \cos(2\rvar{a}_{h,g})$} {ahg,fhg} {chg} ; %
+  \op[left=of dhg, xshift=-2mm] {ahg_fhg-dhg} 
+    {below:$\rvar{f}_{h,g} \sin(2\rvar{a}_{h,g})$} {ahg,fhg} {dhg} ; %
+  \op[left=of e1g, xshift=-2mm] {chg_s-e1g} 
+    {below:$\rvar{e}^\star_{1,g} - \sum_{h=1}^H \rvar{c}_{h,g}$} {chg} {e1g} ; %
+  \op[left=of e2g, xshift=-2mm] {dhg_s-e2g} 
+    {$\rvar{e}^\star_{2,g} - \sum_{h=1}^H \rvar{d}_{h,g}$} {dhg} {e2g} ; %
+  \node[latent, above= of chg_s-e1g, yshift=-5mm] (e1gi) {$\rvar{e}^\star_{1,g}$} ;
+  \draw[-] (e1gi) -- (chg_s-e1g) ; %
+  \factor[left=of e1gi] {pr-e1gi} {below:$\nrm{0,\sigma^2}$} {} {e1gi} ; %
+  \node[latent, below= of dhg_s-e2g, yshift=5mm] (e2gi) {$\rvar{e}^\star_{2,g}$} ;
+  \draw[-] (e2gi) -- (dhg_s-e2g) ; %
+  \factor[left=of e2gi] {pr-e2gi} {$\nrm{0,\sigma^2}$} {} {e2gi} ; %
+  
+  %\node[latent, below=of dhg_s-e2g] (s) {$\rvar{s}$} ; %
+  %\draw[-] (s) -- (dhg_s-e2g) ; %
+  %\draw[-] (s) to[bend left=42] (chg_s-e1g) ; %
+  %\factor[right=of s, xshift=2mm] {pr-s} {above:$\textrm{Gamma}(\alpha,\beta)$} {} {s} ; %
+  
+  \node[const, above left=of xh, xshift=-11.5mm, yshift=-3mm] (dummy2) {} ; %
+  \node[const, right=5 of dummy2] (dummy3) {} ; %
+  \plate {platehalo} 
+    {(xh)(pr-xh)(yh)(pr-yh)(mh)(th)(rhg)(ahg)(fhg)(chg)(dhg)(xh_yh_xg_yg-rhg)(dummy2)} 
+    {$h\in\fset{1 \,...\, H}$}; %
+  \plate {plategalaxy} 
+    {(rhg)(ahg)(fhg)(chg)(dhg)(xh_yh_xg_yg-rhg)(xg)(yg)(e1g)(e2g)(e1gi)(e2gi)(dummy3)} 
+    {$g\in\fset{1 \,...\, G}$}; %
+  
+\end{tikzpicture}
+\vskip 5pt
+\caption[Gravitational lensing model factor graph.]{Factor graph of proposed model for \emph{Observing Dark Worlds} gravitational lensing inference problem for a single cluster image.}
+\label{fig:observing-dark-worlds-factor-graph}
+\end{figure}
 
 \marginpar{You cannot do inference without making assumptions\\---David Mackay}
-The starting point of any inference problem is a model (or models). The model codifies our assumptions about the world. In particular we will assume the model proposes a probabilistic relationship between observable quantities, which we will denote with the random vector $\rvct{y}$, and unobserved quantities which we wish to infer, which we will denote as the random vector $\rvct{z}$. 
+Our starting point for tackling inference problems will be to define a probabilistic model specifying proposed relationships between the observed and non-observed quantities to be inferred. The model codifies the assumptions we make about the problem and any prior beliefs we have. In virtually all real inference problems the model will be a significantly simplified description of a much more complex underlying process, usually motivated by prior empirical observations that the behaviour proposed by the model is a reasonable description of reality. For now we will consider the model as a singular fixed object we will perform inference with. In reality probabilistic modelling and inference are an iterative process with model criticism a key part of the loop \citep{box1980sampling,gelman2013philosophy}. We will discuss some of the (computational) issues involved in probabilistic model evaluation and comparison at the end of this chapter.
 
-Implicitly or explicitly the model defines the joint probability $\prob{\rvar{y},\rvar{z}}$; this might be by defining a joint probability density $\pden{\rvar{y},\rvar{z}}$ which specifies $\prob{\rvar{y},\rvar{z}}$, or by construction of a \emph{simulator} or \emph{generative model} which allows to generate values for $\rvct{y}$ and $\rvct{z}$ without the resulting joint probability $\prob{\rvar{y},\rvar{z}}$ being directly specified.
+For the \emph{Observing Dark Worlds} problem, a proposed probabilistic model is shown as a directed factor graph in Figure \ref{fig:observing-dark-worlds-factor-graph}\footnote{The factor graph in Figure \ref{fig:observing-dark-worlds-factor-graph} is based on the models used by the participants with the top-two winning entries in the Kaggle competition, Iain Murray and Tim Salimans, and described in their personal reports on their competition entries \citep{salimans2012observing,murray2012bayesian} and an article evaluating the competition outcomes \citep{harvey2014observing}.}. This model assumes a simple, physically motivated relationship between the dark matter halo positions and the observed spatial distribution of galaxy ellipticities. As well as random variables for the halo coordinates $\lbrace \rvar{x}_h,\rvar{y}_h \rbrace_{h=1}^H$ and galaxy ellipticity components $\lbrace \rvar{e}_{1,g},\rvar{e}_{2,g} \rbrace_{g=1}^G$, the model also introduces additional latent (non-observed) random variables $\lbrace \rvar{m}_{h}, \rvar{t}_h \rbrace_{h=1}^H$, which correpond respectively to the unknown total masses of each halo (multiplied by an arbitrary scaling factor) and an unknown \emph{core radius} for each halo, which specifies a radial distance within which the distortion by the halo is of constant magnitude. The halo coordinates are assumed to be marginally uniformly distributed across the image extents. The halo mass and core radius latent variables are both positive quanties and are assumed to have log normal marginal distributions.
+
+The model proposes that at sky coordinate $(u,v)$ each halo produces a shear distortion of magnitude
+\begin{equation}\label{eq:dark-matter-halo-force}
+  f_h(u,v) = \frac{\rvar{m}_h}{\max(r_h,\rvar{t}_h)}
+  \quad\textrm{where}\quad
+  r_h = \sqrt{(\rvar{x}_h - u)^2 + (\rvar{y}_h - v)^2}
+\end{equation}
+and acting in a tangential direction to the radial vector from the halo centre $(\rvar{x}_h,\rvar{y}_h)$ to $(u,v)$. %, i.e. proportional to $\rvar{m}_h$ and of constant magnitude for galaxies with radial distance $\rvar{r}_{h,g}$ from the halo of less than the core radius $\rvar{t}_h$ and with a $\rvar{r}_{h,g}^{-1}$ dependence outside this threshold. 
+This functional relationship is just one possibility among many - alternative models using a different $f_h$ could be used instead. In fact the post-competition review article \citep{jullo2007bayesian} revealed that the simulated data actually used dark matter halos with a mixture of two different radial profiles, neither of which correspond to the distortion model assumed in \eqref{eq:dark-matter-halo-force}. This mismatch between a model and the actual process by which observations were generated will virtually always be the case in real inference problems. We can still make inferences which are consistent with our modelling assumptions, however we should as far as possible also critically review those modelling assumptions to check the validity of the inferences made.
+
+For galaxies where the variation of the magnitude of the distorting effect of a halo across the extent of the galaxy's image is small, a reasonable approximation of the gravitational lensing effect of a single halo on the observed ellipticity $(\rvar{e}_{1,g},\rvar{e}_{2,g})$ of a galaxy image with intrinsic (prior to any gravitational lensing effect) ellipticity $(\rvar{e}_{1_g}^\star, \rvar{e}_2^\star)$ is that 
+\begin{equation}\label{eq:obs-ellipticity-single-halo}
+  \rvar{e}_{1,g} = \rvar{e}_{1,g}^\star - \rvar{f}_{h,g} \cos(2 \rvar{a}_{h,g}),
+  \quad
+  \rvar{e}_{2,g} = \rvar{e}_{2,g}^\star -  \rvar{f}_{h,g} \sin(2 \rvar{a}_{h,g}),
+\end{equation}
+where $\rvar{a}_{h,g} = \textrm{atan2}\lpa v_g - \rvar{y}_h, u_g - \rvar{x}_g\rpa$ is the angle the line from the centre of halo $h$ to galaxy $g$ makes to the horizontal axis and $\rvar{f}_{h,g} = f_h(u_g, v_g)$ is the magnitude of the shear distortion according to the proposed relationship in Equation \eqref{eq:dark-matter-halo-force} evaluated at the galaxy image centre \citep{bartelmann2001weak}. For clusters with multiple halos, a simple linearity assumption is made, i.e. that the shear distortions due to the different halos act additively on the ellipticity components
+\begin{equation}\label{eq:obs-ellipticity-multiple-halos}
+  \rvar{e}_{1,g} = \rvar{e}_{1,g}^\star - \sum_{h=1}^H \rvar{f}_{h,g} \cos(2 \rvar{a}_{h,g}),
+  ~
+  \rvar{e}_{2,g} = \rvar{e}_{2,g}^\star -  \sum_{h=1}^H \rvar{f}_{h,g} \sin(2 \rvar{a}_{h,g}).
+\end{equation}
+The intrinsic ellipticities of the galaxies are assumed to have a isotropic, zero-mean normal distribution,  with standard deviation $\sigma$.
+
+For now we will assume the standard deviation $\sigma$ of the intrinsic ellipticities, and the parameters $\mu_m,\,\sigma_t,\,\mu_t,\,\sigma_t$ of the halo mass and core radius marginal distributions have somehow been set to reasonable values, for example based on prior beliefs about the typical ranges of the variables. We will discuss possible strategies for inferring these parameters in more detail later.
+
+%In particular we will assume the model proposes a probabilistic relationship between observable quantities, which for the purposes of this section we will assume are collected together in the random vector $\rvct{y}$, and unobserved quantities which we will group in to a random vector $\rvct{z}$. Note that here we will assume $\rvct{z}$ includes \emph{all} unobserved random variables in the model irrespective of whether they correspond to `meaningful' quantities we wish to infer the values of, or are `nuisance' variables which we have no interest in the value of.
+
+%Implicitly or explicitly the model defines a joint probability $\prob{\rvar{y},\rvar{z}}$; this might be provided as a joint probability density $\pden{\rvar{y},\rvar{z}}$ which specifies $\prob{\rvar{y},\rvar{z}}$, or a \emph{simulator} or \emph{generative model} which allows to generate values for $\rvct{y}$ and $\rvct{z}$ without directly specification of a joint density.
 
 
+\subsection{Computing predictions as conditional expectations}
 
-
-\subsection{Posterior expectations}
-
-\subsection{Model evidence}
+\subsection{Model comparison}
 
 
 % ## Random variables
