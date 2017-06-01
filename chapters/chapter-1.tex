@@ -1,4 +1,4 @@
-\chapter{\mbox{Probabilistic inference}}\label{ch:probabilistic-inference}
+\chapter{\mbox{Probabilistic modelling}}\label{ch:probabilistic-modelling}
 
 %\marginpar{We are hardly able to get through one waking hour without facing some situation (e.g. will it rain or won’t it?) where we do not have enough information to permit deductive reasoning \\--- Edward Jaynes}
 \marginpar{The actual science of logic is conversant at present only with things either certain, impossible, or entirely doubtful, none of which (fortunately) we have to reason on. Therefore the true logic for this world is the calculus of probabilities\\---James Clerk Maxwell}
@@ -9,7 +9,7 @@ To make inferences under conditions of uncertainty, we must instead turn to prob
 
 %Various axiomatic bases have been proposed for deriving the laws of probability. Of particular note are the Kolmogorov axioms \citep{} which are the basis for the modern measure-theoretic formulation of probability theory. Cox's theorem \citep{} and related work by Polya \citep{} and Jaynes \citep{}, offers an alternative axiomatic basis for deriving probability theory from a minimal set of `common-sense' postulates, with resulting system of \emph{plausible reasoning} seen as natural extension of formal deductive logic under conditions of uncertainty. There has been much philosophical debate over the interpretation of probabilties
 
-In this chapter we will first introduce the probability notation we will use in the rest of this work, and state some basic results which will be important in the later chapters. We will introduce graphical models as a compact way of visualising structure in probabilistic models. Finally we will give a concrete definition of the probabilistic inference tasks that the methods presented in the rest of this thesis are aimed at computing (approximate) solutions to, \marginpar{Probability theory is nothing but common sense reduced to calculation. \\--- Pierre-Simon Laplace}and motivate why such approximate computational methods are needed.
+In this chapter we will first introduce the probability notation we will use in the rest of this work, and state some basic results which will be important in the later chapters. We will introduce graphical models as a compact way of visualising structure in probabilistic models. Finally we will give a concrete definition of the inference tasks that the methods presented in the rest of this thesis are aimed at computing (approximate) solutions to, \marginpar{Probability theory is nothing but common sense reduced to calculation. \\--- Pierre-Simon Laplace}and motivate why such approximate computational methods are needed.
 
 %We will here largely ignore philosophical disucssions of interpretations of probabilities, and instead concentrate on the computational aspects of performing probabilistic inference.
 
@@ -182,7 +182,7 @@ When dealing with random variables, we will often only specify the co-domain of 
 
 This less explicit but more succinct probability notation in terms of random variables and densities is common in the machine learning and computational statitistics literature and will generally be preferred to improve readability. 
 %The underlying measure-theoretic basis of these concepts will however be important for some of the upcoming definitions in this chapter and some of the derivations later in the thesis. 
-Table \ref{tab:standard-distributions} gives definitions of the densities and shorthand notation of some common parametric probability distributions that we will use in this thesis.
+Tables \ref{tab:standard-distributions-discrete}, \ref{tab:standard-distributions-unbounded} and \ref{tab:standard-distributions-bounded} give definitions of the densities and shorthand notation for some common parametric probability distributions that we will use in this thesis.
 
 \newgeometry{
   includehead,
@@ -190,13 +190,108 @@ Table \ref{tab:standard-distributions} gives definitions of the densities and sh
   headsep=5mm,
   %nomarginpar,
   marginparsep=8mm,
-  marginparwidth=27mm,
+  marginparwidth=27mm,	
   top=20mm,
   bottom=40mm,
   outer=20mm,
-  inner=40mm,
-  %showframe
+  inner=40mm
 }
+
+\begin{landscape}
+\vspace*{-8mm}
+\begin{table}[H]
+\centering
+\begin{tabular}{p{4cm}p{5cm}lll}
+\toprule
+  \textsf{Name} & \textsf{Parameters} & \textsf{Shorthand} & \textsf{Density} & Support \\
+\midrule
+%%%%%%%%%%%%%
+  Bernoulli & 
+  $\pi \in [0,1]$ &
+  $\textrm{Ber}(x \gvn \pi)$ & 
+  $\pi^x (1 -\pi)^{(1-x)}$ &
+  $x \in \fset{0,1}$\\
+%%%%%%%%%%%%%
+  Categorical & 
+  $\vct{\pi} \in \vvmathbb{S}^K$ &
+  $\textrm{Cat}(x \gvn \vct{\pi})$ & 
+  $\sum_{k=1}^K \lpa \ind{\fset{k}}(x) \pi_k \rpa$ &
+  $x \in \fset{1 \dots K}$\\
+%%%%%%%%%%%%%
+\bottomrule
+\end{tabular}
+\caption[Standard discrete density definitions.]{Definitions of densities of parameteric distributions for discrete random variables that will be used in this thesis.}
+\label{tab:standard-distributions-discrete}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{p{4cm}p{5cm}ll}
+\toprule
+  \textsf{Name} & \textsf{Parameters} & \textsf{Shorthand} & \textsf{Density} \\
+\midrule
+%%%%%%%%%%%%%
+  Normal & 
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\mu \in \reals$ &~: mean\\[-1mm]
+  $\sigma > 0$ &~: standard deviation 
+  \end{tabular} &
+  $\nrm{x \gvn \mu,\sigma^2}$ & 
+  $\frac{1}{\sqrt{2\uppi}\sigma} \exp\lpa -\frac{(x-\mu)^2}{2\sigma^2}\rpa$ \\[0mm]
+%%%%%%%%%%%%%
+  Multivariate normal &
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\vct{\mu} \in \reals^D$ &~: mean vector \\[-1mm]
+$\mtx{\Sigma} \in \sset{S}^{D}_{++}$ &~: covariance matrix
+  \end{tabular} &
+  $\nrm{\vct{x} \gvn \vct{\mu}, \mtx{\Sigma}}$ & 
+  $\frac{1}{\sqrt{(2\uppi)^D|\mtx{\Sigma}|}} \exp\lpa -\frac{1}{2} (\vct{x}-\vct{\mu})\tr\mtx{\Sigma}^{-1}(\vct{x}-\vct{\mu})\rpa$ \\[4mm]
+%%%%%%%%%%%%%
+  Student's \emph{t} & 
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\nu > 0$ &~: degrees of freedom\\[-1mm]
+  $\mu \in \reals$ &~: location\\[-1mm]
+  $\sigma > 0$ &~: scale\\ 
+  \end{tabular} &
+  $\mathrm{StT}(x \gvn \nu, \mu, \sigma)$ & 
+  $\frac{\upGamma\lpa\frac{\nu + 1}{2}\rpa}{\upGamma\lpa\frac{\nu}{2}\rpa\sqrt{\uppi\nu}\sigma}\lpa 1 + \frac{1}{\nu}\lpa\frac{x-\mu}{\sigma}\rpa^2\rpa^{-\frac{\nu + 1}{2}}$\\[6mm] 
+%%%%%%%%%%%%%
+%  Cauchy & 
+%  \setlength\tabcolsep{0pt}
+%  \begin{tabular}{ll}
+%  $\mu \in \reals$ &~: location\\
+%  $\sigma > 0$ &~: scale 
+%  \end{tabular} &
+%  $\mathcal{C}(x \gvn \mu, \sigma)$ & 
+%  $\frac{1}{\uppi \sigma \lsb 1 + \lpa\frac{x - \mu}{\sigma}\rpa^2\rsb}$ \\[0mm]
+%%%%%%%%%%%%%
+  Logistic &
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\mu \in \reals$ &~: location\\[-1mm]
+  $\sigma > 0$ &~: scale 
+  \end{tabular} &
+  $\textrm{Logistic}(x \gvn \mu,\sigma)$ & 
+  $\frac{1}{4\sigma}\cosh\lpa\frac{x - \mu}{2\sigma}\rpa^{-2}$ \\[0mm]
+%%%%%%%%%%%%%
+  Inverse cosh  & 
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\mu \in \reals$ &~: location\\[-1mm]
+  $\sigma > 0$ &~: scale 
+  \end{tabular} &
+  $\textrm{InvCosh}(x \gvn \mu, \sigma)$ & 
+  $\frac{1}{2\sigma} \cosh\lpa\frac{\uppi(x - \mu)}{2 \sigma}\rpa^{-1}$ \\
+%%%%%%%%%%%%%
+\bottomrule
+\end{tabular}
+\caption[Standard unbounded density definitions.]{Definitions of densities of parameteric distributions for unbounded real random variables that will be used in this thesis.}
+\label{tab:standard-distributions-unbounded}
+\end{table}
+\end{landscape}
 
 \begin{landscape}
 \begin{table}[htp]
@@ -206,101 +301,92 @@ Table \ref{tab:standard-distributions} gives definitions of the densities and sh
   \textsf{Name} & \textsf{Parameters} & \textsf{Shorthand} & \textsf{Density} & \textsf{Support} \\
 \midrule
 %%%%%%%%%%%%%
-  Normal & 
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\mu \in \reals$ &~: mean\\
-  $\sigma > 0$ &~: standard deviation 
-  \end{tabular} &
-  $\nrm{x \gvn \mu,\sigma^2}$ & 
-  $\frac{1}{\sqrt{2\uppi}\sigma} \exp\lpa -\frac{(x-\mu)^2}{2\sigma^2}\rpa$ & 
-  $x \in \reals$ \\
-%%%%%%%%%%%%%
   Log-normal & 
   \setlength\tabcolsep{0pt}
   \begin{tabular}{ll}
-  $\mu \in \reals$ &~: log mean\\
+  $\mu \in \reals$ &~: log mean\\[-1mm]
   $\sigma > 0$ &~: log standard deviation 
   \end{tabular} &
   $\textrm{LogNorm}(x \gvn \mu,\sigma^2)$ & 
   $\frac{1}{x\sqrt{2\uppi}\sigma} \exp\lpa -\frac{(\log x-\mu)^2}{2\sigma^2}\rpa$ & 
-  $x > 0$ \\
+  $x > 0$ \\[3mm]
 %%%%%%%%%%%%%
-  Multivariate normal &
+  Multivariate log-normal &
   \setlength\tabcolsep{0pt}
   \begin{tabular}{ll}
-  $\vct{\mu} \in \reals^D$ &~: mean vector \\
-$\mtx{\Sigma} \in \sset{S}^{D}_{++}$ &~: covariance matrix
+  $\vct{\mu} \in \reals^D$ &~: log mean \\[-1mm]
+  $\mtx{\Sigma} \in \sset{S}^{D}_{++}$ &~: log covariance
   \end{tabular} &
-  $\nrm{\vct{x} \gvn \vct{\mu}, \mtx{\Sigma}}$ & 
-  $\frac{1}{\sqrt{(2\uppi)^D|\mtx{\Sigma}|}} \exp\lpa -\frac{1}{2} (\vct{x}-\vct{\mu})\tr\mtx{\Sigma}^{-1}(\vct{x}-\vct{\mu})\rpa$ & $\vct{x} \in \reals^D$ \\
+  $\textrm{LogNorm}(\vct{x} \gvn \vct{\mu}, \mtx{\Sigma})$ & 
+  $\frac{\exp\lpa -\frac{1}{2} (\log\vct{x}-\vct{\mu})\tr\mtx{\Sigma}^{-1}(\log\vct{x}-\vct{\mu})\rpa}{\prod_{d=1}^D(x_d)\sqrt{(2\uppi)^D|\mtx{\Sigma}|}} $ & $\vct{x} \in [0, \infty)^D$ \\[3mm]
 %%%%%%%%%%%%%
   Exponential & 
   $\lambda > 0$ : rate &
   $\mathrm{Exp}(x \gvn \lambda)$ & 
   $\lambda \exp(-\lambda x)$ & 
-  $x \geq 0$\\
+  $x \geq 0$\\[2mm]
 %%%%%%%%%%%%%
   Uniform & 
   \setlength\tabcolsep{0pt}
   \begin{tabular}{ll}
-  $a \in \reals$ &~: minimum\\
+  $a \in \reals$ &~: minimum\\[-1mm]
   $b \in \reals$ &~: maximum, $b > a$
   \end{tabular} &
   $\mathcal{U}(x \gvn a, b)$ & 
   $\frac{1}{b-a}\ind{[a,b]}(x)$ & 
-  $a \leq x \leq b$\\
-%%%%%%%%%%%%%
-%  Cauchy & 
-%  \setlength\tabcolsep{0pt}
-%  \begin{tabular}{ll}
-%  $x_0 \in \reals$ &~: location\\
-%  $\gamma > 0$ &~: scale 
-%  \end{tabular} &
-%  $\mathcal{C}(x \gvn x_0, \gamma)$ & 
-%  $\frac{1}{\uppi \gamma \lsb 1 + \lpa\frac{x - x_0}{\gamma}\rpa^2\rsb}$ & 
-%  $x \in \reals$ \\
+  $a \leq x \leq b$\\[3mm]
 %%%%%%%%%%%%%
   Half-Cauchy & 
   $\gamma > 0$ : scale &
   $\mathcal{C}_{\geq 0}(x \gvn \gamma)$ & 
   $\frac{2}{\uppi \gamma} \lpa 1 + \frac{x^2}{\gamma^2} \rpa^{-1}$ & 
-  $x \geq 0$ \\ 
+  $x \geq 0$ \\[2mm]
+%%%%%%%%%%%%%
+%  Chi-squared & 
+%  $k \in \naturals_{+}$ : degrees of freedom &
+%  $\chi^2(x \gvn k)$ & 
+%  $\frac{x^{\frac{k}{2}-1}\exp\lpa -\frac{x}{2}\rpa}{\Gamma\lpa\frac{k}{2}\rpa 2^{\frac{k}{2}}}$ & 
+%  $x > 0$ \\[2mm]
 %%%%%%%%%%%%%
   Gamma &
   \setlength\tabcolsep{0pt}
   \begin{tabular}{ll}
-  $\alpha > 0$ &~: shape\\
+  $\alpha > 0$ &~: shape\\[-1mm]
   $\beta > 0$ &~: rate 
   \end{tabular} &
   $\textrm{Gamma}(x \gvn \alpha, \beta)$ & 
-  $\frac{\beta^\alpha}{\Gamma(\alpha)} x^{\alpha - 1} \exp(-\beta x)$& 
+  $\frac{\beta^\alpha}{\upGamma(\alpha)} x^{\alpha - 1} \exp(-\beta x)$& 
+  $x \geq 0$ \\[3mm]
+%%%%%%%%%%%%%
+  Beta &
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\alpha > 0$ &~: shape\\[-1mm]
+  $\beta > 0$ &~: shape 
+  \end{tabular} &
+  $\textrm{Beta}(x \gvn \alpha, \beta)$ & 
+  $\frac{\upGamma(\alpha + \beta)}{\upGamma(\alpha)\upGamma(\beta)} x^{\alpha - 1} (1 - x)^{\beta - 1}$& 
+  $0 \leq x \leq 1$ \\[3mm]
+%%%%%%%%%%%%%
+  Dirichlet &
+  $\vct{\alpha} \in (0,\infty)^K$ : concentration &
+  $\textrm{Dir}(\vct{x} \gvn \vct{\alpha})$ & 
+  $\frac{\upGamma\lpa \sum_{k=1}^K \alpha_k \rpa}{\prod_{k=1}^K \upGamma(\alpha_k)} \prod_{k=1}^K x_i^{\alpha_k -1}$& 
+  $\vct{x} \in \vvmathbb{S}^K$ \\[2mm]
+%%%%%%%%%%%%%
+  Lomax &
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\alpha > 0$ &~: shape\\[-1mm]
+  $\beta > 0$ &~: scale 
+  \end{tabular} &
+  $\textrm{Lomax}(x \gvn \alpha, \beta)$ & 
+  $\frac{\alpha\beta^\alpha}{(\beta + x)^{\alpha + 1}}$& 
   $x \geq 0$ \\
-%%%%%%%%%%%%%
-  Logistic &
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $m \in \reals$ &~: location\\
-  $s > 0$ &~: scale 
-  \end{tabular} &
-  $\textrm{Logistic}(x \gvn m,s)$ & 
-  $\frac{1}{4s}\cosh\lpa\frac{x - m}{2s}\rpa^{-2}$ & 
-  $x \in \reals$\\
-%%%%%%%%%%%%%
-  Inverse cosh  & 
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $m \in \reals$ &~: location\\
-  $s > 0$ &~: scale 
-  \end{tabular} &
-  $\textrm{InvCosh}(x \gvn m, s)$ & 
-  $\frac{1}{2s} \cosh\lpa\frac{\uppi(x - m)}{2 s}\rpa^{-1}$ & 
-  $x \in \reals$ \\
-%%%%%%%%%%%%%
 \bottomrule
 \end{tabular}
-\caption[Standard density notation and definitions.]{Definitions of densities of some common parameteric distributions which will be used in this thesis.}
-\label{tab:standard-distributions}
+\caption[Standard bounded density definitions.]{Definitions of densities of parameteric distributions for bounded real random variables that will be used in this thesis.}
+\label{tab:standard-distributions-bounded}
 \end{table}
 \end{landscape}
 \restoregeometry
@@ -722,13 +808,15 @@ Both directed and undirected graphical models can always be losslessly converted
   \factor[below= of s4] {b4} {below:$\exp(b_4 \rvar{s}_4)$} {s4} {} ; %
   \factor[below= of s5] {b5} {below:$\exp(b_5 \rvar{s}_5)$} {s5} {} ; %
   
-  \factor[above= of s1, xshift=-17mm] {W12} {above:$\exp(\rvar{s}_1 W_{12} \rvar{s}_2)$} {s1,s2} {} ; %
+  \factor[above= of s1, xshift=-17mm] {W12} {} {s1,s2} {} ; %
+  \node[align=left, anchor=south, xshift=3mm] (lab-W12) at (W12.north) {\tiny $\exp(\rvar{s}_1 W_{12} \rvar{s}_2)$} ; %
   \factor[above= of s1] {W13} {above:$\exp(\rvar{s}_1 W_{13} \rvar{s}_3)$} {s1,s3} {} ; %
   \factor[above= of s2] {W23} {above:$\exp(\rvar{s}_2 W_{23} \rvar{s}_3)$} {s2,s3} {} ; %
   \factor[above= of s3] {W24} {above:$\exp(\rvar{s}_2 W_{24} \rvar{s}_4)$} {s2,s4} {} ; %
   \factor[above= of s4] {W34} {above:$\exp(\rvar{s}_3 W_{34} \rvar{s}_4)$} {s3,s4} {} ; %
   \factor[above= of s5] {W35} {above:$\exp(\rvar{s}_3 W_{35} \rvar{s}_5)$} {s3,s5} {} ; %
-  \factor[above= of s5, xshift=17mm] {W45} {above:$\exp(\rvar{s}_4 W_{45} \rvar{s}_5)$} {s4,s5} {} ; %
+  \factor[above= of s5, xshift=17mm] {W45} {} {s4,s5} {} ; %
+  \node[align=right, anchor=south, xshift=-3mm] (lab-W45) at (W45.north) {\tiny $\exp(\rvar{s}_4 W_{45} \rvar{s}_5)$} ; %
   
   \factor[above=14mm of W23] {W14} {above:$\exp(\rvar{s}_1 W_{14} \rvar{s}_4)$} {} {} ; %
   \draw[-] (W14) to[bend right=5] (s1); %
@@ -795,13 +883,13 @@ In Figure \ref{fig:hier-lin-regression-factor-graph} we illustrate some addition
 
 It will often be useful to be able to explicitly represent deterministic functions applied to the random variables in a factor graph. For this purpose we introduce an additional node type denoted by an unfilled diamond (\tikz{\node[op] {};}). The semantics of this node type are very similar to standard directed factor nodes. Variables acting as inputs to the function are connected to the node by undirected edges and the variable corresponding to the function output indicated by a directed edge from the node to the relevant variable. Like standard factor nodes, the deterministic factor nodes only ever connect to variable nodes. The operations performed by the function on the inputs will usually be included as a label adjacent to the node as illustrated by the example in Figure \ref{fig:hier-lin-regression-factor-graph}.
 
-The deterministic factor nodes are directly equivalent to a standard directed factor node corresponding to a degenerate Dirac delta conditional density on the output variable which concentrates all the probability mass at the output value of the function applied to inputs (conditioning variables). From this perspective it can be seen that the previously discussed rules for evaluating conditional independency properties in factor graphs can be directly extended to account for the new node type by just considering it as a (specialised) directed factor node.
+A deterministic factor node can informally\footnote{A Dirac delta cannot strictly define a density as it is not the Radon--Nikodyn derivative of an absolutely continuous measure, however it can be informally treated as the density of a singular Dirac measure $f(0) = \int f(x) \,\dr\delta(x) \simeq \int f(x) \delta(x) \,\dr x$.} be considered equivalent to a directed factor node with a degenerate Dirac delta conditional density on the output variable which concentrates all the probability mass at the output of the function applied to the inputs variables. The previously discussed rules for evaluating conditional independency properties in factor graphs can be directly extended to account for the new node type by just considering it as a directed factor node.
 
 Optionally constant values used in a model may be included in a factor graph as plain nodes indicated only by a label. The $\vct{x}^{(i)}$ and $c^{(i)}$ nodes in Figure \ref{fig:hier-lin-regression-factor-graph} are an example of this notation.
 
-A commonly used convention in both factor graphs and directed graphical models is \emph{plate notation} \citep{buntine1994operations}, with an example of a plate shown by the rounded rectangle bounding some of the nodes in Figure \ref{fig:hier-lin-regression-factor-graph}. Plates are used to indicate a subgraph in the model which is replicated multiple times (with the number of replications and an index over the replications typically indicated somewhere on the plate, for example in the lower right corner in the plate in Figure \ref{fig:hier-lin-regression-factor-graph}). The subgraph entirely contained on the plate is assumed to be replicated the relevant number of times, with any edges crossing into the plate from variable nodes outside of the plate being repeated once for each subgraph replication. Plates are commonly used to represent a model component repeated across multiple data items.
+A commonly used convention in factor graphs (and other graphical models) is \emph{plate notation} \citep{buntine1994operations}, with an example of a plate shown by the rounded rectangle bounding some of the nodes in Figure \ref{fig:hier-lin-regression-factor-graph}. Plates are used to indicate a subgraph in the model which is replicated multiple times (with the replications being indexed over a set which is typically indicated in the lower right corner of the plate as in Figure \ref{fig:hier-lin-regression-factor-graph}). The subgraph entirely contained on the plate is assumed to be replicated the relevant number of times, with any edges crossing into the plate from variable nodes outside of the plate being repeated once for each subgraph replication. Plates are commonly used to represent a model component repeated across multiple data items.
 
-Each of the factors in Figure \ref{fig:hier-lin-regression-factor-graph} is labelled with a shorthand for a probability density function corresponding to the conditional or marginal density factor associated with the node. Definitions for the shorthand notations that are used for densities in this thesis are given in Table \ref{tab:standard-distributions}. The dependence of the factors on the value of the random variable the density is defined on is omitted in the factor labels for brevity.
+Each of the factors in Figure \ref{fig:hier-lin-regression-factor-graph} is labelled with a shorthand for a probability density function corresponding to the conditional or marginal density factor associated with the node. Definitions for the shorthand notations that are used for densities in this thesis are given in Tables \ref{tab:standard-distributions-unbounded} and \ref{tab:standard-distributions-bounded}. The dependence of the factors on the value of the random variable the density is defined on is omitted in the labels for brevity.
 
 A final additional notation used in Figure \ref{fig:hier-lin-regression-factor-graph} is the use of a shaded variable node (corresponding to $\rvar{y}^{(i)}$) to indicate a random variable corresponding to an observable quantity in the model. %In general as we will see in the subsequent discussion of inference, the random variables corresponding to observable quantities in a model will be conditioned on observed data.
 
@@ -1009,7 +1097,7 @@ Depending on how the computation graph is traversed to accumulate the derivative
   
 \end{tikzpicture}
 \vskip 0pt
-\caption[Reverse-mode automatic differentiation.]{Visualisation of applying reverse-mode automatic differentiation to the computation graph in Figure \ref{fig:gaussian-density-computation-graph} to calculate the derivatives of the negative log density of a univariate Gaussian distribution.}
+\caption[Reverse-mode automatic differentiation.]{Visualisation of applying reverse-mode automatic differentiation to the computation graph in Figure \ref{fig:gaussian-density-computation-graph} to calculate the derivatives of the negative log density of a univariate normal distribution.}
 \label{fig:gaussian-density-gradient-computation-graph}
 \end{figure}
 
@@ -1156,16 +1244,18 @@ Having now introduced the tools we use to construct probabilistic models, we wil
 
 \subsection{Example problem: Observing Dark Worlds}
 
-We will begin with a brief review of the motivation for the \emph{Observing Dark Worlds} inference problem. Dark matter is a hypothesised form of matter which does not emit electromagnetic radiation.  This prevents direct observation by telescopes as it produces no signal in any part of the electromagnetic spectrum \citep{massey2010dark}. General relativity however predicts that all objects with mass locally distort spacetime. If a very large concentration of mass lies between an observer and a light source the strong distortion of spacetime by the mass significantly alters the paths of photons emitted by the source and causes the apparent image of the source to the observer to be visibly distorted \citep{bartelmann2001weak}. This effect is analagous to placing a lens between the light source and observer and this motivates the term \emph{gravitational lensing} to describe the phenonemon. It is believed that large concentrations of dark matter around galaxy clusters termed \emph{dark matter halos}, cause gravitational lensing of the light emitted from background galaxies observed in telescope images of galaxy clusters. %Detection of instances of such distortion would therefore allow indirect observation of the presence and sky position of dark matter halos. 
+We will begin with a brief review of the motivation for the \emph{Observing Dark Worlds} inference problem. Dark matter is a hypothesised form of matter which does not emit or interact with electromagnetic radiation.  This prevents direct observation of dark matter by telescopes as it produces no signal in any part of the electromagnetic spectrum \citep{massey2010dark}. General relativity however predicts that all objects with mass locally distort spacetime. If a very large concentration of mass lies between an observer and a light source the strong distortion of spacetime by the mass significantly alters the paths of photons emitted by the source and causes the apparent image of the source to the observer to be visibly distorted \citep{bartelmann2001weak}. This effect is analagous to placing a lens between the light source and observer and this motivates the term \emph{gravitational lensing} to describe the phenonemon. It is believed that large concentrations of dark matter around galaxy clusters termed \emph{dark matter halos}, cause gravitational lensing of the light emitted from background galaxies observed in telescope imagery of galaxy clusters. %Detection of instances of such distortion would therefore allow indirect observation of the presence and sky position of dark matter halos. 
 
 \marginpar{In the context of gravitational lensing ellipticity is defined as a complex quantity $\epsilon = \frac{a-b}{a+b} \exp(2i\phi)$ where $a$ is the length of the ellipse major axis, $b$ the minor axis length and $\phi$ the orientation of the major axis. Here we will parameterise ellipticity terms of $e_1 = \mathrm{Re}(\epsilon) $ and $e_2 = \mathrm{Im}(\epsilon)$.}
-Galaxies typically have approximately elliptical shapes in telescope images. It is assumed that the \emph{ellipticities} of observed galaxy images not subject to gravitational lensing are isotropically distributed \citep{bartelmann2001weak}: there is no preferred orientation of the galaxies to an observer on Earth. The presence of a large mass concentration such as a dark matter halo between background galaxies and a telescope however locally distorts the distribution of the ellipticities of the observed galaxy images. An example of this effect in a galaxy cluster image from the Hubble Space Telescope is shown in Figure \ref{sfig:gravitational-lensing-photo} with the galaxies showing a bias towards being oriented tangentially to bright region at the centre of the image. Local biases in the spatial distribution of galaxy ellipticities can therefore be used to infer the location of dark matter halos.
+Galaxies typically have approximately elliptical shapes in telescope images. It is assumed that the \emph{ellipticities} of observed galaxy images not subject to gravitational lensing are isotropically distributed \citep{bartelmann2001weak}: there is no preferred orientation of the galaxies to an observer on Earth. The presence of a large mass concentration such as a dark matter halo between background galaxies and a telescope however locally distorts the distribution of the ellipticities of the observed galaxy images. An example of this effect in a galaxy cluster image from the Hubble Space Telescope is shown in Figure \ref{sfig:gravitational-lensing-photo} with the galaxies showing a bias towards being oriented tangentially to the bright region at the centre of the image. Local biases in the spatial distribution of galaxy ellipticities can therefore be used to infer the location of dark matter halos.
 
 The \emph{Observing Dark Worlds} inference task is formulated as follows. The observed data consists of the sky co-ordinates $\lbrace u_g, v_g \rbrace_{g=1}^G$ and ellipticity components $\lbrace e_{1,g}, e_{2,g} \rbrace_{g=1}^G$ of a set of $G$ galaxies. The task is given this data to infer the coordinates $\lbr \rvar{x}_h, \rvar{y}_h\rbr_{h=1}^H$ of the centers of a known number of dark matter halos present in the sky field of view. Galaxy coordinate and ellipticity data are provided for multiple cluster images each with a known number of halos present and the cluster image data are assumed to be \ac{iid}.
 
-The \emph{Observing Dark Worlds} data is simulated thus the ground truth positions of the dark matter halos are known in reality which was required for the purposes of evaluation in the competition. An example visualisation of one of the simulated galaxy cluster images in the data set is shown in Figure \ref{sfig:gravitational-lensing-simulated}. The known positions of the dark matter halos in this image are shown by red circles\footnote{A \emph{training set} of cluster image data was provided to competition participants for which the associated true dark matter halo positions were given. This data was distinct from the \emph{test set} cluster data were the halo positions are unknown and the basis of the described inference problem, with the training data intended to aid initial model exploration and evaluation.}. As can be seen the halo in the lower left of this image produces a strong visible distortion in the ellipticities, however the second halo at the top right has a much less visible effect on the surrounding galaxies. %, emphasising the challenging nature of even this toy version of the task. 
+The \emph{Observing Dark Worlds} data is simulated thus the ground truth positions of the dark matter halos are known in reality which was required for the purposes of evaluation in the competition. An example visualisation of one of the simulated galaxy cluster images in the data set is shown in Figure \ref{sfig:gravitational-lensing-simulated}. The known positions of the dark matter halos in this image are shown by red circles\footnote{A \emph{training set} of cluster image data was provided to competition participants for which the associated true dark matter halo positions were given. This data was distinct from the \emph{test set} cluster data were the halo positions are unknown and which is the basis of the described inference problem and scoring for the competition, with the training data intended to aid initial model exploration and evaluation.}. As can be seen the halo in the lower left of this image produces a strong visible distortion in the ellipticities, however the second halo at the top right has a much less visible effect on the surrounding galaxies. %, emphasising the challenging nature of even this toy version of the task. 
 
-The use of simulated data and provision of exact galaxy positions and ellipticities rather than also requiring these to be also inferred directly from telescope images significantly reduces the difficulty of the \emph{Observing Dark Worlds} inference task compared to working with real gravitational lensing data, however for the purposes of our exposition the task is still sufficiently complex to highlight the computational challenges inherent in probabilistic inference problems. Further the probabilistic approach we will describe here is similar to that used (albeit with significantly more complex models) in state of the art tools used to analyse gravitational lensing in real telescope images \citep{jullo2007bayesian}.
+The use of simulated data 
+%and provision of exact galaxy positions and ellipticities rather than also requiring these to be also inferred from telescope images significantly 
+ reduces the difficulty of the \emph{Observing Dark Worlds} inference task compared to working with real gravitational lensing data, however for the purposes of our discussion the task is still sufficiently complex to highlight the computational challenges involved in inference problems. Further the probabilistic approach described here is similar to that used (albeit with significantly more complex models) in methods and tools used in practice to analyse gravitational lensing data to infer dark matter properties \citep{marshall2003bayesian,jullo2007bayesian}.
 
 %The provided data consististed of a set of $S=420$ simulated galaxy cluster images provided as vectors of the co-ordinates of each galaxy center $\lbr \vct{u}^{(s)}, \vct{v}^{(s)} \rbr_{s=1}^S$ and the associated two components of the ellipticity of each galaxy $\lbr \vct{e}^{(s)}_1, \vct{e}^{(s)}_2 \rbr_{s=1}^S$.
 
@@ -1179,66 +1269,69 @@ The use of simulated data and provision of exact galaxy positions and ellipticit
 \begin{tikzpicture}
 
   \node[latent] (xh) {$\rvar{x}_h$} ; %
-  \factor[left=of xh, xshift=-5mm] {pr-xh} {$\mathcal{U}(0, x_{\textrm{max}})$} {} {xh} ; %
+  \factor[above left=of xh] {pr-xh} {right:$\mathcal{U}(0, x_{\textrm{max}})$} {} {xh} ; %
   \node[latent, below=of xh, yshift=5mm] (yh) {$\rvar{y}_h$} ; %
-  \factor[left=of yh, xshift=-5mm] {pr-yh} {$\mathcal{U}(0, y_{\textrm{max}})$} {} {yh} ; %
-  \node[latent, below=2.5 of yh] (mh) {$\rvar{m}_h$} ; %
-  %\node[latent, left=1.5 of mh, yshift=5mm] (mum) {$\upsfmu_m$} ; %
-  %\node[latent, left=1.5 of mh, yshift=-5mm] (sigmam) {$\upsfsigma_m$} ; %
-  \factor[left=of mh, xshift=-5mm] {pr-mh} {$\mathrm{LogNorm}(\mu_m, \sigma_m)$} {} {mh} ; %
-  \node[latent, below= of mh, yshift=5mm] (th) {$\rvar{t}_h$} ; %
-  %\node[latent, left=1.5 of th, yshift=5mm] (mut) {$\upsfmu_t$} ; %
-  %\node[latent, left=1.5 of th, yshift=-5mm] (sigmat) {$\upsfsigma_t$} ; %
-  \factor[left=of th, xshift=-5mm] {pr-th} {$\mathrm{LogNorm}(\mu_t, \sigma_t)$} {} {th} ; %
-  \node[const, right=7.5 of xh] (dummy1) {} ; %
-  \node[const, left=1.7 of dummy1] (xg) {$u_g$} ; %
-  \node[const] (yg) at (yh -| xg) {$v_g$} ; %
-  \node[latent, below right=1.5 and 1 of yh] (rhg) {$\rvar{r}_{h,g}$} ; %
-  \node[latent, right=0.5 of rhg] (ahg) {$\rvar{a}_{h,g}$} ; %
+  \factor[below left=of yh] {pr-yh} {right:$\mathcal{U}(0, y_{\textrm{max}})$} {} {yh} ; %
+  \node[const, right=5.4 of xh] (ug) {$u_g$} ; %
+  \node[const] (vg) at (yh -| ug) {$v_g$} ; %
+  \node[latent] (ahg) at ($(yh)!0.5!(vg)+(0,-1.5)$) {$\rvar{a}_{h,g}$} ; %
+  \node[latent, left=0.5 of ahg] (rhg) {$\rvar{r}_{h,g}$} ; %
   \node[op, label={above:$\sqrt{(\rvar{x}_h - u_g)^2 + (\rvar{y}_h - v_g)^2}$}] 
-    (xh_yh_xg_yg-rhg) at (xh -| ahg) {} ; %
-  \factoredge {xh,xg,yh,yg} {xh_yh_xg_yg-rhg} {rhg} ; %
-  %\op[right=2 of xh] {xh_yh_xg_yg-rhg}
-  %  {above right:$\sqrt{(\rvar{x}_h - x_g)^2 + (\rvar{y}_h - y_g)^2}$} {xh,xg,yh,yg} {rhg}; %
-  \op[above=1.5 of ahg] {xh_yh_xg_yg-ahg}
-    {below right:$\textrm{atan2}\lpa v_g - \rvar{y}_h, u_g - \rvar{x}_h\rpa$} {xh,xg,yh,yg} {ahg}; %
-  \op[below=1.5 of rhg, yshift=2.5mm] {rhg_mh_th-fhg} 
-    {below:$\qquad\frac{\rvar{m}_{\scalebox{0.75}{$h$}}}{\max(\rvar{r}_{\scalebox{0.75}{$h,g$}}, \rvar{t}_{\scalebox{0.75}{$h$}})}$} {rhg,mh,th} {} ; %
+    (xh_yh_ug_vg-rhg) at (xh -| ahg) {} ; %
+  \factoredge {xh,ug,yh,vg} {xh_yh_ug_vg-rhg} {rhg} ; %
+  \node[op, label={below right:$\textrm{atan2}\lpa v_g - \rvar{y}_h, u_g - \rvar{x}_h\rpa$}]
+    (xh_yh_ug_vg-ahg) at (yh -| ahg) {} ; %
+  \factoredge {xh,ug,yh,vg} {xh_yh_ug_vg-ahg} {ahg} ; %
+  \op[below=1.1 of rhg] {rhg_mh_th-fhg} 
+    {below:$\qquad\frac{\rvar{m}_{\scalebox{0.75}{$h$}}}{\max(\rvar{r}_{\scalebox{0.75}{$h,g$}}, \rvar{t}_{\scalebox{0.75}{$h$}})}$} {} {} ; %
+
+  \node[latent, yshift=6mm] (mh) at (rhg_mh_th-fhg -| yh) {$\rvar{m}_h$} ; %
+  \factor[above=of mh] {pr-mh} {above:$\mathrm{LogNorm}(\mu_m, \sigma_m)$} {} {mh} ; %
+  \node[latent, yshift=-6mm] (th) at (rhg_mh_th-fhg -| yh) {$\rvar{t}_h$} ; %
+  \factor[below=of th] {pr-th} {below:$\mathrm{LogNorm}(\mu_t, \sigma_t)$} {} {th} ; %
   \node[latent] (fhg) at (rhg_mh_th-fhg -| ahg) {$\rvar{f}_{h,g}$} ; %
-  \draw[-{Latex[length=2mm]}] (rhg_mh_th-fhg) -- (fhg) ; %
-  \node[obs] at (ahg -| dummy1) (e1g) {$\rvar{e}_{1,g}$} ; %
-  \node[obs] at (fhg -| dummy1) (e2g) {$\rvar{e}_{2,g}$} ; %
-  \node[latent, right=1.4 of ahg] (chg) {$\rvar{c}_{h,g}$} ; %
-  \node[latent, right=1.4 of fhg] (dhg) {$\rvar{d}_{h,g}$} ; %
-  \op[left=of chg, xshift=-2mm] {ahg_fhg-chg} 
-    {$\rvar{f}_{h,g} \cos(2\rvar{a}_{h,g})$} {ahg,fhg} {chg} ; %
-  \op[left=of dhg, xshift=-2mm] {ahg_fhg-dhg} 
-    {below:$\rvar{f}_{h,g} \sin(2\rvar{a}_{h,g})$} {ahg,fhg} {dhg} ; %
-  \op[left=of e1g, xshift=-2mm] {chg_s-e1g} 
-    {below:$\rvar{e}^\star_{1,g} - \sum_{h=1}^H \rvar{c}_{h,g}$} {chg} {e1g} ; %
-  \op[left=of e2g, xshift=-2mm] {dhg_s-e2g} 
-    {$\rvar{e}^\star_{2,g} - \sum_{h=1}^H \rvar{d}_{h,g}$} {dhg} {e2g} ; %
-  \node[latent, above= of chg_s-e1g, yshift=-5mm] (e1gi) {$\rvar{e}^\star_{1,g}$} ;
-  \draw[-] (e1gi) -- (chg_s-e1g) ; %
-  \factor[left=of e1gi] {pr-e1gi} {below:$\nrm{0,\sigma^2}$} {} {e1gi} ; %
-  \node[latent, below= of dhg_s-e2g, yshift=5mm] (e2gi) {$\rvar{e}^\star_{2,g}$} ;
-  \draw[-] (e2gi) -- (dhg_s-e2g) ; %
-  \factor[left=of e2gi] {pr-e2gi} {$\nrm{0,\sigma^2}$} {} {e2gi} ; %
+  
+  \factoredge {mh,th,rhg} {rhg_mh_th-fhg} {fhg} ; %
+  %\draw[-{Latex[length=2mm]}] (rhg_mh_th-fhg) -- (fhg) ; %
+  \node[latent, right=1.4 of ahg] (bhg) {$\rvar{b}_{h,g}$} ; %
+  \node[latent, right=1.4 of fhg] (chg) {$\rvar{c}_{h,g}$} ; %
+  \op[left=of bhg, xshift=-1mm] {ahg_fhg-bhg} 
+    {$\rvar{f}_{h,g} \cos(2\rvar{a}_{h,g})$} {ahg,fhg} {bhg} ; %
+  \op[left=of chg, xshift=-1mm] {ahg_fhg-chg} 
+    {below:$\rvar{f}_{h,g} \sin(2\rvar{a}_{h,g})$} {ahg,fhg} {chg} ; %
+  \node[latent, right=1.4 of bhg] (d1g) {$\rvar{d}_{1,g}$} ; %
+  \node[latent, right=1.4 of chg] (d2g) {$\rvar{d}_{2,g}$} ; %
+  \op[left=of d1g] {bhg-d1g} {$-\sum_{h=1}^H \rvar{b}_{h,g}$} {bhg} {d1g} ; %
+  \op[left=of d2g] {chg-d2g} {$-\sum_{h=1}^H \rvar{c}_{h,g}$} {chg} {d2g} ; %
+  \node[obs, right=1.4 of d1g] (e1g) {$\rvar{e}_{1,g}$} ; %
+  \node[obs, right=1.4 of d2g] (e2g) {$\rvar{e}_{2,g}$} ; %
+  \op[left=of e1g, xshift=-0mm] {e1gi_d1g-e1g} 
+    {below:$\rvar{e}^\star_{1,g} + \rvar{d}_{1,g}$} {d1g} {e1g} ; %
+  \op[left=of e2g, xshift=-0mm] {e2gi_d2g-e2g} 
+    {$\rvar{e}^\star_{2,g} + \rvar{d}_{2,g}$} {d2g} {e2g} ; %
+  \node[latent, above= of e1gi_d1g-e1g, yshift=-4mm] (e1gi) {$\rvar{e}^\star_{1,g}$} ;
+  \draw[-] (e1gi) -- (e1gi_d1g-e1g) ; %
+  \factor[left=of e1gi] {pr-e1gi} {above:$\nrm{0,\sigma^2}$} {} {e1gi} ; %
+  \node[latent, below= of e2gi_d2g-e2g, yshift=4mm] (e2gi) {$\rvar{e}^\star_{2,g}$} ;
+  \draw[-] (e2gi) -- (e2gi_d2g-e2g) ; %
+  \factor[left=of e2gi] {pr-e2gi} {below:$\nrm{0,\sigma^2}$} {} {e2gi} ; %
   
   %\node[latent, below=of dhg_s-e2g] (s) {$\rvar{s}$} ; %
   %\draw[-] (s) -- (dhg_s-e2g) ; %
   %\draw[-] (s) to[bend left=42] (chg_s-e1g) ; %
   %\factor[right=of s, xshift=2mm] {pr-s} {above:$\textrm{Gamma}(\alpha,\beta)$} {} {s} ; %
   
-  \node[const, above left=of xh, xshift=-11.5mm, yshift=-3mm] (dummy2) {} ; %
+  \node[const, right=8.5 of xh] (dummy1) {} ; %
+  \node[const, above left=of xh, xshift=1.5mm, yshift=-2mm] (dummy2) {} ; %
   \node[const, right=5 of dummy2] (dummy3) {} ; %
+  \node[const, below=6.6 of dummy2] (dummy4) {} ; %
+  \node[const, right=5 of dummy4, yshift=0.1mm] (dummy5) {} ; %
   \plate {platehalo} 
-    {(xh)(pr-xh)(yh)(pr-yh)(mh)(th)(rhg)(ahg)(fhg)(chg)(dhg)(xh_yh_xg_yg-rhg)(dummy2)} 
+    {(xh)(pr-xh)(yh)(pr-yh)(mh)(pr-mh)(th)(pr-th)(rhg)(ahg)(fhg)(bhg)(chg)(xh_yh_ug_vg-rhg)(dummy2)(dummy4)} 
     {$h\in\fset{1 \,...\, H}$}; %
   \plate {plategalaxy} 
-    {(rhg)(ahg)(fhg)(chg)(dhg)(xh_yh_xg_yg-rhg)(xg)(yg)(e1g)(e2g)(e1gi)(e2gi)(dummy3)} 
+    {(rhg)(ahg)(fhg)(bhg)(chg)(xh_yh_ug_vg-rhg)(ug)(vg)(e1g)(e2g)(e1gi)(pr-e1gi)(e2gi)(pr-e2gi)(dummy3)(dummy5)} 
     {$g\in\fset{1 \,...\, G}$}; %
-  
 \end{tikzpicture}
 \vskip 5pt
 \caption[Gravitational lensing model factor graph.]{Factor graph of proposed model for \emph{Observing Dark Worlds} gravitational lensing inference problem for a single cluster image.}
@@ -1257,7 +1350,8 @@ The model proposes that at sky coordinate $(u,v)$ each halo produces a shear dis
   r_h = \sqrt{(\rvar{x}_h - u)^2 + (\rvar{y}_h - v)^2}
 \end{equation}
 and acting in a tangential direction to the radial vector from the halo centre $(\rvar{x}_h,\rvar{y}_h)$ to $(u,v)$. %, i.e. proportional to $\rvar{m}_h$ and of constant magnitude for galaxies with radial distance $\rvar{r}_{h,g}$ from the halo of less than the core radius $\rvar{t}_h$ and with a $\rvar{r}_{h,g}^{-1}$ dependence outside this threshold. 
-This functional relationship is just one possibility among many - alternative models using a different $f_h$ could be used instead. In fact the post-competition review article \citep{jullo2007bayesian} revealed that the simulated data actually used dark matter halos with a mixture of two different radial profiles, neither of which correspond to the distortion model assumed in \eqref{eq:dark-matter-halo-force}. This mismatch between a model and the actual process by which observations were generated will virtually always be the case in real inference problems. We can still make inferences which are consistent with our modelling assumptions, however we should as far as possible also critically review those modelling assumptions to check the validity of the inferences made.
+This functional relationship is just one possibility among many. % - alternative models using a different $f_h$ could be used instead.
+The post-competition review article \citep{harvey2014observing} revealed that the simulated data actually used dark matter halos with a mixture of two different radial density profiles, neither of which correspond to the distortion model assumed in \eqref{eq:dark-matter-halo-force}. This mismatch between a model and the actual process by which observations were generated will virtually always be the case in real inference problems. We can still make inferences which are consistent with our modelling assumptions, however we should as far as possible also critically review those modelling assumptions to check the validity of the inferences made.
 
 For galaxies where the variation of the magnitude of the distorting effect of a halo across the extent of the galaxy's image is small, a reasonable approximation of the gravitational lensing effect of a single halo on the observed ellipticity $(\rvar{e}_{1,g},\rvar{e}_{2,g})$ of a galaxy image with intrinsic (prior to any gravitational lensing effect) ellipticity $(\rvar{e}_{1_g}^\star, \rvar{e}_2^\star)$ is that 
 \begin{equation}\label{eq:obs-ellipticity-single-halo}
@@ -1265,32 +1359,665 @@ For galaxies where the variation of the magnitude of the distorting effect of a 
   \quad
   \rvar{e}_{2,g} = \rvar{e}_{2,g}^\star -  \rvar{f}_{h,g} \sin(2 \rvar{a}_{h,g}),
 \end{equation}
-where $\rvar{a}_{h,g} = \textrm{atan2}\lpa v_g - \rvar{y}_h, u_g - \rvar{x}_g\rpa$ is the angle the line from the centre of halo $h$ to galaxy $g$ makes to the horizontal axis and $\rvar{f}_{h,g} = f_h(u_g, v_g)$ is the magnitude of the shear distortion according to the proposed relationship in Equation \eqref{eq:dark-matter-halo-force} evaluated at the galaxy image centre \citep{bartelmann2001weak}. For clusters with multiple halos, a simple linearity assumption is made, i.e. that the shear distortions due to the different halos act additively on the ellipticity components
+where $\rvar{a}_{h,g} = \textrm{atan2}\lpa v_g - \rvar{y}_h, u_g - \rvar{x}_g\rpa$ is the angle the line from the centre of halo $h$ to galaxy $g$ makes to the horizontal axis and $\rvar{f}_{h,g} = f_h(u_g, v_g)$ is the magnitude of the shear distortion according to the proposed relationship in Equation \eqref{eq:dark-matter-halo-force} evaluated at the galaxy image centre \citep{bartelmann2001weak,marshall2003bayesian}. For clusters with multiple halos, a further simple linearity assumption is made, that the shear distortions due to the different halos act additively on the ellipticity components
 \begin{equation}\label{eq:obs-ellipticity-multiple-halos}
   \rvar{e}_{1,g} = \rvar{e}_{1,g}^\star - \sum_{h=1}^H \rvar{f}_{h,g} \cos(2 \rvar{a}_{h,g}),
   ~
   \rvar{e}_{2,g} = \rvar{e}_{2,g}^\star -  \sum_{h=1}^H \rvar{f}_{h,g} \sin(2 \rvar{a}_{h,g}).
 \end{equation}
-The intrinsic ellipticities of the galaxies are assumed to have a isotropic, zero-mean normal distribution,  with standard deviation $\sigma$.
-
-For now we will assume the standard deviation $\sigma$ of the intrinsic ellipticities, and the parameters $\mu_m,\,\sigma_t,\,\mu_t,\,\sigma_t$ of the halo mass and core radius marginal distributions have somehow been set to reasonable values, for example based on prior beliefs about the typical ranges of the variables. We will discuss possible strategies for inferring these parameters in more detail later.
+The intrinsic ellipticities of the galaxies are assumed to have a isotropic, zero-mean normal distribution,  with standard deviation $\sigma$, with normal assumption corresponding well to empirical observations from large scale surveys \citep{bartelmann2001weak,marshall2003bayesian}. For now we will assume the standard deviation $\sigma$ of the intrinsic ellipticities, and the parameters $\mu_m,\,\sigma_m,\,\mu_t,\,\sigma_t$ of the halo mass and core radius marginal distributions have somehow been set to reasonable values, for example based on prior beliefs about the typical ranges of the variables. We will discuss possible strategies for choosing (or inferring) these parameters in more detail later.
 
 %In particular we will assume the model proposes a probabilistic relationship between observable quantities, which for the purposes of this section we will assume are collected together in the random vector $\rvct{y}$, and unobserved quantities which we will group in to a random vector $\rvct{z}$. Note that here we will assume $\rvct{z}$ includes \emph{all} unobserved random variables in the model irrespective of whether they correspond to `meaningful' quantities we wish to infer the values of, or are `nuisance' variables which we have no interest in the value of.
 
 %Implicitly or explicitly the model defines a joint probability $\prob{\rvar{y},\rvar{z}}$; this might be provided as a joint probability density $\pden{\rvar{y},\rvar{z}}$ which specifies $\prob{\rvar{y},\rvar{z}}$, or a \emph{simulator} or \emph{generative model} which allows to generate values for $\rvct{y}$ and $\rvct{z}$ without directly specification of a joint density.
 
+\subsection{Making predictions}
 
-\subsection{Computing predictions as conditional expectations}
+Having now defined a model for the \emph{Observing Dark Worlds} problem, we now consider how to use this model to make predictions about the unobserved dark matter halo positions. The downstream task we are using the inference output for will generally determine what the exact inferential query we wish to evaluate is. In general however, any prediction output which takes into account all of the information we have about the unobserved variables given the assumed model and observed data will be computed as a conditional expectation.
+
+To motivate this statement for the \emph{Observing Dark Worlds} example we will discuss some instances of outputs we might wish to compute. For notational convenience we define the following random vectors for the halo random variables
+\begin{equation}
+  \rvct{x} = \begin{bmatrix} \rvar{x}_1 \\ \vdots \\[-1mm] \rvar{x}_H \end{bmatrix},
+  \quad
+  \rvct{y} = \begin{bmatrix} \rvar{y}_1 \\ \vdots \\[-1mm] \rvar{y}_H \end{bmatrix},
+  \quad
+  \rvct{m} = \begin{bmatrix} \rvar{m}_1 \\ \vdots \\[-1mm] \rvar{m}_H \end{bmatrix},
+  \quad
+  \rvct{t} = \begin{bmatrix} \rvar{t}_1 \\ \vdots \\[-1mm] \rvar{t}_H \end{bmatrix},
+\end{equation}
+and similarly for the observed and intrinsic galaxy ellipticities
+\begin{equation}
+  \rvct{e}_1 = \begin{bmatrix} 
+    \rvar{e}_{1,1} \\ \vdots \\[-1mm] \rvar{e}_{1,G}
+  \end{bmatrix},
+  \quad
+  \rvct{e}_2 = \begin{bmatrix} 
+    \rvar{e}_{2,1} \\ \vdots \\[-1mm] \rvar{e}_{2,G}
+  \end{bmatrix},
+  \quad
+  \rvct{e}^\star_1 = \begin{bmatrix} 
+    \rvar{e}^\star_{1,1} \\ \vdots \\[-1mm] \rvar{e}^\star_{1,G}
+  \end{bmatrix},
+  \quad
+  \rvct{e}^\star_2 = \begin{bmatrix} 
+    \rvar{e}^\star_{2,1} \\ \vdots \\[-1mm] \rvar{e}^\star_{2,G}
+  \end{bmatrix}.
+\end{equation}
+An obvious output we may wish to compute is the expected (mean) values of the halo positions given the observed ellipticities. From a decision theoretic standpoint these values correspond to the position predictions which minimise the expected squared error loss from the true positions given the model and observed data. 
+As conditonal expectations these are simply
+\begin{equation}
+  \vct{m}_{\rvct{x}} = \expc{\rvct{x} \gvn \rvct{e}_1 = \vct{e}_1,\,\rvct{e}_2 = \vct{e}_2}
+  ~~\textrm{and}~~
+  \vct{m}_{\rvct{y}} = \expc{\rvct{y} \gvn \rvct{e}_1 = \vct{e}_1,\,\rvct{e}_2 = \vct{e}_2}.
+\end{equation}
+We may also be interested in the covariances of the halo positions conditioned on the observations, these giving some idea of our remaining uncertainty in the positions and any correlations between them after conditioning on the observed ellipticities. Again these can be expressed as conditional expectations
+\begin{align}
+  \nonumber
+  \mtx{C}_{\rvct{x},\rvct{x}} &=
+  \expc{
+    (\rvct{x}-\vct{m}_{\rvct{x}})(\rvct{x}-\vct{m}_{\rvct{x}})\tr
+    \gvn \rvct{e}_1 = \vct{e}_1,\,\rvct{e}_2 = \vct{e}_2
+  },
+  \\
+  \mtx{C}_{\rvct{y},\rvct{y}} &=
+  \expc{
+    (\rvct{y}-\vct{m}_{\rvct{y}})(\rvct{y}-\vct{m}_{\rvct{y}})\tr
+    \gvn \rvct{e}_1 = \vct{e}_1,\,\rvct{e}_2 = \vct{e}_2
+  },
+  \\
+  \nonumber
+  \textrm{and}\quad
+  \mtx{C}_{\rvct{x},\rvct{y}} &=
+  \expc{
+    (\rvct{x}-\vct{m}_{\rvct{x}})(\rvct{y}-\vct{m}_{\rvct{y}})\tr
+    \gvn \rvct{e}_1 = \vct{e}_1,\,\rvct{e}_2 = \vct{e}_2
+  }.
+\end{align}
+In the \emph{Observing Dark Worlds} competition, participants' halo position predictions were evaluated by comparing to the known true halo positions using a metric provided as part of the competition instructions. If we denote the metric $\ell(\vct{x},\vct{y};\hat{\vct{x}},\hat{\vct{y}})$ where $(\vct{x},\vct{y})$ are the true halo positions and $(\hat{\vct{x}},\hat{\vct{y}})$ the predicted positions, then the optimal predictions given the assumed model and observed data can be calculated by minimising the expected metric value conditioned on the observed data
+\begin{equation}
+  \bar{\ell}(\hat{\vct{x}},\hat{\vct{y}}) =
+  \expc{\ell(\rvct{x},\rvct{y};\hat{\vct{x}},\hat{\vct{y}}) \gvn \rvct{e}_1 =\vct{e}_1, \rvct{e}_2=\vct{e}_2}.
+\end{equation}
+Due to linearity of the expectation operator, we can also calculate the derivatives of the expected metric with respect to the predictions as
+\begin{equation}
+\begin{split}
+  \pd{\bar{\ell}(\hat{\vct{x}},\hat{\vct{y}})}{\hat{\vct{x}}} &=
+  \expc{
+    \pd{\ell(\rvct{x},\rvct{y};\hat{\vct{x}},\hat{\vct{y}})}{\hat{\vct{x}}}
+    \mathrel{\Big|} \rvct{e}_1 =\vct{e}_1, \rvct{e}_2=\vct{e}_2}\\
+  \textrm{and}\quad
+  \pd{\bar{\ell}(\hat{\vct{x}},\hat{\vct{y}})}{\hat{\vct{y}}} &=
+  \expc{
+    \pd{\ell(\rvct{x},\rvct{y};\hat{\vct{x}},\hat{\vct{y}})}{\hat{\vct{y}}}
+    \mathrel{\Big|} \rvct{e}_1 =\vct{e}_1, \rvct{e}_2=\vct{e}_2}.
+\end{split}
+\end{equation}
+For some metrics we will be able to analytically solve for the stationary points to find the predictions minimising $\bar{\ell}(\hat{\vct{x}},\hat{\vct{y}})$ and more generally we can use the derivatives in an iterative optimisation scheme.
+
+Evaluating conditional expectations of functions of the unobserved variables in a model given observed data is therefore the key computational task in making inferences about the variables in a probabilistic model. The \emph{Observing Dark Worlds} model factor graph in Figure \ref{fig:observing-dark-worlds-factor-graph} defines a joint density across all the variables in the model. We can therefore use Equation \eqref{eq:conditional-expectation-density} to write the conditional expectation of a measurable function $f$ of the halo position random variables $\rvct{x}$ and $\rvct{y}$ as\footnote{For brevity the sets on which integrals are evaluated have been omitted in this section and should be assumed to be the full co-domain of the corresponding random vector.}
+\begin{equation}\label{eq:odw-conditional-expectation}
+\begin{split}
+  \expc{f(\rvct{x},\rvct{y}) \gvn \rvct{e}_1 =\vct{e}_1, \rvct{e}_2=\vct{e}_2} =&\\
+  \iint
+    f(\vct{x},\vct{y})\,
+    &\pden{\rvct{x},\rvct{y} | \rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y} \gvn \vct{e}_1,\vct{e}_2)
+  \,\dr\vct{x}\,\dr\vct{y},
+\end{split}
+\end{equation}
+where the conditional density $\pden{\rvct{x},\rvct{y} | \rvct{e}_1,\rvct{e}_2}$ is defined as
+\begin{equation}
+  \pden{\rvct{x},\rvct{y} | \rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y} \gvn \vct{e}_1,\vct{e}_2) =
+  \frac
+    {\pden{\rvct{x},\vct{y},\rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y},\vct{e}_1,\vct{e}_2)}
+    {\pden{\rvct{e}_1,\rvct{e}_2}(\vct{e}_1,\vct{e}_2)},
+\end{equation}
+with $\pden{\rvct{e}_1,\rvct{e}_2}$ defined in terms of $\pden{\rvct{x},\rvct{y},\rvct{e}_1,\rvct{e}_2}$ by marginalising out $\rvct{x}$ and $\rvct{y}$
+\begin{equation}
+  \pden{\rvct{e}_1,\rvct{e}_2}(\vct{e}_1,\vct{e}_2) =
+  \iint 
+    \pden{\rvct{x},\rvct{y},\rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y},\vct{e}_1,\vct{e}_2) 
+  \,\dr\vct{x}\,\dr\vct{y}.
+\end{equation}
+We can express $\pden{\rvct{x},\vct{y},\rvct{e}_1,\rvct{e}_2}$ itself as a marginal of the joint density over all random variables in the model (which we can read off as a product of factors from Figure \ref{fig:observing-dark-worlds-factor-graph}) by marginalising out $\rvct{m}$, $\rvct{t}$, $\rvct{e}_1^\star$ and $\rvct{e}_2^\star$
+\begin{equation}\label{eq:odw-e1-e2-x-y-joint-1}
+\begin{split}
+  \pden{\rvct{x}, \rvct{y}, \rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y},\vct{e}_1,\vct{e}_2) =
+  \iiiint &
+    \pden{\rvct{x}}(\vct{x}) \, 
+    \pden{\rvct{y}}(\vct{y}) \, 
+    \pden{\rvct{m}}(\vct{m}) \,
+    \pden{\rvct{t}}(\vct{t}) \,
+    \\[-1.5mm]& 
+    \pden{\rvct{e}_1 | \rvct{e}_1^\star\kern-2pt,\rvct{x},\rvct{y},\rvct{m},\rvct{t}}
+    (\vct{e}_1\gvn\vct{e}_1^\star\kern-2pt,\vct{x},\vct{y},\vct{m},\vct{t})\,
+    \\&    
+    \pden{\rvct{e}_2 | \rvct{e}_2^\star\kern-1.5pt,\rvct{x},\rvct{y},\rvct{m},\rvct{t}}
+    (\vct{e}_2\gvn\vct{e}_2^\star\kern-1.5pt,\vct{x},\vct{y},\vct{m},\vct{t})\,
+    \\&
+    \pden{\rvct{e}_1^\star}(\vct{e}_1^\star) \, 
+    \pden{\rvct{e}_2^\star}(\vct{e}_2^\star) \,
+    \dr\vct{e}_1^\star\dr\vct{e}_2^\star\dr\vct{t}\,\dr\vct{m}.
+\end{split}
+\end{equation}
+The integration with respect to $\vct{e}_1^\star$ and $\vct{e}_2^\star$ can be performed analytically as the conditional density factors $\pden{\rvct{e}_2 | \rvct{e}_2^\star\kern-2pt,\rvct{x},\rvct{y},\rvct{m},\rvct{t}}$ and $\pden{\rvct{e}_2 | \rvct{e}_1^\star\kern-2pt,\rvct{x},\rvct{y},\rvct{m},\rvct{t}}$ correspond to deterministic factors which depend linearly on $\rvct{e}_1^\star$ and $\rvct{e}_2^\star$. Expressing the deterministic factors as Dirac deltas and denoting the functions corresponding to the computational graphs in Figure \ref{fig:observing-dark-worlds-factor-graph} mapping from $\fset{\rvar{x}_h,\rvar{y}_h,\rvar{m}_h,\rvar{t}_h}_{h=1}^H$ to $\lbrace \rvar{d}_{1,g}\rbrace_{g=1}^G$ and $\lbrace \rvar{d}_{2,g} \rbrace_{g=1}^G$, $\vct{d}_1$ and $\vct{d}_2$ respectively, we have that
+\begin{equation}\label{eq:odw-e1-gvn-xymt}
+\begin{split}
+  &\pden{\rvct{e}_1 | \rvct{x},\rvct{y},\rvct{m},\rvct{t}} (\vct{e}_1\gvn\vct{x},\vct{y},\vct{m},\vct{t})
+  \\
+  &\qquad=
+  \int 
+    \pden{\rvct{e}_1 | \rvct{e}_1^\star\kern-2pt,\rvct{x},\rvct{y},\rvct{m},\rvct{t}}
+    (\vct{e}_1\gvn\vct{e}_1^\star\kern-2pt,\vct{x},\vct{y},\vct{m},\vct{t})\,
+    \pden{\rvct{e}^\star_1}(\vct{e}^\star_1)
+  \,\dr\vct{e}^\star_1 
+  \\
+  &\qquad=
+  \int 
+    \delta\lpa
+     \vct{e}_1 - \vct{e}^\star_1 - \vct{d}_1(\vct{x},\vct{y},\vct{m},\vct{t})
+    \rpa\,
+    \nrm{\vct{e}^\star_1 \gvn \vct{0},\sigma^2\mathbf{I}}
+  \,\dr\vct{e}^\star_1\\
+  &\qquad=
+  \nrm{\vct{e}_1 \gvn \vct{d}_1(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\mathbf{I}},
+\end{split}
+\end{equation}
+and likewise for $\pden{\rvct{e}_2 | \rvct{x},\rvct{y},\rvct{m},\rvct{t}}$
+\begin{equation}\label{eq:odw-e2-gvn-xymt}
+  \pden{\rvct{e}_2 | \rvct{x},\rvct{y},\rvct{m},\rvct{t}}(\vct{e}_2\gvn\vct{x},\vct{y},\vct{m},\vct{t})
+  =
+  \nrm{\vct{e}_2 \gvn \vct{d}_2(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\mathbf{I}}.
+\end{equation}
+%If we define $\rvct{n} = \log \rvct{m}$ and $\rvct{u} = \log \rvct{t}$ then as $\lbrace \rvar{m}_h \rbrace_{h=1}^H$ and $\lbrace \rvar{t}_h \rbrace_{h=1}^H$ have log-normal marginal densities, then $\rvct{n}$ and $\rvct{u}$ will have multivariate normal densities, $\pden{\rvct{n}}(\vct{n}) = \nrm{\vct{n} \gvn \mu_m\vct{1}, \sigma_m^2\mathbf{I}}$ and $\pden{\rvct{u}}(\vct{u}) = \nrm{\vct{u} \gvn \mu_t\vct{1}, \sigma_t^2\mathbf{I}}$.
+%\begin{equation}
+%\begin{split}
+%  &\pden{\rvct{x},\rvct{y},\rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y},\vct{e}_1,\vct{e}_2) = \\
+%  &\qquad
+%  \frac{1}{x_{\textrm{max}}^H \, y_{\textrm{max}}^H}
+%  \prod_{h=1}^H \lpa 
+%    \ind{[0,x_{\textrm{max}}]}(x_h) \,
+%    \ind{[0,y_{\textrm{max}}]}(y_h) 
+%  \rpa 
+%  \\
+%  &\qquad
+%  \iint
+%    \nrm{\vct{n} \gvn \mu_m\vct{1}, \sigma_m^2\mathbf{I}} \, 
+%    \nrm{\vct{u} \gvn \mu_m\vct{1}, \sigma_m^2\mathbf{I}}
+%  \\[-1.5mm]
+%  &\qquad\phantom{\iint}\,
+%    \nrm{\vct{e}_1 \gvn -\vct{d}_1(\vct{x},\vct{y},\exp\vct{n},\exp\vct{u}),\sigma^2\mathbf{I}}\,
+%  \\
+%  &\qquad\phantom{\iint}\,
+%    \nrm{\vct{e}_2 \gvn -\vct{d}_2(\vct{x},\vct{y},\exp\vct{n},\exp\vct{u}),\sigma^2\mathbf{I}}
+%  \,\dr\vct{u}\,\dr\vct{n}
+%\end{split}
+%\end{equation}
+Rewriting \eqref{eq:odw-e1-e2-x-y-joint-1} in terms of \eqref{eq:odw-e1-gvn-xymt} and \eqref{eq:odw-e2-gvn-xymt} and substituting the definitions for the factors from Figure \ref{fig:observing-dark-worlds-factor-graph} we have that
+\begin{equation}\label{eq:odw-e1-e2-x-y-joint-2}
+\begin{split}
+  &\pden{\rvct{x},\rvct{y},\rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y},\vct{e}_1,\vct{e}_2) =
+  \iint 
+    \pden
+      {\rvct{x},\rvct{y},\rvct{m},\rvct{t},\rvct{e}_1,\rvct{e}_2}
+      (\vct{x},\vct{y},\vct{m},\vct{t},\vct{e}_1,\vct{e}_2)
+   \,\dr\vct{t}\,\dr\vct{m}
+  \\
+  &
+  ~=\iint
+  \prod_{h=1}^H \lpa 
+    \mathcal{U}\lpa x_h \gvn 0,x_{\textrm{max}}\rpa \,
+    \mathcal{U}\lpa y_h \gvn 0,y_{\textrm{max}}\rpa 
+  \rpa 
+  \\
+  &
+  \phantom{~=\iint}~
+    \nrm{\vct{e}_1 \gvn \vct{d}_1(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\mathbf{I}}\,
+    \nrm{\vct{e}_2 \gvn \vct{d}_2(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\mathbf{I}}
+  \\
+  &\phantom{~=\iint}~
+    \textrm{LogNorm}\lpa \vct{m} \gvn \mu_m\vct{1}, \sigma_m^2\mathbf{I} \rpa \, 
+    \textrm{LogNorm}\lpa \vct{t} \gvn \mu_m\vct{1}, \sigma_m^2\mathbf{I} \rpa
+  \,\dr\vct{t}\,\dr\vct{m}.
+\end{split}
+\end{equation}
+We cannot simplify this integral any further analytically. Thefore the conditional expectation we wish to compute in terms of integrals of functions we can evaluate pointwise is
+\begin{equation}\label{eq:odw-cond-expectation-2}
+\begin{split}
+  &\expc{f(\rvct{x},\rvct{y}) \gvn \rvct{e}_1 =\vct{e}_1, \rvct{e}_2=\vct{e}_2} = \\
+  &
+  \frac
+  {\displaystyle
+    \iiiint f(\vct{x},\vct{y}) \, 
+    \pden
+      {\rvct{x},\rvct{y},\rvct{m},\rvct{t},\rvct{e}_1,\rvct{e}_2}
+      (\vct{x},\vct{y},\vct{m},\vct{t},\vct{e}_1,\vct{e}_2)
+    \,\dr\vct{t}\,\dr\vct{m}\,\dr{\vct{x}}\,\dr{\vct{y}}
+  }
+  {\displaystyle
+    \iiiint
+      \pden
+      {\rvct{x},\rvct{y},\rvct{m},\rvct{t},\rvct{e}_1,\rvct{e}_2}
+      (\vct{x},\vct{y},\vct{m},\vct{t},\vct{e}_1,\vct{e}_2)
+    \,\dr\vct{t}\,\dr\vct{m}\,\dr{\vct{x}}\,\dr{\vct{y}}
+  }.
+\end{split}
+\end{equation}
+Each of the vector integration variables in \eqref{eq:odw-cond-expectation-2} is of dimension $H$ and so the overall dimension of the space being integrated over in both the numerator and denominator is $4H$.
+In the \emph{Observing Dark Worlds} data the number of halos per cluster image $H$ is between one and three so to evaluate conditional expectations of the halo positions we need to compute integrals over spaces with four, eight or twelve dimensions. 
+
+For four or eight dimensions it may be feasible to use quadrature methods \citep{davis1967numerical}, which involve evaluating the integrand across a fixed grid of points and then computing a weighted sum of these values, to numerically approximate the integrals to reasonable accuracy. For a fixed grid resolution however the cost of quadrature scales exponentially with the dimension of the space being integrated over - if $N$ points are used per dimension, using quadrature to evaluate \eqref{eq:odw-cond-expectation-2} will involve $N^{4H}$ evaluations of the integrand. 
+
+Assuming the computational cost of the function $f(\rvct{x},\rvct{y})$ the conditional expectation is being calculated of is negligible, the dominant cost in the evaluation of the integrands in \eqref{eq:odw-cond-expectation-2} will be in evaluating $\vct{d}_1(\vct{x},\vct{y},\vct{m},\vct{t})$ and $\vct{d}_2(\vct{x},\vct{y},\vct{m},\vct{t})$ which involve computing the distances and angles between all galaxy-halo pairs. Using a very simplistic (and conservative) assumption that each arithmetic, square root, comparison and trigonometric operation has a unit floating point operation cost, the computation graph in Figure \ref{fig:observing-dark-worlds-factor-graph} which is present on the overlap between the two plates will involve 15 floating point operations in a single forward pass and is evaluated $GH$ times for an overall cost per integrand evaluation of $15GH$ floating point operations. 
+
+A rough but conservative lower bound on the floating point operation count of evaluating the integrals in \eqref{eq:odw-cond-expectation-2} using quadrature is therefore $15 GH N^{4H}$. The number of galaxies $G$ per cluster image in the \emph{Observing Dark Worlds} data varies between 300 and 740. If we assume $G=500$ and that we use only $N=20$ grid points per dimension, for the $H=2$ cases evaluating the conditional expectation will involve $\sim 1\times 10^9$ floating point operations, for $H=2$, $\sim 4 \times 10^{14}$ floating point operations and for $H=3$, $\sim 9\times 10^{19}$ floating point operations.
+
+At the time of writing, the theoretical peak floating point operation performance of a top-end multi-core server \ac{CPU} is around $5 \times 10^{11}$ \ac{FLOPS}. Assuming this peak performance could be obtained when using quadrature to approximate \eqref{eq:odw-cond-expectation-2}
+% (an optimistic but not completely terrible assumption as the computation is trivially paralleisable across the cores)
+, our back-of-the-envelope calculation suggests a trivial two millisecond compute time for clusters with one halo, a more noticeable thirteen minute computation for clusters with two halos, and an impractical six year wait for clusters with three halos.
+
+Current top-end \acp{GPU} have a peak theoretical (single-precision) floating point performance of around $10^{13}$ \ac{FLOPS} which at best would cut the computation time for a $H=3$ case by a factor of 20 to around 100 days. With a cluster of \ac{CPU} or \ac{GPU} nodes, or faster individual nodes due to future growth in processing power, the compute time could potentially be brought down further to more reasonable timescales. However the key point in this example is the exponential growth with dimension - even moving from eight to twelve dimensions made compute time impractical. Clearly therefore approximating the integrals in expectations like \eqref{eq:odw-cond-expectation-2} using quadrature methods is not viable when performing inference in models with large numbers of unobserved variables (with the example here showing that even integrals over what might initially seem a low dimensionality of twelve can be problematic).
+
+In the \emph{Observing Dark Worlds} example it was possible to analytically integrate out the random vectors $\rvct{e}_1^\star$ and $\rvct{e}_2^\star$, which correspond to the intrinsic galaxy ellipticities, due to the observed ellipticities $\rvct{e}_1$ and $\rvct{e}_2$ being deterministic linear functions of $\rvct{e}_1^\star$ and $\rvct{e}_2^\star$ respectively (for fixed $\rvct{x}$, $\rvct{y}$, $\rvct{m}$ and $\rvct{t}$). Rather than calculating the conditional densities on $\rvct{e}_1$ and $\rvct{e}_2$ by integrating out $\rvct{e}_1^\star$ and $\rvct{e}_2^\star$, we could equivalently have applied the change of variables formula \eqref{eq:change-of-variables-vector-bijective} for a bijective transformation; in this case the Jacobian determinant is simply one.
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}[b]{.48\linewidth}
+\centering
+\begin{tikzpicture}
+  \node[obs] (x) {$\rvar{x}$} ; %
+  \node[latent, above left=0.75 and 1.5 of x] (u) {$\rvar{u}$} ; %
+  \node[latent, below left=0.75 and 1.5 of x] (v) {$\rvar{v}$} ; %
+  \factor[left=of u] {pr-u} {below:$\nrm{0,1}$} {} {u} ; %
+  \factor[left=of v] {pr-v} {$\nrm{0,1}$} {} {v} ; %
+  \op[left=of x] {u_v-x} {left:$\displaystyle\frac{\rvar{u}\rvar{v}}{\lpa 1+\exp\rvar{u}\rpa\lpa1+\exp\rvar{v}\rpa}$} {u,v} {x} ; %
+\end{tikzpicture}
+\caption{Directed factor graph defining model with two latent variables $(\rvar{u}, \rvar{v})$, and an observed variable $\rvar{x}$.}
+\label{sfig:simple-impl-factor-graph}
+\end{subfigure}
+~~
+\begin{subfigure}[b]{.48\linewidth}
+\centering
+\pgfplotsset{cycle list/Dark2-3}
+\begin{tikzpicture}
+  \begin{axis}[
+    cycle list name={Dark2-3},
+    domain=-5:5,
+    xmin=-5, xmax=5,
+    ymin=-5, ymax=5,
+    width=48mm,
+    height=48mm,
+    xlabel={\small $u$},
+    ylabel={\small $v$},
+    every tick label/.append style={font=\tiny},
+    axis y line=center,
+    axis x line=middle,
+    ytick={-5,5},
+    xtick={-5,5},
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.55,0.2)},
+      fill=none,
+      anchor=north west,
+      draw=none, 
+      font=\scriptsize,
+    }
+  ]
+    \draw[gray] (axis cs:0,0) circle [radius=2.15];
+    \draw[gray] (axis cs:0,0) circle [radius=1.55];
+    \draw[gray] (axis cs:0,0) circle [radius=1.18];
+    \draw[gray] (axis cs:0,0) circle [radius=0.84];
+    \draw[gray] (axis cs:0,0) circle [radius=0.46];
+    \addlegendimage{no markers,gray}
+    \addlegendentry{$\pden{\rvar{u},\rvar{v}}$};
+    \addplot+[mark=none, thick] table [x=u, y=v, col sep=comma] 
+      {data/example-implicit-model-curve-1.csv};
+    \addlegendentry{$\rvar{x} = 1$};
+    
+\end{axis}
+\end{tikzpicture}
+\caption{Plot of density on latent variables (contours) and set of values for which $\rvar{x} = 1$ (green curve).}
+\label{sfig:example-implicit-model-cond-plot}
+\end{subfigure}
+\caption[Example of implicit probabilistic model.]{Simple example of a probabilistic model where the observed variable is a non-bijective function of two latent variables.}
+\label{fig:example-non-bijective-transform-factor-graph}
+\end{figure}
+
+If the observed variables had instead been the output of a deterministic factor where there was no bijective dependence on any of the parent variables (inputs to the deterministic factor), the simplified form of the change of variables formula \eqref{eq:change-of-variables-vector-bijective} would no longer have applied and instead the more general form \eqref{eq:change-of-variables-vector} would have been required. Generally in such cases it will not be possible to analytically marginalise out a parent variable to give a well-defined conditional density on the observed variable(s). 
+
+An illustration of such a case for a simple three variable model is shown in Figure \ref{fig:example-non-bijective-transform-factor-graph}. Here the observed variable $\rvar{x}$ is a deterministic function of two latent (unobserved) variables $\rvar{u}$ and $\rvar{v}$. There is no analytic solution in terms of elementary functions for $\rvar{u}$ as a function of $\rvar{x}$ and $\rvar{v}$ or for $\rvar{v}$ as a function of $\rvar{x}$ and $\rvar{u}$. This means the Dirac delta term corresponding to the deterministic factor cannot be integrated out. Due to the presence of the Dirac delta the joint density $\pden{\rvar{x},\rvar{u},\rvar{v}}$ is not well defined (the joint probability $\prob{\rvar{x},\rvar{u},\rvar{m}}$ is not absolutely continuous with respect to any measure) which complicates evaluations of conditional expectations such as $\expc{f(\rvar{u},\rvar{v}) \gvn \rvar{x} = 1}$. 
+
+In particular the set of $\rvar{u}$ and $\rvar{v}$ values corresponding to solutions to $\rvar{x} = 1$ (illustrated as the green curve in Figure \ref{sfig:example-directed-graphical-model}) has zero Lebesgue measure. Therefore even though the dimensionality is low in this case we can not use simple quadrature to evaluate conditional expectations without some further form of approximation. We will revisit methods for performing inference in such models later in the thesis.
+
+\begin{table}[!t]
+\centering
+\begin{tabular}{rl}
+  \toprule
+  \multicolumn{1}{c}{\textsf{Original factorisation}} & \multicolumn{1}{c}{\textsf{Conjugate factorisation}} \tabularnewline
+  \midrule
+  \tikz{
+    \node[latent] (x) {$\rvar{x}$} ; %
+    \node[latent, left=of x] (z) {$\rvar{z}$} ; %
+    \factor[left=of z, xshift=-2mm] {pr-z} {$\nrm{\mu,\sigma^2}$} {} {z} ; %
+    \factor[left=of x] {z-x} {$\nrm{\rvar{z},s^2}$} {z} {x}; %
+    \node[const, right=0.3 of x] (dummy) {} ; %
+    \draw[-, densely dotted] (x) -- (dummy) ; %
+  } &
+  \tikz{
+    \node[latent] (x) {$\rvar{x}$} ; %
+    \node[latent, left=3 of x] (z) {$\rvar{z}$} ; %
+    \factor[above=of x] {pr-x} {right:$\nrm{\mu,\sigma^2+s^2}$} {} {x} ; %
+    \factor[left=of x, xshift=-9mm] {x-z} {$\nrm{\frac{\sigma^2\rvar{x} + s^2\mu}{\sigma^2 + s^2}, \frac{\sigma^2 s^2}{\sigma^2 + s^2}}$} {x} {z}; %
+    \node[const, right=0.3 of x] (dummy) {} ; %
+    \draw[-, densely dotted] (x) -- (dummy) ; %
+  } \\
+  \tikz{
+    \node[latent] (x) {$\rvct{x}$} ; %
+    \node[latent, left=of x] (z) {$\rvct{z}$} ; %
+    \factor[left=of z, xshift=-2mm] {pr-z} {$\nrm{\vct{\mu},\mtx{\Sigma}}$} {} {z} ; %
+    \factor[left=of x] {z-x} {$\nrm{\rvct{z},\mtx{C}}$} {z} {x}; %
+    \node[const, right=0.3 of x] (dummy) {} ; %
+    \draw[-, densely dotted] (x) -- (dummy) ; %
+  } &
+  \tikz{
+    \node[latent] (x) {$\rvct{x}$} ; %
+    \node[latent, left=3 of x] (z) {$\rvct{z}$} ; %
+    \factor[above=of x] {pr-x} {right:$\nrm{\vct{\mu},\mtx{\Sigma}+\mtx{C}}$} {} {x} ; %
+    \factor[left=of x, xshift=-9mm] {x-z} {} {x} {z}; %
+    \node[align=left, anchor=south] (lab1) at (x-z.north) {\tiny$\nrm{\mtx{D}(\mtx{C}^{-1}\rvct{x} + \mtx{\Sigma}^{-1}\vct{\mu}), \mtx{D}}$} ; %
+    \node[align=left, anchor=north] (lab2) at (x-z.south) {\tiny$\textrm{where}~ \mtx{D} = (\mtx{C}^{-1}+\mtx{\Sigma}^{-1})^{-1}$} ; %
+    \node[const, right=0.3 of x] (dummy) {} ; %
+    \draw[-, densely dotted] (x) -- (dummy) ; %
+  } \\
+  \tikz{
+    \node[latent] (x) {$\rvar{x}$} ; %
+    \node[latent, left=of x] (z) {$\rvar{z}$} ; %
+    \factor[left=of z, xshift=-2mm] {pr-z} {$\textrm{Gamma}\lpa\alpha,\beta\rpa$} {} {z} ; %
+    \factor[left=of x] {z-x} {$\nrm{\mu,\frac{1}{\rvar{z}}}$} {z} {x}; %
+    \node[const, right=0.3 of x] (dummy) {} ; %
+    \draw[-, densely dotted] (x) -- (dummy) ; %
+  } &
+  \tikz{
+    \node[latent] (x) {$\rvar{x}$} ; %
+    \node[latent, left=3 of x] (z) {$\rvar{z}$} ; %
+    \factor[above=of x] {pr-x} {right:$\textrm{StT}\lpa 2\alpha,\mu,\sqrt{\frac{\beta}{\alpha}}\rpa$} {} {x} ; %
+    \factor[left=of x, xshift=-9mm] {x-z} {$\textrm{Gamma}\lpa\alpha + \frac{1}{2}, \beta + \frac{1}{2}(\rvar{x}-\mu)^2\rpa$} {x} {z}; %
+    \node[const, right=0.3 of x] (dummy) {} ; %
+    \draw[-, densely dotted] (x) -- (dummy) ; %
+  } \\
+  \tikz{
+    \node[latent] (x) {$\rvar{x}$} ; %
+    \node[latent, left=of x] (z) {$\rvar{z}$} ; %
+    \factor[left=of z, xshift=-2mm] {pr-z} {$\textrm{Gamma}\lpa\alpha,\beta\rpa$} {} {z} ; %
+    \factor[left=of x] {z-x} {$\textrm{Exp}(\rvar{z})$} {z} {x}; %
+    \node[const, right=0.3 of x] (dummy) {} ; %
+    \draw[-, densely dotted] (x) -- (dummy) ; %
+  } &
+  \tikz{
+    \node[latent] (x) {$\rvar{x}$} ; %
+    \node[latent, left=3 of x] (z) {$\rvar{z}$} ; %
+    \factor[above=of x] {pr-x} {right:$\textrm{Lomax}\lpa \alpha, \beta\rpa$} {} {x} ; %
+    \factor[left=of x, xshift=-9mm] {x-z} {$\textrm{Gamma}\lpa\alpha + \frac{1}{2}, \beta + \rvar{x}\rpa$} {x} {z}; %
+    \node[const, right=0.3 of x] (dummy) {} ; %
+    \draw[-, densely dotted] (x) -- (dummy) ; %
+  } \\
+  \tikz{
+    \node[latent] (x) {$\rvar{x}$} ; %
+    \node[latent, left=of x] (z) {$\rvar{z}$} ; %
+    \factor[left=of z, xshift=-2mm] {pr-z} {$\textrm{Beta}(\alpha, \beta)$} {} {z} ; %
+    \factor[left=of x] {z-x} {$\textrm{Ber}(\rvar{z})$} {z} {x}; %
+    \node[const, right=0.3 of x] (dummy) {} ; %
+    \draw[-, densely dotted] (x) -- (dummy) ; %
+  } &
+  \tikz{
+    \node[latent] (x) {$\rvar{x}$} ; %
+    \node[latent, left=3 of x] (z) {$\rvar{z}$} ; %
+    \factor[above=of x] {pr-x} {right:$\textrm{Ber}\lpa \frac{\alpha}{\alpha + \beta} \rpa$} {} {x} ; %
+    \factor[left=of x, xshift=-9mm] {x-z} {$\textrm{Beta}\lpa\alpha + \rvar{x}, \beta + 1 -\rvar{x}\rpa$} {x} {z}; %
+    \node[const, right=0.3 of x] (dummy) {} ; %
+    \draw[-, densely dotted] (x) -- (dummy) ; %
+  } \\
+  \bottomrule
+\end{tabular}
+\caption[Conjugate distribution factor graphs.]{Factor graph illustrations of conjugate distributions.}
+\label{tab:conjugate-distributions}
+\end{table}
+
+Some densities have a \emph{conjugacy} property that can simplify inference. If $\rvar{x}$ and $\rvar{z}$ are two random variables in a model then the joint density on the two variable can be factorised as
+\begin{equation}\label{eq:conjugate-factorisation}
+  \pden{\rvar{x},\rvar{z}}(x,z) =
+  \pden{\rvar{x}|\rvar{z}}(x\gvn z)\pden{\rvar{z}}(z) =
+  \pden{\rvar{z}|\rvar{x}}(z\gvn x)\pden{\rvar{x}}(x).
+\end{equation}
+\marginpar{A conditional density $\pden{\rvct{u}|\rvct{v}}$ is from the exponential family if it can be written as\\
+$\pden{\rvct{u}|\rvct{v}}(\vct{u}\gvn\vct{v})=$
+\\[1mm]
+$\frac{h(\vct{u}) \exp \lpa \vct{\eta}(\vct{v})\tr\vct{t}(\vct{u})\rpa}{z(\vct{v})}$,
+\\[1mm] with $\vct{\eta}(\vct{v})$ termed the \emph{natural parameters} and $\vct{t}(\vct{u})$ termed the \emph{sufficient statistics}.}
+For certain pairs of $\pden{\rvar{x}|\rvar{z}}$ and $\pden{\rvar{z}}$ the corresponding $\pden{\rvar{z}|\rvar{x}}$ and $\pden{\rvar{x}}$ have closed-form expressions. Some examples are shown in Table \ref{tab:conjugate-distributions}. In all of these examples the conditional density $\pden{\rvar{x}|\rvar{z}}$ is a density for an \emph{exponential family distribution}. For every exponential family distribution density $\pden{\rvar{x}|\rvar{z}}$ there exists a density $\pden{\rvar{z}}$ such that $\pden{\rvar{z}|\rvar{x}}$ is of the same parametric family as $\pden{\rvar{z}}$.
+
+If $\rvar{x}$ corresponds to an observed variable in the model, then if evaluating conditional expectations $\expc{f(\rvar{z}) \gvn \rvar{x}}$ the conjugacy property means that conditional density $\pden{\rvar{z}|\rvar{x}}$ which $f$ should be integrated against has a closed form expression. Often for simple $f$, e.g. $f(z) = z$ or $f(z) = z^2$, the conditional expectations will have closed form solutions in such cases (i.e. corresponding to moments of the distribution defined by $\pden{\rvar{z}|\rvar{x}}$). Even when $f$ is more complex, typically generating independent random samples from $\pden{\rvar{z}|\rvar{x}}$ in such cases will be possible, simplifying the use of Monte Carlo methods (which will be introduced in the next chapter). If both $\rvar{z}$ and $\rvar{x}$ are latent variables then the conjugacy property is also useful as in this case $\rvar{z}$ can be analytically marginalised out of conditional expectations of functions which do not depend on $\rvar{z}$.
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+  \node[latent] (z0) {$\rvct{z}_{0}$} ; %
+  \factor[left=of z0, xshift=-5mm] {pr-z0} {above:$\nrm{\vct{m}_0,\mtx{C}_0}$} {} {z0} ; %
+  \def\T{3}
+  \foreach \t in {1,...,\T} {
+    \pgfmathtruncatemacro{\s}{\t-1}
+    \node[latent, right=1.9 of z\s] (z\t) {$\rvct{z}_{\t}$} ; %
+    \factor[left=of z\t, xshift=-5mm] {z\s-z\t} 
+      {above:$\nrm{\mtx{A}_{\t}\rvct{z}_{\s} + \vct{m}_{\t}, \mtx{C}_{\t}}$} {z\s} {z\t} ; %
+    \node[obs, below=of z\s] (x\s) {$\rvct{x}_{\s}$} ; %
+    \factor[above=of x\s] {z\s-x\s} 
+      {left:$\nrm{\mtx{B}_{\s}\rvct{z}_{\s} + \vct{n}_{\s},\mtx{D}_{\s}}$} {z\s} {x\s} ; %
+  }
+  \node[obs, below=of z\T] (x\T) {$\rvct{x}_{\T}$} ; %
+  \factor[above=of x\T] {z\T-x\T} 
+      {left:$\nrm{\mtx{B}_{\T}\rvct{z}_{\T} + \vct{n}_{\T},\mtx{D}_{\T}}$} {z\T} {x\T} ; %
+\end{tikzpicture}
+%\vskip 5pt
+\caption[Linear dynamical system factor graph.]{Factor graph for a latent linear dynamical system model.} %
+\label{fig:lds-factor-graph}
+\end{figure}
+
+\marginpar{A Markov process is a stochastic process such that future states are conditionally independent of past states given the current state.}
+Various algorithms have been developed to exploit conjugacy in restricted classes of probabilistic models to perform efficient exact inference. Inference in \emph{latent linear dynamical systems}, an example of which is shown as a factor graph in Figure \ref{fig:lds-factor-graph}, can be efficiently performed with the recursive Kalman filtering and smoothing algorithms \citep{kalman1960new}. Closely related are the forward and backward updates for inference in \emph{hidden Markov models} \citep{stratonovich1960conditional} which have the same factorisation structure as latent linear dynamical systems but use a discrete rather than real-valued latent state. The \emph{junction tree algorithm} \citep{lauritzen1988local} is a general purpose algorithm for performing exact inference in undirected graphical models of discrete random variables which exploits conditional independency structure to efficiently decompose the inference into local computations; the computational cost of the algorithm scales exponentially with the number of nodes in the largest clique in the model and so is mainly relevant for graphs with relatively small maximal cliques.
+% message passing (link to reverse-mode AD?)
+
+% discrete latent variables
+% Boltzmann machine distribution - summation of exponential number of states
+% junction tree
+
+%In general we might consider inference as only an intermediate step with the inferential output (which we discuss in more detail below but for now we loosely define as a representation of the probable values of the unobserved random variables in our assumed model given observations) then being used in some downstream task. Achieving `optimal' in some sense performance in this task would then be considered the overall aim - decision theory offers a framework for making optimal decisions under uncertainty. Alternatively we might be interested in analysing the statistical properties of the model when conditioning on observations - for instance computing moments of variables or the probability that variables take values in within some set. Importantly in both cases however the fundamental computation involved is the same - evaluating conditional expectations of functions of the unobserved variables in the model given observations. We will generally remain agnostic to such considerations of how the output of the inference is to be used, and instead consider inference as the task of
+
+%In general we should consider the task of inference in the context of the downstream task the inferential output is being used for. %The topic of \emph{decision theory} considers the issues surrounding using a probabilistic model to reason and make decisions under uncertainty and is a signficant research area in its own right, we will however use a very coarse but still we believe useful characterisation that the fundamental computational task in probabilistic decision theory is computing the expected value of functions of unobserved variables given a probabilistic model and observations. In particular we will assume we have a loss function we wish to minimise the expected value of (or equivalently a utitlity function we wish to maximise the expected value of).
+
+
+
+%Given a probabilistic model and set of observations, we loosely define inference as the process of finding plausible values for the unobserved variables given the model and observations. 
+
+%Before considering inference specifically in the setting of the \emph{Observing Dark Worlds} problem, we will first try to express the computational task in more general terms. For the sake of notational brevity we assume that we collect all observed random variables in to the random vector $\rvct{y} \in \set{Y}$ and all unobserved random variables in the model of interst in to the random vector $\rvct{z} \in \set{Z}$. Our model defines a joint probability $\prob{\rvct{y},\rvct{z}}$; in the \emph{Observing Dark Worlds} case we specified this as a directed factor graph, alternatively we might specify our model as a simulator in code or as an undirected factor graph, in all cases explicitly or implicitly we define $\prob{\rvct{y},\rvct{z}}$.
+
+%We then define inference as the task of computing a representation of the information we have about the probable values of $\rvct{z}$ given the assumed model and observed values for $\rvct{y}$ which allows evaluation of conditional expectations $\expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y}}$ of functions of the unobserved random variables. This a not entirely standard definition and not is mathematically precise, however we believe it is broadly consistent with existing usages of \emph{inference} while making clear the key property that the motivation for inference algorithm is to allow computation of (conditional) expectations.
+
+ %Making inferences about the unobserved variables given the model and observations then fundamentally corresponds to computing conditional expectations on the unobserved variables given the observations, $\expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y}}$. Conditional expectation can be used to express any inferential query we ha[align=left, anchor=north] (lab2) at (x-z.south)ve about the unobserved variables
+ 
+\subsection{A note on Bayesian terminology}
+
+%We have so far discussed inference without using some of the language and terminology common to discussions of \emph{Bayesian inference}. This omission was purposeful - although many of the inference problems we will discuss in this thesis 
+
+%We have so far discussed inference in what to some readers may seem a somewhat obtuse way, in as much as we have avoided some of the terminology commonly used to describe Bayesian inference.
+
+%We have so far neglected to mention some of the terminology commonly used when discussing inference.
+
+We have thus far discussed inference without mentioning some of the terminology commonly used in this context. In particular the system of inference that we have described would often be identified as being \emph{Bayesian} --- this name arises because of the central importance of \emph{Bayes' theorem} \eqref{eq:bayes-theorem} in defining the conditional probability of unobserved variables given observations. 
+
+While often the inference problems we will discuss in this thesis will be motivated from a Bayesian standpoint, the use of probabilistic modelling and resulting need to deal with the computational challenges of computing integrals in high dimensional spaces are not unique to Bayesian statistics. For instance many of the approximate inference methods we will discuss in the next two chapters were originally developed for use in studying statistical physics problems such as the phase transitions of the \emph{Ising spin model} (which we earlier encounted under the alternative name of the Boltzmann machine model when discussing undirected graphical models). As our main interest in this thesis will be the computational aspects of inference rather than specific applications, we will therefore generally prefer to refer to probabilistic modelling and inference in general terms rather than Bayesian inference in particular.
+
+%For instance the Boltzmann machine model given as an example when discussing undirected graphical models, is more commonly known as an \emph{Ising spin model} in statistical physics and is used extensively as a simple model to study phase transition behaviour. Computing the normalising constant of the . There 
+
+For completeness we will briefly review the nomenclature typically used in Bayesian inference before makes some comments about the terminology we use in this thesis. For a model with observed variables $\rvct{x} \in \set{X}$ and unobserved variables $\rvct{z} \in \set{Z}$, often referred to as \emph{model parameters} in a Bayesian setting, the standard presentation of Bayesian inference assumes that the joint probability is specified by a density $\pden{\rvar{x},\rvar{z}} = \td{\prob{\rvct{x},\rvct{z}}}{(\mu_{\rvct{x}} \times \mu_{\rvct{z}})}$ which naturally factorises as $\pden{\rvct{x},\rvct{z}}(\vct{x},\vct{z}) = \pden{\rvct{x}|\rvct{z}}(\vct{x}\gvn\vct{z})\,\pden{\rvct{z}}(\vct{z})$. 
+
+In this case the probability distribution defined by the marginal density on the model parameters $\pden{\rvct{z}}$ is typically termed the \emph{prior distribution}, with the intepretation that it captures our beliefs about the parameters before observing data. The conditional density on the observed variables given parameters $\pden{\rvct{x}|\rvct{z}}$ is often referred to as the \emph{likelihood}.%, though as we will discuss below this usage is ambiguous. 
+
+The distribution defined by the conditional density on the parameters given the observations $\pden{\rvct{z}|\rvct{x}}$ is termed the \emph{posterior distribution}, with this naming indicative of it representing our beliefs about the parameters after observing data. The posterior density can be calculated from the prior and likelihood using the definition for conditional density given in \eqref{eq:conditional-density}. Analagously to the definition for probabilities in \eqref{eq:bayes-theorem} the resulting relationship is often also termed Bayes' theorem
+\begin{equation}\label{eq:bayes-theorem-density}
+ \pden{\rvct{z}|\rvct{x}}(\vct{z}\gvn\vct{x}) =
+ \frac{\pden{\rvct{x}|\rvct{z}}(\vct{x}\gvn\vct{z})\,\pden{\rvct{z}}(\vct{z})}{\pden{\rvct{x}}(\vct{x})}
+ \quad \forall \vct{z} \in \set{Z},\,\vct{x} \in \set{X} : \pden{\rvct{x}}(\vct{x}) > 0.
+\end{equation}
+Inference is then typically posed as the problem of computing the posterior distribution (density). This is typically not available in a (normalised) closed form as evaluating the denominator in \eqref{eq:bayes-theorem-density}, $\pden{\rvct{x}}$, sometimes termed the \emph{model evidence}, requires integrating the joint density over the parameters
+\begin{equation}\label{eq:model-evidence-integral}
+ \pden{\rvct{x}}(\vct{x}) = 
+ \int_{\set{Z}} \pden{\rvct{x},\rvct{z}}(\vct{x},\vct{z})\,\dr\vct{z} =
+ \int_{\set{Z}} \pden{\rvct{x}|\rvct{z}}(\vct{x}\gvn\vct{z})\,\pden{\rvct{z}}(\vct{z})
+ \,\dr\vct{z}.
+\end{equation}
+Other than in special cases such as the conjugate pairs of densites shown in Table \ref{tab:conjugate-distributions}, this integral does not have a closed form solution and typically $\set{Z}$ will be of a dimensionality which means numerical quadrature will be too expensive. As $\pden{\rvar{x}}(\vct{x})$ is found by marginalising out $\rvct{z}$ from the product of the prior and likelihood, it is also sometimes termed the \emph{marginal likelihood}, though this name obscures that it is also dependent on the prior.
+
+The usage of the term likelihood in Bayesian inference is somewhat overloaded: while it is often informally used to refer to the conditional density in $\pden{\rvct{x}|\rvct{z}}$ in Bayes' theorem (which is often summarised as \emph{posterior is proportional to likelihood times prior}), the likelihood is usually formally defined as a function of the parameters (given fixed values for the observed variables) with notation such as $\ell(\vct{z} \gvn \vct{x}) = \pden{\rvct{x}|\rvct{z}}(\vct{x}\gvn\vct{z})$ sometimes used to emphasise this. This usage is particularly common when discussing \emph{maximum likelihood} methods which find values of the parameters which maximise the likelihood (given data). In this latter interpretation it makes sense to refer to the likelihood of the parameters, but not the likelihood of observed variables (or observations / data). This leads to recommendations to refer to `the likelihood of the parameters given the [observed] data' \citep{mackay2003information}, which given the construct being discussed is actually a density on the observed data given parameter values is, in our opinion, not particularly clear.
+
+In this thesis we will generally avoid using the terms \emph{likelihood} and \emph{marginal likelihood}. We will instead prefer to refer to individual conditional and marginal densities (or probabilities) explicitly. We will also prefer to refer to unobserved or latent variables (which we will use interchangeably) rather than model parameters when these values are being inferred (as opposed to set to fixed values). Parameters and latent variables are sometimes used distinctly (e.g. defining parameters as unobserved variables which are global and of a fixed number and latent variables as unobserved variables that are linked with individual observed variables and increase in number with the number of observations), however from the computational perspective of inference both are equivalent - they are variables in the model which we assume we are uncertain about the value of as we do not observe their values directly. Although this point may seem minor, as we will see later a key idea of this thesis is that treating all unobserved variables in a probabilistic model jointly rather than differentially treating a subset considered as parameters can be of signficant computational benefit.
+
+%This is not just a pedantic point about terminology: as we will see in later chapters, a key idea in this thesis will be that by treating all unobserved variables in a model jointly we are often 
+
+
+% factorisation p(y|z)p(z) not natural for undirected models
+% considers prior and likelihood as separate objects, often with implication prior is subjective and likelihood is more objective - both are expressions of belief / assumptions and are not independent - if reparameterise likelihood need to change prior to keep consistent + any prior including uniform / improper prior makes assumptions (only flat in given parameterisation)
+
+\subsection{Hierarchical modelling}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+  \node[latent] (mi) {$\rvct{m}^{(i)}$} ;
+  \node[latent, below=0.4 of mi] (ti) {$\rvct{t}^{(i)}$} ;
+  \node[factor, left=2.5 of mi] (mum_sigmam-mi) {} ; %
+  \node[align=left, anchor=south west, xshift=-1mm] (label-mum-sigmam-mi)
+    at (mum_sigmam-mi.north) {\tiny $\textrm{LogNorm}(\upmu_{\rvar{m}},\upsigma_{\rvar{m}})$} ; %
+  \node[factor, left=of ti] (mut_sigmat-ti) {} ; %
+  \node[align=left, anchor=south, xshift=-3mm] (label-mut-sigmat-ti)
+    at (mut_sigmat-ti.north) {\tiny $\textrm{LogNorm}(\upmu_{\rvar{t}},\upsigma_{\rvar{t}})$} ; %
+  \node[const, above=0.4 of mi] (xi) {$\vct{x}^{(i)}$}; % 
+  \node[const, above=0.4 of mi, xshift=12mm, yshift=-1mm] (yi) {$\vct{y}^{(i)}$}; % 
+  \node[latent, right=2.5 of mi] (d1i) {$\rvct{d}_1^{(i)}$} ; %
+  \node[latent, right=2.5 of ti] (d2i) {$\rvct{d}_2^{(i)}$} ; %
+  \op[left= of d1i, xshift=-3mm] {xi_yi_mi_ti-d1i} {} {xi,yi,mi,ti} {d1i} ; %
+  \node[anchor=south west, xshift=-2mm, yshift=2mm] (lab-xi_yi_mi_ti-d1i)
+    at (xi_yi_mi_ti-d1i.north) 
+    {\tiny $\vct{d}_1(\vct{x}^{(i)}\kern-2pt,\vct{y}^{(i)}\kern-2pt,\rvct{m}^{(i)}\kern-2pt,\rvct{t}^{(i)})$} ; %
+  \op[left= of d2i, xshift=-3mm] {xi_yi_mi_ti-d2i} {} {xi,yi,mi,ti} {d2i} ; %
+  \node[anchor=north, xshift=-3mm] (lab-xi_yi_mi_ti-d2i)
+    at (xi_yi_mi_ti-d2i.south) 
+    {\tiny $\vct{d}_2(\vct{x}^{(i)}\kern-2pt,\vct{y}^{(i)}\kern-2pt,\rvct{m}^{(i)}\kern-2pt,\rvct{t}^{(i)})$} ; %
+  \node[obs, right=2.5 of d1i] (e1i) {$\rvct{e}_1^{(i)}$} ; %
+  \node[obs, right=2.5 of d2i] (e2i) {$\rvct{e}_2^{(i)}$} ; %
+  \node[factor, left=of e1i, xshift=-7mm] (d1i_sigma-e1i) {} ; %
+  \node[align=left, anchor=south west, xshift=-2mm, yshift=-1mm] (lab-d1i_sigma-e1i) 
+    at (d1i_sigma-e1i.north) {\tiny $\nrm{\rvct{d}_1^{(i)}\kern-2pt,\upsigma^2\mathbf{I}}$}; %
+  \node[factor, left=of e2i, xshift=-7mm] (d2i_sigma-e2i) {} ; %
+  \node[align=left, anchor=south west, xshift=-2mm, yshift=-1mm] (lab-d2i_sigma-e2i) 
+    at (d2i_sigma-e2i.north) {\tiny $\nrm{\rvct{d}_2^{(i)}\kern-2pt,\upsigma^2\mathbf{I}}$}; %
+  \node[const, above=0 of yi, yshift=-2mm] (dummyyi) {} ; %
+  \plate {training} {(mi)(ti)(mum_sigmam-mi)(mut_sigmat-ti)(xi)(dummyyi)(d1i)(d2i)(e1i)(e2i)} {$i \in \fset{1 \,...\, N_{\textrm{train}}}$} ; %
+  
+  \node[latent, below=3.8 of mi] (tj) {$\rvct{t}^{(j)}$} ;
+  \node[latent, below=0.4 of tj] (mj) {$\rvct{m}^{(j)}$} ;
+  \node[factor, left=2.5 of mj] (mum_sigmam-mj) {} ; %
+  \node[align=left, anchor=north west, xshift=-1mm] (label-mum-sigmam-mj)
+    at (mum_sigmam-mj.south) {\tiny $\textrm{LogNorm}(\upmu_{\rvar{m}},\upsigma_{\rvar{m}})$} ; %
+  \node[factor, left=of tj] (mut_sigmat-tj) {} ; %
+  \node[align=left, anchor=north, xshift=-3mm] (label-mut-sigmat-tj)
+    at (mut_sigmat-tj.south) {\tiny $\textrm{LogNorm}(\upmu_{\rvar{t}},\upsigma_{\rvar{t}})$} ; %
+  \node[latent, below=0.4 of mj] (xj) {$\rvct{x}^{(j)}$}; % 
+  \node[latent, below=0.4 of mj, xshift=12mm] (yj) {$\rvct{y}^{(j)}$}; %
+  \factor[left=of xj] {pr-xj} {left:$\mathcal{U}(0,x_{\rm max})$} {} {xj} ; %
+  \factor[right=of yj] {pr-yj} {right:$\mathcal{U}(0,y_{\rm max})$} {} {yj} ; %
+  \node[latent, right=2.5 of mj] (d1j) {$\rvct{d}_1^{(j)}$} ; %
+  \node[latent, right=2.5 of tj] (d2j) {$\rvct{d}_2^{(j)}$} ; %
+  \op[left= of d1j, xshift=-3mm] {xj_yj_mj_tj-d1j} {} {xj,yj,mj,tj} {d1j} ; %
+  \node[anchor=north west, xshift=-2mm, yshift=-2mm] (lab-xj_yj_mj_tj-d1j)
+    at (xj_yj_mj_tj-d1j.south) 
+    {\tiny $\vct{d}_1(\rvct{x}^{(j)}\kern-2pt,\rvct{y}^{(j)}\kern-2pt,\rvct{m}^{(j)}\kern-2pt,\rvct{t}^{(j)})$} ; %
+  \op[left= of d2j, xshift=-3mm] {xj_yj_mj_tj-d2j} {} {xj,yj,mj,tj} {d2j} ; %
+  \node[anchor=south, xshift=-3mm] (lab-xj-yj_mj_tj-d2j)
+    at (xj_yj_mj_tj-d2j.north) 
+    {\tiny $\vct{d}_2(\rvct{x}^{(j)}\kern-2pt,\rvct{y}^{(j)}\kern-2pt,\rvct{m}^{(j)}\kern-2pt,\rvct{t}^{(j)})$} ; %
+  \node[obs, right=2.5 of d1j] (e1j) {$\rvct{e}_1^{(j)}$} ; %
+  \node[obs, right=2.5 of d2j] (e2j) {$\rvct{e}_2^{(j)}$} ; %
+  \node[factor, left=of e1j, xshift=-7mm] (d1j_sigma-e1j) {} ; %
+  \node[align=left, anchor=north west, xshift=-2mm, yshift=1mm] (lab-d1j_sigma-e1j) 
+    at (d1j_sigma-e1j.south) {\tiny $\nrm{\rvct{d}_1^{(j)}\kern-2pt,\upsigma^2\mathbf{I}}$}; %
+  \node[factor, left=of e2j, xshift=-7mm] (d2j_sigma-e2j) {} ; %
+  \node[align=left, anchor=north west, xshift=-2mm, yshift=1mm] (lab-d2j_sigma-e2j) 
+    at (d2j_sigma-e2j.south) {\tiny $\nrm{\rvct{d}_2^{(j)}\kern-2pt,\upsigma^2\mathbf{I}}$}; %
+  \node[const, above=0 of yj, yshift=-4mm] (dummyyj) {} ; %
+  \plate {training} {(mj)(tj)(mum_sigmam-mj)(mut_sigmat-tj)(dummyyj)(d1j)(d2j)(e1j)(e2j)(lab-xj-yj_mj_tj-d2j)(lab-d2j_sigma-e2j)} {$j \in \fset{N_{\textrm{train}} + 1 \,...\, N_{\textrm{train}} + N_{\textrm{test}}}$} ; %
+  
+  \node[latent, below=1 of d2i, xshift=10mm] (sigma) {$\upsfsigma$} ; %
+  \factor[left=of sigma] {pr-sigma} {below:$\mathrm{Gamma}(2, 0.1)~~~~$} {} {sigma} ;%
+  \node[latent, xshift=15mm] (mut) at (sigma-|mut_sigmat-ti) {$\upsfmu_{\rvar{t}}$} ; %
+  \factor[left=of mut] {pr-mut} {$\nrm{0,5}$} {} {mut} ;%
+  \node[latent, right=0.3 of mut] (sigmat) {$\upsfsigma_{\rvar{t}}$} ; %
+  \factor[right=of sigmat] {pr-sigmat} {$\mathcal{C}_{\geq 0}(2)$} {} {sigmat} ;%
+  \node[latent] (mum) at (sigma-|mum_sigmam-mi) {$\upsfmu_{\rvar{m}}$} ; %
+  \factor[right=of mum] {pr-mum} {above:$\nrm{0,5}$} {} {mum} ;%
+  \node[latent, right=1.3 of mum] (sigmam) {$\upsfsigma_{\rvar{m}}$} ; %
+  \factor[left=of sigmam] {pr-sigmam} {below:$\mathcal{C}_{\geq 0}(2)$} {} {sigmam} ;%
+  
+  \factoredge {mut,sigmat} {mut_sigmat-ti} {ti} ; %
+  \factoredge {mum,sigmam} {mum_sigmam-mi} {mi} ; %
+  \factoredge {d1i,sigma} {d1i_sigma-e1i} {e1i} ; %
+  \factoredge {d2i,sigma} {d2i_sigma-e2i} {e2i} ; %
+  
+  \factoredge {mut,sigmat} {mut_sigmat-tj} {tj} ; %
+  \factoredge {mum,sigmam} {mum_sigmam-mj} {mj} ; %
+  \factoredge {d1j,sigma} {d1j_sigma-e1j} {e1j} ; %
+  \factoredge {d2j,sigma} {d2j_sigma-e2j} {e2j} ; %
+
+\end{tikzpicture}
+%\vskip 5pt
+\caption[Observing Dark Worlds hierarchical model.]{Observing Dark Worlds hierarchical model.} %
+\label{fig:odw-hierarchical-factor-graph}
+\end{figure}
+
+When introducing the proposed model (Figure \ref{fig:observing-dark-worlds-factor-graph} for the \emph{Observing Dark Worlds} problem we glossed over how the parameters $\sigma$, $\mu_m$, $\sigma_m$, $\mu_t$ and $\sigma_t$ were chosen, assuming for simplicity they had somehow been set to reasonable values. Rather than fixing the parameter the values, a more Bayesian approach would be instead to also treat these unknown parameters as further unobserved variables to infer.
+
+In particular we can encode our beliefs about plausible values for the variables by setting prior distributions on each of the variables and then jointly conditioning on \emph{all} of the observed data together. In the \emph{Observing Dark Worlds} competition, two distinct sets of galaxy data were provided - a training set of $N_{\textrm{train}} = 300$ of cluster images in which the observed ellipticities, galaxy coordinates and halo positions were all provided; and a test set of $N_{\textrm{test}} = 120$ images where only the galaxy observed ellipticities and coordinates are provided. 
+
+Assuming both the training and test data are \ac{iid} we can form a \emph{hierarchical model} for the problem which specifies a joint density across the observed and latent variables for all of the training and test set clusters as well as the global variables specifying the distributions on the halo masses, core radii and galaxy intrinsic ellipticities. A factor graph for the proposed hierarchical model is shown in Figure \ref{fig:odw-hierarchical-factor-graph}; compared to the factor graph in Figure \ref{fig:observing-dark-worlds-factor-graph} some of the detail in the model structure for each cluster has been hidden to make the higher level structure clearer and the vector notation introduced when discussing inference in the model has been used to remove the need for plates indexed across galaxies and halos. The galaxy positions which are all observed have also been removed for clarity.
+
+%As an example of how prior distributions might be chosen in practice: 
+The prior on the intrinsic ellipticity scale variable $\upsigma$ has been set to $\mathrm{Gamma}(2,0.1)$ this having positive support as required, and reflecting the known properties of the intrinsic ellipticities - that they have non-zero variability (with the Gamma density tending to zero as $\upsigma \to 0$) and that they are bounded to unit magnitude and hence the standard deviation would be expected to be significantly less than one. For the halo mass and core radii distribution variables weaker priors have been set that support a wide range of plausible distributions while still discouraging extreme values.
+
+When making predictions using the hierarchical model, due to the joint dependence between all cluster images it is now necessary to calculate conditional expectations on all of the test cluster halo coordinates jointly given the observed data. Even considering only the halo position variables the expectations are being calculated over, the resulting integral is now over a space of several hundred dimensions, and once all of the additional unobserved variables defined in the overall joint density are included, the resulting integral is over several thousand variables. Given the discussed infeasibility of using quadrature to compute conditional expectations of the halo positions for even a single cluster images, clearly in this case the need for computational methods for inference which scale to high dimensionalities is even more stark.
+
+% sigma - more than zero (intrinsic variability) but << 1 as e \in [-1, 1]
+% mu_t / mu_m - weak prior knowledge, however extreme values e.g. 1e6 or 1e-6 seem unlikely
+% sigma_t / sigma_m - again weak prior knowledge - allow for zero variability and fat tail
 
 \subsection{Model comparison}
 
+\begin{figure}
+\centering
+\begin{tikzpicture}
+  \node[latent] (zm) {$\rvct{z}_{m}$} ; %
+  \factor[left=of zm] {pr-zm} {below:\small $\pden{\rvct{z}_m}$} {} {zm} ; %
+  \node[obs, right=of zm, xshift=10mm] (x) {$\rvct{x}$} ; %
+  \factor[left=of x, xshift=-7mm] {zm-x} {below:\small $\pden{\rvct{x}|\rvct{z}_m}$} {zm} {x} ; %
+  \node[latent, above=0.5 of zm-x] (m) {$\rvar{m}$} ; %
+  \factor[left=of m] {pr-m} {\small $\pden{\rvar{m}}$} {} {m} ; %
+  \gate {mgate} {(zm-x)(zm-x-caption)} {m} {.north} ; %
+  \plate {models} {(pr-zm)(zm)(pr-zm-caption)(zm-x)(zm-x-caption)(mgate)} {$m \in \fset{1 \dots M}$} ; %
+\end{tikzpicture}
+%\vskip 5pt
+\caption[Model comparison factor graph.]{Model comparison factor graph.} %
+\label{fig:model-comparison-factor-graph}
+\end{figure}
 
-% ## Random variables
-% - definition in terms of uncertainty / degrees of belief (as opposed to stochasticity)
-% discrete random variables - probability mass function
-% continuous random variables - probability density function
-% product and sum rules (+ Bayes rule)
-% probability density functions - change of variable
-% Borel-Kolgomorov paradox
-% LOTUS
-% factor graphs
+So far we have discussed inference on the unobserved variables in a fixed model. An important second level of inference is comparing between competing models for observed data. This can be treated consistently within the existing probabilistic framework we have discussed, however the computations involved in inference over models can pose further challenges beyond those already discussed in the previous section. We will first pose the model inference problem in general terms before returning to the \emph{Observing Dark Worlds} problem to give a concrete example.
+
+The general set up will be that we have a finite set of $M$ models which we index with the variable $\rvar{m} \in \fset{1 \dots M}$. A common special case will be where $M=2$ and we are performing a comparison between a pair of models. All models share the same observed random vector $\rvct{x}$, and each model has a model specific vector of unobserved variables $\rvct{z}_m$
+
+

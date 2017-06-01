@@ -31,6 +31,7 @@
 \pdfcompresslevel=9
 \pdfadjustspacing=1 
 \usepackage[pdftex]{graphicx} 
+\usepackage{float}
 \usepackage{pdflscape}
 \usepackage{enumitem}
 \usepackage[noend]{algpseudocode}
@@ -56,7 +57,7 @@
 
 % Use Libertine fonts for text and maths and Bitstream Vera Mono for monospaced
 \usepackage[mono=false,proportional]{libertine}
-\usepackage[libertine,cmintegrals,cmbraces]{newtxmath}
+\usepackage[libertine,cmintegrals,cmbraces,libaltvw,slantedGreek]{newtxmath}
 \usepackage[scaled=0.8]{beramono}
 
 \makeatletter
@@ -91,6 +92,7 @@
 %\usepackage[bb=mma]{mathalfa}
 
 \usepackage{enumitem}
+\usepackage{longtable}
  
 % Use one-and-half line spacing as per University of Edinburgh requirements
 \usepackage[onehalfspacing]{setspace}
@@ -129,6 +131,7 @@
 
 \usepackage{pgfplots}
 \usepgfplotslibrary{colorbrewer}
+\pgfplotsset{compat=1.5.1}
 
 \definecolor{edblue}{RGB}{0, 50, 95}
 \definecolor{edred}{RGB}{193, 0, 67}
@@ -137,7 +140,7 @@
 \definecolor{s5}{RGB}{255, 127, 0}
 
 \usepackage{tikz}
-\usetikzlibrary{bayesnet,arrows.meta,calc,positioning}
+\usetikzlibrary{bayesnet,arrows,arrows.meta,calc,positioning}
 
 % Necessary for correct hyperlinks (to index, bib, etc.)                                  
 \newcounter{dummy} 
