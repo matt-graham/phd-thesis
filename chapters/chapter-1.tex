@@ -1851,13 +1851,17 @@ Various algorithms have been developed to exploit conjugacy in restricted classe
 
 %We have so far neglected to mention some of the terminology commonly used when discussing inference.
 
-We have thus far discussed inference without mentioning some of the terminology commonly used in this context. In particular the system of inference that we have described would often be identified as being \emph{Bayesian} --- this name arises because of the central importance of \emph{Bayes' theorem} \eqref{eq:bayes-theorem} in defining the conditional probability of unobserved variables given observations. 
+%We have thus far avoided some of the terminology 
 
-While often the inference problems we will discuss in this thesis will be motivated from a Bayesian standpoint, the use of probabilistic modelling and resulting need to deal with the computational challenges of computing integrals in high dimensional spaces are not unique to Bayesian statistics. For instance many of the approximate inference methods we will discuss in the next two chapters were originally developed for use in studying statistical physics problems such as the phase transitions of the \emph{Ising spin model} (which we earlier encounted under the alternative name of the Boltzmann machine model when discussing undirected graphical models). As our main interest in this thesis will be the computational aspects of inference rather than specific applications, we will therefore generally prefer to refer to probabilistic modelling and inference in general terms rather than Bayesian inference in particular.
+%We have thus far discussed inference without mentioning some of the terminology commonly used in this context. In particular the system of inference that we have described would often be identified as being \emph{Bayesian} --- this name arises because of the central importance of \emph{Bayes' theorem} \eqref{eq:bayes-theorem} in defining the conditional probability of unobserved variables given observations. 
+
+The system of inference that we have described would often be identified as being \emph{Bayesian}. This name arises because of the central importance of \emph{Bayes' theorem} \eqref{eq:bayes-theorem} in defining the conditional probability of unobserved variables given observations.
+
+While often the inference problems we will discuss in this thesis will be motivated from a Bayesian standpoint, the use of probabilistic modelling and resulting need to deal with the computational challenges of computing integrals in high dimensional spaces are not unique to Bayesian statistics. For instance many of the approximate inference methods we will discuss in the next two chapters were originally developed for use in studying statistical physics problems such as the phase transitions of the \emph{Ising spin model} (which we earlier encounted under the alternative name of the Boltzmann machine model). As our main interest in this thesis will be the computational aspects of inference rather than specific applications, we will therefore generally prefer to refer to probabilistic modelling and inference in general terms rather than Bayesian inference in particular.
 
 %For instance the Boltzmann machine model given as an example when discussing undirected graphical models, is more commonly known as an \emph{Ising spin model} in statistical physics and is used extensively as a simple model to study phase transition behaviour. Computing the normalising constant of the . There 
 
-For completeness we will briefly review the nomenclature typically used in Bayesian inference before makes some comments about the terminology we use in this thesis. For a model with observed variables $\rvct{x} \in \set{X}$ and unobserved variables $\rvct{z} \in \set{Z}$, often referred to as \emph{model parameters} in a Bayesian setting, the standard presentation of Bayesian inference assumes that the joint probability is specified by a density $\pden{\rvar{x},\rvar{z}} = \td{\prob{\rvct{x},\rvct{z}}}{(\mu_{\rvct{x}} \times \mu_{\rvct{z}})}$ which naturally factorises as $\pden{\rvct{x},\rvct{z}}(\vct{x},\vct{z}) = \pden{\rvct{x}|\rvct{z}}(\vct{x}\gvn\vct{z})\,\pden{\rvct{z}}(\vct{z})$. 
+For completeness we will briefly review the nomenclature typically used in Bayesian inference. For a model with observed variables $\rvct{x} \in \set{X}$ and unobserved variables $\rvct{z} \in \set{Z}$, often referred to as \emph{model parameters} in a Bayesian setting, the standard presentation of Bayesian inference assumes that the joint probability is specified by a density $\pden{\rvar{x},\rvar{z}} = \td{\prob{\rvct{x},\rvct{z}}}{(\mu_{\rvct{x}} \times \mu_{\rvct{z}})}$ which naturally factorises as $\pden{\rvct{x},\rvct{z}}(\vct{x},\vct{z}) = \pden{\rvct{x}|\rvct{z}}(\vct{x}\gvn\vct{z})\,\pden{\rvct{z}}(\vct{z})$. 
 
 In this case the probability distribution defined by the marginal density on the model parameters $\pden{\rvct{z}}$ is typically termed the \emph{prior distribution}, with the intepretation that it captures our beliefs about the parameters before observing data. The conditional density on the observed variables given parameters $\pden{\rvct{x}|\rvct{z}}$ is often referred to as the \emph{likelihood}.%, though as we will discuss below this usage is ambiguous. 
 
@@ -1867,7 +1871,7 @@ The distribution defined by the conditional density on the parameters given the 
  \frac{\pden{\rvct{x}|\rvct{z}}(\vct{x}\gvn\vct{z})\,\pden{\rvct{z}}(\vct{z})}{\pden{\rvct{x}}(\vct{x})}
  \quad \forall \vct{z} \in \set{Z},\,\vct{x} \in \set{X} : \pden{\rvct{x}}(\vct{x}) > 0.
 \end{equation}
-Inference is then typically posed as the problem of computing the posterior distribution (density). This is typically not available in a (normalised) closed form as evaluating the denominator in \eqref{eq:bayes-theorem-density}, $\pden{\rvct{x}}$, sometimes termed the \emph{model evidence}, requires integrating the joint density over the parameters
+Inference is then typically posed as the problem of computing the posterior distribution. This is typically not available in a closed form as evaluating the denominator in \eqref{eq:bayes-theorem-density}, $\pden{\rvct{x}}$, sometimes termed the \emph{model evidence}, requires integrating the joint density over the parameters
 \begin{equation}\label{eq:model-evidence-integral}
  \pden{\rvct{x}}(\vct{x}) = 
  \int_{\set{Z}} \pden{\rvct{x},\rvct{z}}(\vct{x},\vct{z})\,\dr\vct{z} =
@@ -1892,15 +1896,15 @@ In this thesis we will generally avoid using the terms \emph{likelihood} and \em
 \centering
 \begin{tikzpicture}
   \node[latent] (mi) {$\rvct{m}^{(i)}$} ;
-  \node[latent, below=0.4 of mi] (ti) {$\rvct{t}^{(i)}$} ;
+  \node[latent, below=0.3 of mi] (ti) {$\rvct{t}^{(i)}$} ;
   \node[factor, left=2.5 of mi] (mum_sigmam-mi) {} ; %
   \node[align=left, anchor=south west, xshift=-1mm] (label-mum-sigmam-mi)
     at (mum_sigmam-mi.north) {\tiny $\textrm{LogNorm}(\upmu_{\rvar{m}},\upsigma_{\rvar{m}})$} ; %
   \node[factor, left=of ti] (mut_sigmat-ti) {} ; %
   \node[align=left, anchor=south, xshift=-3mm] (label-mut-sigmat-ti)
     at (mut_sigmat-ti.north) {\tiny $\textrm{LogNorm}(\upmu_{\rvar{t}},\upsigma_{\rvar{t}})$} ; %
-  \node[const, above=0.4 of mi] (xi) {$\vct{x}^{(i)}$}; % 
-  \node[const, above=0.4 of mi, xshift=12mm, yshift=-1mm] (yi) {$\vct{y}^{(i)}$}; % 
+  \node[const, above=0.3 of mi] (xi) {$\vct{x}^{(i)}$}; % 
+  \node[const, above=0.3 of mi, xshift=12mm, yshift=-1mm] (yi) {$\vct{y}^{(i)}$}; % 
   \node[latent, right=2.5 of mi] (d1i) {$\rvct{d}_1^{(i)}$} ; %
   \node[latent, right=2.5 of ti] (d2i) {$\rvct{d}_2^{(i)}$} ; %
   \op[left= of d1i, xshift=-3mm] {xi_yi_mi_ti-d1i} {} {xi,yi,mi,ti} {d1i} ; %
@@ -1923,15 +1927,15 @@ In this thesis we will generally avoid using the terms \emph{likelihood} and \em
   \plate {training} {(mi)(ti)(mum_sigmam-mi)(mut_sigmat-ti)(xi)(dummyyi)(d1i)(d2i)(e1i)(e2i)} {$i \in \fset{1 \,...\, N_{\textrm{train}}}$} ; %
   
   \node[latent, below=3.8 of mi] (tj) {$\rvct{t}^{(j)}$} ;
-  \node[latent, below=0.4 of tj] (mj) {$\rvct{m}^{(j)}$} ;
+  \node[latent, below=0.3 of tj] (mj) {$\rvct{m}^{(j)}$} ;
   \node[factor, left=2.5 of mj] (mum_sigmam-mj) {} ; %
   \node[align=left, anchor=north west, xshift=-1mm] (label-mum-sigmam-mj)
     at (mum_sigmam-mj.south) {\tiny $\textrm{LogNorm}(\upmu_{\rvar{m}},\upsigma_{\rvar{m}})$} ; %
   \node[factor, left=of tj] (mut_sigmat-tj) {} ; %
   \node[align=left, anchor=north, xshift=-3mm] (label-mut-sigmat-tj)
     at (mut_sigmat-tj.south) {\tiny $\textrm{LogNorm}(\upmu_{\rvar{t}},\upsigma_{\rvar{t}})$} ; %
-  \node[latent, below=0.4 of mj] (xj) {$\rvct{x}^{(j)}$}; % 
-  \node[latent, below=0.4 of mj, xshift=12mm] (yj) {$\rvct{y}^{(j)}$}; %
+  \node[latent, below=0.3 of mj] (xj) {$\rvct{x}^{(j)}$}; % 
+  \node[latent, below=0.3 of mj, xshift=12mm] (yj) {$\rvct{y}^{(j)}$}; %
   \factor[left=of xj] {pr-xj} {left:$\mathcal{U}(0,x_{\rm max})$} {} {xj} ; %
   \factor[right=of yj] {pr-yj} {right:$\mathcal{U}(0,y_{\rm max})$} {} {yj} ; %
   \node[latent, right=2.5 of mj] (d1j) {$\rvct{d}_1^{(j)}$} ; %
@@ -1982,16 +1986,15 @@ In this thesis we will generally avoid using the terms \emph{likelihood} and \em
 \label{fig:odw-hierarchical-factor-graph}
 \end{figure}
 
-When introducing the proposed model (Figure \ref{fig:observing-dark-worlds-factor-graph} for the \emph{Observing Dark Worlds} problem we glossed over how the parameters $\sigma$, $\mu_m$, $\sigma_m$, $\mu_t$ and $\sigma_t$ were chosen, assuming for simplicity they had somehow been set to reasonable values. Rather than fixing the parameter the values, a more Bayesian approach would be instead to also treat these unknown parameters as further unobserved variables to infer.
+When introducing the proposed model (Figure \ref{fig:observing-dark-worlds-factor-graph}) for the \emph{Observing Dark Worlds} problem we glossed over how the parameters $\sigma$, $\mu_m$, $\sigma_m$, $\mu_t$ and $\sigma_t$ were chosen, assuming for simplicity they had somehow been set to reasonable values. Rather than fixing the parameter values, a more Bayesian approach would be instead to also treat these parameters as further unobserved variables to infer.
 
-In particular we can encode our beliefs about plausible values for the variables by setting prior distributions on each of the variables and then jointly conditioning on \emph{all} of the observed data together. In the \emph{Observing Dark Worlds} competition, two distinct sets of galaxy data were provided - a training set of $N_{\textrm{train}} = 300$ of cluster images in which the observed ellipticities, galaxy coordinates and halo positions were all provided; and a test set of $N_{\textrm{test}} = 120$ images where only the galaxy observed ellipticities and coordinates are provided. 
+In particular we can encode our beliefs about plausible values for $\upsigma$, $\upmu_{\rvar{m}}$, $\upsigma_{\rvar{m}}$, $\upmu_{\rvar{t}}$ and $\upsigma_{\rvar{t}}$ by setting prior distributions on each of the variables and then jointly conditioning on \emph{all} of the observed data together. For example, for the the prior on the intrinsic ellipticity scale variable $\upsigma$ we might use $\mathrm{Gamma}(2,0.1)$. This has support only for positive values as required for a scale variable, and reflects the known properties of the intrinsic ellipticities - that they have non-zero variability (with the Gamma density tending to zero as $\upsigma \to 0$) and that they are bounded to unit magnitude and hence the standard deviation would be expected to be significantly less than one. We might have less strong prior beliefs about the range of plausible values for the halo mass and core radii distribution, and so choose to use concordantly less constraining prior distributions on the scale and location variables for these distributions. For example a prior of $\nrm{0, 5}$ on the location variables $\upmu_{\rvar{m}}$ and $\upmu_{\rvar{t}}$ and a prior of $\mathcal{C}_{\geq 0}(2)$ on the scale variables $\upsigma_{\rvar{m}}$ and $\upsigma_{\rvar{t}}$, supports a wide range of values for these variables as being reasonable while still making a weak assumption that very extreme values are implausible.
 
-Assuming both the training and test data are \ac{iid} we can form a \emph{hierarchical model} for the problem which specifies a joint density across the observed and latent variables for all of the training and test set clusters as well as the global variables specifying the distributions on the halo masses, core radii and galaxy intrinsic ellipticities. A factor graph for the proposed hierarchical model is shown in Figure \ref{fig:odw-hierarchical-factor-graph}; compared to the factor graph in Figure \ref{fig:observing-dark-worlds-factor-graph} some of the detail in the model structure for each cluster has been hidden to make the higher level structure clearer and the vector notation introduced when discussing inference in the model has been used to remove the need for plates indexed across galaxies and halos. The galaxy positions which are all observed have also been removed for clarity.
+In the \emph{Observing Dark Worlds} competition, two distinct sets of data were provided - a training set of $N_{\textrm{train}} = 300$ of cluster images in which the observed ellipticities, galaxy coordinates and halo positions were all provided; and a test set of $N_{\textrm{test}} = 120$ images where only the galaxy observed ellipticities and coordinates are provided. Assuming both the training and test data are \ac{iid} we can form a \emph{hierarchical model} for the problem which specifies a joint density across the observed and latent variables for all of the training and test set clusters as well as the global variables $\upsigma$, $\upmu_{\rvar{m}}$, $\upsigma_{\rvar{m}}$, $\upmu_{\rvar{t}}$ and $\upsigma_{\rvar{t}}$. A factor graph for the proposed hierarchical model is shown in Figure \ref{fig:odw-hierarchical-factor-graph}. Compared to the factor graph in Figure \ref{fig:observing-dark-worlds-factor-graph} some detail in the model structure for each cluster has been hidden to make the higher level structure clearer. The vector notation introduced when discussing inference in the model has also been used to remove the need for plates indexed across galaxies and halos. %The galaxy positions which are all observed have also been removed for clarity.
 
 %As an example of how prior distributions might be chosen in practice: 
-The prior on the intrinsic ellipticity scale variable $\upsigma$ has been set to $\mathrm{Gamma}(2,0.1)$ this having positive support as required, and reflecting the known properties of the intrinsic ellipticities - that they have non-zero variability (with the Gamma density tending to zero as $\upsigma \to 0$) and that they are bounded to unit magnitude and hence the standard deviation would be expected to be significantly less than one. For the halo mass and core radii distribution variables weaker priors have been set that support a wide range of plausible distributions while still discouraging extreme values.
 
-When making predictions using the hierarchical model, due to the joint dependence between all cluster images it is now necessary to calculate conditional expectations on all of the test cluster halo coordinates jointly given the observed data. Even considering only the halo position variables the expectations are being calculated over, the resulting integral is now over a space of several hundred dimensions, and once all of the additional unobserved variables defined in the overall joint density are included, the resulting integral is over several thousand variables. Given the discussed infeasibility of using quadrature to compute conditional expectations of the halo positions for even a single cluster images, clearly in this case the need for computational methods for inference which scale to high dimensionalities is even more stark.
+When making predictions using the hierarchical model, the latent variables associated with each cluster image are now dependent when not conditioning on the values of the variables $\upsigma$, $\upmu_{\rvar{m}}$, $\upsigma_{\rvar{m}}$, $\upmu_{\rvar{t}}$ and $\upsigma_{\rvar{t}}$. It is therefore necessary to calculate conditional expectations on all of the test cluster halo coordinates jointly given the observed data. Even considering only the halo position variables the expectations are being calculated over, the resulting integral is over a space of several hundred dimensions. Once all of the additional unobserved variables defined in the overall joint density are included, the resulting integral is over several thousand variables. Given the discussed infeasibility of using quadrature to compute conditional expectations of the halo positions for even a single cluster images, clearly in this case the need for computational methods for inference which scale to high dimensionalities is even more stark.
 
 % sigma - more than zero (intrinsic variability) but << 1 as e \in [-1, 1]
 % mu_t / mu_m - weak prior knowledge, however extreme values e.g. 1e6 or 1e-6 seem unlikely
@@ -2004,20 +2007,61 @@ When making predictions using the hierarchical model, due to the joint dependenc
 \begin{tikzpicture}
   \node[latent] (zm) {$\rvct{z}_{m}$} ; %
   \factor[left=of zm] {pr-zm} {below:\small $\pden{\rvct{z}_m}$} {} {zm} ; %
-  \node[obs, right=of zm, xshift=10mm] (x) {$\rvct{x}$} ; %
-  \factor[left=of x, xshift=-7mm] {zm-x} {below:\small $\pden{\rvct{x}|\rvct{z}_m}$} {zm} {x} ; %
+  \node[obs, right=of zm, xshift=13mm] (x) {$\rvct{x}$} ; %
+  \factor[left=of x, xshift=-7mm] {zm-x} {below:\small $\pden{\rvct{x}|\rvar{m},\rvct{z}_m}$} {zm} {x} ; %
   \node[latent, above=0.5 of zm-x] (m) {$\rvar{m}$} ; %
   \factor[left=of m] {pr-m} {\small $\pden{\rvar{m}}$} {} {m} ; %
   \gate {mgate} {(zm-x)(zm-x-caption)} {m} {.north} ; %
   \plate {models} {(pr-zm)(zm)(pr-zm-caption)(zm-x)(zm-x-caption)(mgate)} {$m \in \fset{1 \dots M}$} ; %
 \end{tikzpicture}
 %\vskip 5pt
-\caption[Model comparison factor graph.]{Model comparison factor graph.} %
+\caption[Model comparison factor graph.]{Factor graph for inference over multiple models.} %
 \label{fig:model-comparison-factor-graph}
 \end{figure}
 
-So far we have discussed inference on the unobserved variables in a fixed model. An important second level of inference is comparing between competing models for observed data. This can be treated consistently within the existing probabilistic framework we have discussed, however the computations involved in inference over models can pose further challenges beyond those already discussed in the previous section. We will first pose the model inference problem in general terms before returning to the \emph{Observing Dark Worlds} problem to give a concrete example.
+So far we have discussed making inferences about the unobserved variables in a single fixed model. An important second level of inference is comparing between competing models for the same observed data. As we will see this can be treated consistently within a simple extension to the existing probabilistic framework we have discussed. 
 
-The general set up will be that we have a finite set of $M$ models which we index with the variable $\rvar{m} \in \fset{1 \dots M}$. A common special case will be where $M=2$ and we are performing a comparison between a pair of models. All models share the same observed random vector $\rvct{x}$, and each model has a model specific vector of unobserved variables $\rvct{z}_m$
+As a simple motivating example, we can consider comparing our proposed model for the \emph{Observing Dark Worlds} problem, in which we assumed that the magnitude of the shear distortion had the functional dependence given in \eqref{eq:dark-matter-halo-force}, to an alternative model which assumes
+\begin{equation}\label{eq:dark-matter-halo-force-alt-1}
+  f_h(u,v) = \frac{\rvar{m}_h}{r_h}
+  \quad\textrm{where}\quad
+  r_h = \sqrt{(\rvar{x}_h - u)^2 + (\rvar{y}_h - v)^2}.
+\end{equation}
+\marginpar{Ockham's Razor is a philoshopical principle, commonly attributed to the 14th century Franciscan friar William of Ockham, that states if there exist multiple explanations for observations, all else being equal we should prefer the simplest.} 	
+This model is simpler in the sense of requiring only one additional latent variable per halo, but produces a non-realistic infinite magnitude distortion at zero radial distances. Given the observed data, we would ideally like to be able to make a judgement as to which of the two proposed models better describes the data. To be useful this comparison must take into account the relative complexity of the models; a model with more free variables will generally be able to fit observed data more closely, however \emph{Ockham's Razor}, and empricical evidence of the loss of predictive power of overly complex models, suggests we should prefer simpler models where possible. By marginalising over the unobserved variables in a model, the probabilistic model comparison framework we will describe automatically embodies Ockham's Razor \citep{mackay2003information}. 
+%We will first pose the model inference problem in general terms before returning to the \emph{Observing Dark Worlds} problem to give a concrete example.
 
+The general set up will be that we have a finite set of $M$ models which we index with the variable $\rvar{m} \in \fset{1 \dots M}$. A common special case will be where $M=2$ and we are performing a comparison between a pair of models. All models share the same observed random vector $\rvct{x}$, and there are a set of per model vectors of unobserved variables $\fset{\rvct{z}_m}_{m=1}^M$ which are assumed to be independent  (before conditioning on any observations). More complex structures could be assumed e.g. that the models share a set of common unobserved variables, however we only consider the simple case of independent models here. The joint density across the observations, model indicator and model latent variables is then assumed to factorise as
+\begin{equation}\label{eq:multi-model-joint}
+\begin{split}
+  &\pden{\rvct{x},\rvar{m},\rvct{z}_1,...\, ,\rvct{z}_M}
+  (\vct{x},m,\vct{z}_1,...\, ,\vct{z}_M) =\\[-2mm]
+  &\qquad\qquad
+  \pden{\rvct{x}|\rvar{m},\rvct{z}_m}(\vct{x}\gvn m,\vct{z}_m)\,
+  \pden{\rvar{m}}(m)\,
+  \prod_{n=1}^M \pden{\rvct{z}_n}(\vct{z}_n).
+\end{split}
+\end{equation}
+The marginal density on the model indicator $\pden{\rvar{m}}$ represents our prior beliefs about the relative probabilities of the models before observing data. Importantly the value of the model indicator variable $\rvar{m}$ selects the relevant per model conditional density on the observed variables given latent variables $\pden{\rvct{x}|\rvar{m},\rvct{z}_m}$; this represents the assumption that conditioned on the model indicator assuming a particular model index $m$ the observed variables are conditionally independent of the latent variables of all other models $\rvct{x} \perp \fset{\rvct{z}_n}_{n\neq m} \gvn \rvar{m} = m$. An extension to factor graphs, \emph{gates} \citep{minka2009gates}, can be used to represent such context-dependent conditional independency relationships. Figure \ref{fig:model-comparison-factor-graph} shows a gated factor graph representation of equation \ref{eq:multi-model-joint}, with the gate indicated by the dashed box. %The semantics of the gate are that any edges from factors or variables nodes within the gate box to variables or factor outside the gate are only active when the gating variable, indicated by the the variable
 
+Given this computational set up, the task in model comparison is then to compute the relative probabilities of each of the models given observed data. These probabilities\footnote{As $\rvar{m}$ is a discrete random variable the probability of the event of $\rvar{m}$ taking a value in the singleton set $\fset{m}$ given that $\rvct{x} = \vct{x}$ is equal to the density $\pden{\rvar{m}|\rvct{x}}(m\gvn\vct{x})$.} are given by
+\begin{equation}\label{eq:model-posterior}
+  \pden{\rvar{m}|\rvct{x}}(m\gvn\vct{x}) = 
+  \frac{\pden{\rvct{x}|\rvar{m}}(\vct{x}\gvn m)\,\pden{\rvar{m}}(m)}
+  {\sum_{n=1}^M \lpa \pden{\rvct{x}|\rvar{m}}(\vct{x}\gvn n)\,\pden{\rvar{m}}(n)\rpa},
+\end{equation}
+which can be seen as a direct analogue to Bayes' theorem for the posterior density on unobserved random variables for a single model. The key quantities needed to evaluate the model posterior probabilities are the marginal densities $\pden{\rvct{x}|\rvar{m}}(\vct{x}\gvn m)$ evaluated at the observed data. Computing these values requires marginalising out the unobserved variables from the per model joint densities on the observed and unobserved variables
+\begin{equation}\label{eq:model-marginal-den}
+  \pden{\rvct{x}|\rvar{m}}(\vct{x}\gvn m) = 
+  \int_{\set{Z}_m} \pden{\rvct{x}|\rvar{m},\rvct{z}_m}(\vct{x}\gvn m, \vct{z}) \pden{\rvct{z}_m}(\vct{z})
+  \,\dr\vct{z}.
+\end{equation}
+This value is equal to the denominator in Bayes' theorem \eqref{eq:bayes-theorem-density}, this explaining the naming of this term as the \emph{model evidence}.
+
+As with evaluating conditional expectations of functions of the latent variables in a model given observations, evaluating the model evidence values requires integrating across the space of all latent variables. In most cases this integral will not have an analytic solution and the number of latent variables will be sufficiently large to make numerical quadrature methods impractical. The key computational challenge in being able to perform probabilistic model comparison with complex high dimensional models is therefore again being able to efficiently to compute integrals in high dimensional spaces.
+
+\section{Summary}
+
+In this chapter we introduced the probabilistic modelling theory and tools that will form the basis for the methods we will introduce in the rest of the thesis. We illustrated the ability of factor graphs to efficiently communicate the structure of complex probabilistic models and discussed their close links to computation graphs which allow efficient calculation of the derivatives of the outputs of complex functions of a large numbers of variables with respect to their inputs. We concluded by motivating the computational challenges of performing inference in complex probabilistic models involving large numbers of unobserved variables, due to the need to be able to evaluate integrals across high-dimensional spaces. In the next chapter we will introduce some of the computational methods which have been proposed to address the challenges of finding solutions to inferences problems.
+
+%As a concrete example of model comparison, we can consider comparing the model proposed with
