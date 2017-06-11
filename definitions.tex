@@ -10,6 +10,7 @@
 \DeclareMathOperator{\diag}{diag}
 \DeclareMathOperator{\sech}{sech}
 \DeclareMathOperator{\cosech}{cosech}
+\DeclareMathOperator{\support}{supp}
 
 \let\originalleft\left
 \let\originalright\right
@@ -22,6 +23,9 @@
 %\newcommand{\probability}{\vvmathbb{P}}
 \newcommand{\pden}[1]{\probdens_{#1}}  
 \newcommand{\prob}[1]{\probability_{#1}}   
+\newcommand{\kldiv}[3][]{\vvmathbb{D}_{\scriptscriptstyle\mathrm{KL}}^{#1}\lsb #2 \,\Vert\, #3 \rsb}
+\newcommand{\rdiv}[4][]{\vvmathbb{D}_{#2}^{#1}\lsb #3 \,\Vert\, #4 \rsb}
+\newcommand{\varobj}{\mathcal{L}}
 
 \newcommand{\lebesgue}{\lambda}
 \newcommand{\hausdorff}{\mathcal{H}}
@@ -47,9 +51,9 @@
 \newcommand{\set}[1]{\mathit{#1}}
 \newcommand{\sset}[1]{\mathcal{#1}}
 \newcommand{\fset}[1]{\lbr #1 \rbr}
-\newcommand{\reals}{\vvmathbb{R}}
-\newcommand{\naturals}{\vvmathbb{N}}
-\newcommand{\integers}{\vvmathbb{Z}}
+\newcommand{\reals}{\mathbb{R}}
+\newcommand{\naturals}{\mathbb{N}}
+\newcommand{\integers}{\mathbb{Z}}
 \newcommand{\ind}[1]{\indicator_{#1}}
 \newcommand{\bigo}[1]{\mathcal{O}\lpa #1\rpa}
 \newcommand{\lpa}{\left(}
@@ -79,6 +83,7 @@
 \newcommand{\rng}[2]{\lbr #1 \dots #2 \rbr}
 \newcommand{\expc}[1]{\vvmathbb{E}\lsb #1 \rsb}
 \newcommand{\var}[1]{\vvmathbb{V}\lsb #1 \rsb}
+\newcommand{\cov}[1]{\vvmathbb{C}\lsb #1 \rsb}
 \newcommand{\dr}{\mathrm{d}}
 \newcommand{\td}[2]{\frac{\dr #1}{\dr #2}}
 \newcommand{\tdd}[2]{\frac{\dr^2 #1}{\dr #2^2}}
