@@ -1,16 +1,221 @@
 \chapter{Approximate inference}\label{ch:approximate-inference}
 
-\section{Deterministic approaches}
+In the previous chapter it was demonstrated that the key computational challenge in performing inference in probabilistic models is being able to evaluate integrals with respect to probability measures defined on high-dimensional spaces. Although in restricted cases such as conjugate exponential family models, the integrals involved in inference can be solved analytically, to exploit the full flexibility of probabilistic modelling we need to be able to compute such integrals in more general cases. As discussed in the previous chapter, for models with even moderate numbers of latent variables, numerical quadrature approaches to evaluating integrals are computationally infeasible due to the exponential scaling of computation cost with dimension.
 
-\subsection{Laplace's method}
+%\marginpar{Although this may seem a paradox, all exact science is dominated by the idea of approximation. When a man tells you that he knows the exact truth about anything, you are safe in inferring that he is an inexact man.\\---Bertrand Russell}
+%\marginpar{Be approximately right rather than exactly wrong.\\--John W. Tukey}
+\marginpar{Truth is much too complicated to allow anything but approximations.\\---John von Neumann}
+In this chapter we will review some of the key algorithms proposed for computing \emph{approximate} solutions to inference problems. A unifying aspect to all of these methods is trading off some loss of the accuracy of the answers provided to inferential queries, for a potentially significant increase in computational tractability. The literature on \emph{approximate inference} methods is vast and so necessarily this chapter will only form a partial review of the available methods. We will therefore concentrate on those approaches which are directly relevant to this thesis.
 
-\subsection{Variational inference}
+Approximate inference methods can be coarsely divided in to two groups: those in which a more tractable approximation to the target probability measure of interest is found by optimising the approximation to be `close' in some sense to the target measure; methods in which the integrals with respect to the target measure are estimated by computing weighted sums over points sampled from a probability measure over the target state space. As with any such binary classification of such a broad and diverse topic there are however methods which combine aspects of both these approaches. The chapter will therefore be begin with sections reviewing the key sampling and optimisation based approaches to approximate inference, before concluding with a discussion of some of the methods proposed which use a hybrid approach.
 
-\subsection{Expectation propagation}
+\section{Sampling approaches}
 
-\section{Stochastic approaches}
+A key observation in the previous chapter was that inference at both the level of computing conditional expectations of latent variables in a model and in evaluating evidence terms to allow model comparison, will for most models of interest correspond to being able to integrate (potentially constant) functions against a probability density defined with respect to a base measure\footnote{There are models for which the corresponding probability measure is not absolutely continuous with respect to another measure and so cannot be represented by a density, however we will concentrate on the common case were a density exists.}. In particular we wish to be able to compute integrals of the form
+\begin{equation}\label{eq:integral-against-density}
+  \int_{\set{X}} f(\vct{x}) \, \rho(\vct{x}) \,\dr\mu(\vct{x})
+\end{equation}
+where $\rho$ is the density on a space $\set{X}$ of a probability measure with respect to a base measure $\mu$ and $f$ is a measurable function. For instance in the case of computing the \emph{posterior mean} in a Bayesian inference problem with observed variables $\rvct{y}$ and latent variables $\rvct{x}$ where the posterior density $\pden{\rvct{x}|\rvct{y}}$ is defined with respect to the $D$-dimensional Lebesgue measure, we would have  $\rho(\vct{x}) = \pden{\rvct{x}|\rvct{y}}(\vct{x}\gvn\vct{y})$ for an observed $\vct{y}$, $\mu(\vct{x}) = \lebm{D}(\vct{x})$ and $f(\rvct{x}) = \vct{x}$. Often we will only be able to evaluate $\rho$ up to an unknown unnormalising constant i.e. $\rho(\vct{x}) = \frac{1}{Z}\pi(\vct{x})$ with we able to evaluate $\pi$ pointwise but $Z$ intractable to compute. For example in a Bayesian inference setting $\pi(\vct{x})$ would be the joint density $\pden{\rvct{x},\rvct{y}}(\vct{x},\vct{y})$ and $Z$ the model evidence $\pden{\rvct{y}}(\vct{y})$. When peforming inference in undirected graphical models, we would instead have that $\pi$ is the product of clique potentials and $Z$ the corresponding normaliser.
+
+The key idea of the methods we will discuss in this section is that we can estimate \eqref{eq:integral-against-density} by generating a set of random samples from a probability distribution defined on $\set{X}$ and then computing a (potentially weighted) average of the value of the function $f$ evaluated at these sample points. The most obvious approach is to sample independently from the probability distribution defined by the target density $\rho$. As we will see this is not necessarily feasible to do for the complex target densities defined on high dimensional spaces, however a host of related methods for generating and using random samples to approximate integrals with respect to target densities arising from complex probabilistic models have been developed.
 
 \subsection{Monte Carlo method}
+
+\marginpar{The eponym of the Monte Carlo method is a Monocan casino, favoured haunt of the uncle of Stanis{\l}aw Ulam, one of the method's inventors.}
+The framework that unifies all of the methods we will discuss in this section is the \emph{Monte Carlo method} for integration \citep{ulam1949monte}. We will briefly describe the key ideas and properties of Monte Carlo integration. 
+
+Let $\rvct{x}$ be a random (vector) variable distributed according to the target density i.e. $\pden{\rvct{x}} = \td{\prob{\rvct{x}}}{\mu} = \rho$. Given an arbitrary measurable function $f : \set{X} \to \reals$ we define a random variable $\rvar{f} = f(\rvct{x})$. Our task is to compute expectations $\expc{\rvar{f}} = \bar{f}$ corresponding to the integral \eqref{eq:integral-against-density}, with the assumption that $\bar{f}$ exists and is finite.
+
+%We wish to be able to compute expectations of arbitrary measurable functions $f$ of the random variable $\rvct{x}$, the composition defining a new random variable $\rvar{f} = f(\rvct{x})$ 
+%\begin{equation}
+%  \bar{f} = \expc{\rvar{f}} = \int_{\set{X}} f(\vct{x}) \,\rho(\vct{x}) \,\dr\mu(\vct{x}),
+%\end{equation}
+%with the implicit assumption that this expectation exists and is finite. 
+
+For now we assume we have a way of generating values of $N$ random variables $\lbrace \rvct{x}^{(n)}\rbrace_{n=1}^N$, each marginally distributed according to the target density i.e. $\pden{\rvct{x}^{(n)}} = \rho ~\forall n \in \fset{1 \dots N}$. We will initially not require any further properties on the joint distribution across all $N$ variables. We define random variables  $\lbrace \rvar{f}^{(n)} \rbrace_{n=1}^N$ and $\hat{\rvar{f}}$ by
+\begin{equation}
+  \rvar{f}^{(n)} = f\lpa\rvct{x}^{(n)}\rpa \quad\forall n \in \fset{1\dots N}
+  \quad\textrm{and}\quad
+  \skew{2}{\hat}{\rvar{f}} = \frac{1}{N} \sum_{n=1}^N \rvar{f}^{(n)}.
+\end{equation}
+Due to linearity of the expectation operator, we have that
+\begin{equation}
+  \expc{\skew{2}{\hat}{\rvar{f}}} = 
+  \frac{1}{N} \sum_{n=1}^N \expc{\rvar{f}^{(n)}} = 
+  \frac{1}{N} \sum_{n=1}^N \bar{f} = 
+  \bar{f}
+\end{equation}
+%\marginpar{The variance of a random variable $\rvar{x}$ is defined as $\var{\rvar{x}} =\expc{(\rvar{x} - \expc{\rvar{x}})^2}$.}
+and so that in expectation $\skew{2}{\hat}{\rvar{f}}$ is equal to $\bar{f}$, i.e. realisations of $\skew{2}{\hat}{\rvar{f}}$ are unbiased estimators of $\bar{f}$. Note that this result does not require any independence assumptions about the generated random variables. Now considering the variance of $\skew{2}{\hat}{\rvar{f}}$ it can be shown that
+%\begin{align}
+%  \var{\hat{\rvar{f}}} 
+%  =\,& 
+%  \expc{\lpa \frac{1}{N} \sum_{n=1}^N \lpa f(\rvct{x}^{(n)}) \rpa - \bar{f}\rpa^2}\\
+%  =\,&
+%  \frac{1}{N^2} \expc{\lpa \sum_{n=1}^N \lpa f(\rvct{x}^{(n)}) - \bar{f} \rpa\rpa^2}\\
+%  =\,&
+%  \frac{1}{N^2}\sum_{n=1}^N \expc{\lpa f(\rvct{x}^{(n)}) - \bar{f} \rpa^2} +\,\\
+%  &
+%  \frac{2}{N^2}\sum_{n=1}^N \sum_{m=1}^{n-1} 
+%  \expc{\lpa f(\rvct{x}^{(m)}) - \bar{f} \rpa\lpa f(\rvct{x}^{(n)}) - \bar{f} \rpa}
+%  \\
+%  =\,&
+%  \frac{\var{f(\rvct{x})}}{N}
+%  \lpa 
+%    1 +
+%    \frac{2}{N}\sum_{n=1}^N \sum_{m=1}^{n-1} 
+%      \frac{\expc{\lpa f(\rvct{x}^{(m)}) - \bar{f} \rpa\lpa f(\rvct{x}^{(n)}) - \bar{f} \rpa}}
+%      {\var{f(\rvct{x})}}
+%  \rpa
+%\end{align}
+\begin{align}\label{eq:monte-carlo-variance-general}
+  \var{\skew{2}{\hat}{\rvar{f}}}
+  =
+  \frac{\var{\rvar{f}}}{N}
+  \lpa 
+    1 +\frac{2}{N}\sum_{n=1}^N \sum_{m=1}^{n-1} \frac{\cov{\rvar{f}^{(m)}, \rvar{f}^{(n)}}}{\var{\rvar{f}}}
+  \rpa.
+\end{align}
+If the generated random variables $\lbrace \rvct{x}^{(n)}\rbrace_{n=1}^N$ and so $\lbrace \rvar{f}^{(n)}\rbrace_{n=1}^N$ are independent, then $\cov{\rvar{f}^{(m)}, \rvar{f}^{(n)}} = 0 ~\forall m\neq n$. In this case \eqref{eq:monte-carlo-variance-general} reduces to
+\begin{equation}\label{eq:monte-carlo-variance-independent}
+  \var{\skew{2}{\hat}{\rvar{f}}}
+  =
+  \frac{\var{\rvar{f}}}{N},
+\end{equation}
+i.e. the variance of the \emph{Monte Carlo estimate} $\hat{\rvar{f}}$ for $\expc{\rvar{f}}$ is inversely proportional to the number of generated random samples $N$. Importantly this scaling does not depend on the dimension of $\rvct{x}$. 
+
+Therefore if we can generate a set of independent random variables from the target density, we can estimate expectations that asymptotically tend to the true value as $N$ increases, with a typical deviation from the true value (as measured by the standard deviation, i.e. the square root of variance) that is $\mathcal{O}\lpa N^{-\frac{1}{2}}\rpa$. In comparison a fourth-order quadrature method such as \emph{Simpson's rule} has an error that is $\mathcal{O}\lpa N^{-\frac{4}{D}}\rpa$ for a grid of $N$ points uniformly spaced across a $D$ dimensional space. Asymptotically for $D > 8$, Monte Carlo integration will therefore give better convergence than Simpson's rule, and even for smaller dimensions the large constant factors in the error dependence can sometimes favour Monte Carlo.
+
+Note that computing Monte Carlo estimates from independent random variables is not optimal in terms of minimising $\var{\skew{2}{\hat}{\rvar{f}}}$ for a given $f$; the covariance terms in \eqref{eq:monte-carlo-variance-general} can be negative which can reduce the overall variance. A wide range of \emph{variance reduction} methods have been proposed to exploit this and produce lower variance of Monte Carlo estimates for a given $f$ \citep{kroese2011variance}. Although these methods can be very important in pratice for achieving an estimator with a practical variance for a specific $f$ of interest, we will generally concentrate on the case where we do not necessarily know $f$ in advance and so cannot easily exploit these methods. %More generally applicable are \emph{quasi-Monte Carlo} methods \citep{niederreiter1992random,morokoff1995quasi} which use specially constructed \emph{low-discrepancy sequences} to more evenly tile the sample space. The error of quasi-Monte Carlo is upper bounded by $\mathcal{O}(\log(N)^D N^{-1})$ errors which can improve efficiency in some cases. The methods a
+
+\subsection{Pseudo-random number generation}
+
+\marginpar{The generation of random numbers is too important to be left to chance.\\ ---Robert R. Coveyou}
+Virtually all statistical computations involving random numbers in practice make use of \acp{PRNG}. Rather than generating samples from truly random processes\footnote{In a true random process it is impossible to precisely predict the next value in the sequence given the previous values.}, \acp{PRNG} produce deterministic\footnote{The sequences are determnistic in the sense that if the generator internal state is known all values in the sequence can be reconstructed exactly.} sequences of integers in a fixed range that nonetheless maintain many of the properties of a random sequence. 
+
+\begin{figure}[!t]
+\centering
+\pgfplotstableread{data/lcg-37-61-128-37.cvs}{\lcgfile}
+\drawgrid[zero color=black!80, one color=Maroon, cell ht=0.22em, cell wd=0.22em]{\lcgfile}
+\caption[Example linear congruential generator sequence.]{Binary representation of linear congruential generator sequence $s_{n+1} = 37s_n + 61 \kern-4pt\mod 128$. Left to right represents successive integer states in sequence with most significant binary digit at the top.}
+\label{fig:example-lcg-sequence}
+\end{figure}
+
+In particular through careful choice of the updates, sequences with a very long period (number of iterations before the sequence begins repeating), a uniform distribution across the numbers in the sequence range and low correlation between successive states can be constructed. A very simple example of a class of \acp{PRNG} is the \emph{linear congruential generator} which obeys the recurrent update
+\begin{equation}\label{eq:lcg-update}
+  s_{n+1} = (a s_n + c) \kern-4pt\mod m
+  \quad \textrm{with} \quad
+   0 < a < m,~ 0 \leq c < m,
+\end{equation}
+with $a$, $c$ and $m$ integer parameters. If $a$, $c$ and $m$ are chosen appropriately, iterating the update \eqref{eq:lcg-update} from an initial seed $0 \leq s_0 < m$, will produce a sequence of states which visits all the integers in $[0, m)$ before repeating. An example state sequence with $m=128$ is shown in Figure \ref{fig:example-lcg-sequence}. In practice, linear congruential generators produce sequence with poor statistical properties, particularly when used to generate random points in high dimensional spaces \citep{marsaglia1968random}, hence most modern numerical computing libraries use more robust variants such as the \emph{Mersenne-Twister} \citep{matsumoto1998mersenne}, which is used in all experiments in this thesis.
+
+The raw output of a \ac{PRNG} is an integer sequence, with typically the sequence elements uniformly distributed over all integers in a range $[0, 2^n)$ for some $n \in \naturals$. All real values are represented at a fixed precision on computers, typically using a floating point representation \citep{ieee2008standard} of \emph{single} (32-bit) or \emph{double} (64-bit) precision. Through an approriate multiply and shift transformation, the integer outputs of a \ac{PRNG} can be converted to floating-point values uniformly distributed across a finite interval. \ac{PRNG} implementations typically provide a primitive to generate floating-point values uniformly distributed on $[0, 1)$.
+
+Given the ability to generate arbitrary long sequences of (effectively) independent samples from a uniform distribution $\mathcal{U}(0,1)$, the question is then how to use these values to produce random samples from arbitary densities. This will be the subject of the following sub-sections.
+
+\subsection{Transform sampling}
+
+Samples from a large class of distributions can be generated by directly exploiting the transform of random variables relationships discussed in \ref{subsec:change-of-variables}. In particular if $\rvct{u}$ is $D$-dimensional vector of independent random variables with $\mathcal{U}(0,1)$ marginal densities, then if $\vct{g} :  [0,1)^D \to \set{X}$ is a bijective map to a vector space $\set{X} \subseteq \reals^D$, then if we define $\rvct{x} = \vct{g}(\rvct{u})$ and $\vct{h} = \vct{g}^{-1}$, then by applying \eqref{eq:change-of-variables-vector-bijective} we have that
+\begin{equation}\label{eq:transform-sampling-uniform}
+  \pden{\rvct{x}}(\vct{x}) = \left|\pd{\vct{h}(\vct{x})}{\vct{x}}\right|.
+\end{equation}
+\begin{figure}[!t]
+\def\numgrid{11}
+\resizebox{\textwidth}{!}{
+\begin{tikzpicture}[point/.style={circle,draw=Maroon,fill=white!80!black,inner sep=0pt}]
+  \begin{axis}[
+    name=uaxis,
+    xmin=0,xmax=1,
+    ymin=0,ymax=1,
+    width=66mm,height=66mm,
+    x label style={at={(axis description cs:0.5,-0.025)},anchor=north},
+    y label style={at={(axis description cs:-0.025,0.5)},anchor=south},
+    xlabel={\small $u_1$},
+    ylabel={\small $u_2$},
+    every tick label/.append style={font=\small},
+    ytick={0,1},
+    xtick={0,1},
+    ]
+  \end{axis}
+  \begin{axis}[
+    name=xaxis,
+    at=(uaxis.right of south east),
+    xshift=1.5mm,
+    anchor=left of south west,
+    xmin=-3,xmax=3,
+    ymin=-3,ymax=3,
+    width=66mm,height=66mm,
+    x label style={at={(axis description cs:0.5,-0.025)},anchor=north},
+    y label style={at={(axis description cs:-0.025,0.5)},anchor=south},
+    xlabel={\small $x_1$},
+    ylabel={\small $x_2$},
+    every tick label/.append style={font=\small},
+    ytick={-3,3},
+    xtick={-3,3},
+    ]
+  \end{axis}
+
+  \foreach \i in {0,...,\numgrid} 
+  {
+    \foreach \j in {0,...,\numgrid} 
+    {
+      \pgfmathsetmacro{\u}{0.05 + (0.9 * \i) / \numgrid};
+      \pgfmathsetmacro{\v}{0.05 + (0.9 * \j) / \numgrid};
+      \pgfmathsetmacro{\x}{sqrt(-2 * ln(\u)) * cos(deg(2 * pi * \v))};
+      \pgfmathsetmacro{\y}{sqrt(-2 * ln(\u)) * sin(deg(2 * pi * \v))};
+      \pgfmathsetmacro{\c}{mod(\j,2)*80}
+      \node[point,minimum size=0.8mm, fill=black!\c] (uv_\i_\j) at (5*\u,5*\v) {};
+      \node[point,minimum size=0.8mm, fill=black!\c] (xy_\i_\j) at (8.5 + 0.9*\x,2.5+0.9*\y) {};
+    }
+  }
+  %\node (label) at (5.65, 2.5) {$\underset{\vct{h}}{\stackrel{\vct{g}}{\rightleftharpoons}}$} ; %
+  \pgfmathsetmacro{\numgridm}{\numgrid - 1}
+  \foreach \i in {0,...,\numgrid}
+    \foreach \j [count=\k] in {0,...,\numgridm}  
+      \draw[densely dashed, draw=white!50!black] (uv_\i_\j)--(uv_\i_\k) (uv_\j_\i)--(uv_\k_\i) ;
+  \foreach \i in {0,...,\numgrid}
+    \foreach \j [count=\k] in {0,...,\numgridm}  
+      \draw[densely dashed, draw=white!50!black] (xy_\i_\j)--(xy_\i_\k) (xy_\j_\i)--(xy_\k_\i) ;
+\end{tikzpicture}
+}
+\caption[Visualisation of Box--Muller transform.]{Visualisation of Box--Muller transform. Left axis shows uniform grid on $\set{U} = [0,1]^2$ and right-axis shows grid points after mapping through $\vct{g}$ in transformed space $\set{X} = \reals^2$.}
+\label{fig:box-muller-transform}
+\end{figure}
+For example for $D=2$, $\set{X} = \reals^2$ and a bijective map $\vct{g}$ defined by
+\begin{equation}\label{eq:box-muller-transform}
+\begin{split}
+  \vct{g}\lpa\begin{array}{c} u_1\\u_2\end{array}\rpa &=
+  \lsb\begin{array}{c} \sqrt{-2\log u_1}\cos(2\uppi u_1) \\ \sqrt{-2\log u_1}\sin(2\uppi u_2)\end{array}\rsb,
+  \\
+  \vct{h}\lpa\begin{array}{c} x_1\\x_2\end{array}\rpa &=
+  \lsb\begin{array}{c} \exp\lpa-\frac{1}{2}(x_1^2+x_2^2)\rpa \\ \frac{1}{2\uppi}\arctan\lpa\frac{x_1}{x_2}\rpa\end{array}\rsb,
+\end{split}
+\end{equation}
+then we have that the density of the transformed $\rvct{x} = \vct{g}(\rvct{u})$ is
+\begin{equation}\label{eq:box-muller-transform-density}
+  \pden{\rvct{x}}(\vct{x}) = 
+  \frac{1}{\sqrt{2\uppi}}\exp\lpa-\frac{x_1^2}{2}\rpa
+  \frac{1}{\sqrt{2\uppi}}\exp\lpa-\frac{x_2^2}{2}\rpa ,
+\end{equation}
+i.e. $\rvar{x}_1$ and $\rvar{x}_2$ are independent random variables with standard normal densities $\nrm{0,1}$. This is the \emph{Box--Muller transform} \citep{box1958note}, and allows generation of independent standard normal variables given a \ac{PRNG} primitive for sampling from $\mathcal{U}(0,1)$. A visualisation of the transformation of space applied by the method is shown in Figure \ref{fig:box-muller-transform}. 
+
+Due to the relatively high cost of the trigonometric function evaluations, more efficient alternatives to Box--Muller are usually used in practice to generate normal random variables such as a rejection sampling variant \citep{marsaglia1968random} (rejection sampling will be discussed in the next sub-section) or the \emph{Ziggurat algorithm} \citep{marsaglia2000ziggurat} (which also generalises to other symmetric univariate distributions).
+
+A general method for sampling from univarite densities is to use an inverse \ac{CDF} transform. For a probability density $\rho$ on a scalar random variable, the corresponding \ac{CDF} $r : \reals \to [0,1]$ is defined as
+\begin{equation}
+  r(x) = \int_{-\infty}^x \rho(v) \,\dr v
+  \implies
+  \pd{r(x)}{x} = \rho(x).
+\end{equation}
+If $\rvar{u}$ is a standard uniform random variable and $\rvar{x} = r^{-1}(u)$ then
+\begin{equation}
+  \pden{\rvar{x}}(x) = \left|\pd{r(x)}{x}\right| = \rho(x).
+\end{equation}
+To be able to use the inverse \ac{CDF} transform method we need to be able to evaluate $r^{-1}$. For many univariate densities the \ac{CDF} $r$ itself does not have a closed form solution, though for some densities such as the standard normal $\nrm{0,1}$, even though the \ac{CDF} does not have an analytic form in terms of elementary functions it is common for numerical computing libraries to provide numerical approximations to both $r$ and $r^{-1}$ which are accurate to within small multiples of machine precision. In densities where a standard library function for the \ac{CDF} is not available, Chebyshev polynomial approximations to the density can be used to efficient compute an approximation to the \ac{CDF} and an iterative solving method used for the inversion \citep{olver2013fast}.
+
+%numerical quadrature and iterative solving algorithms can be used to evaluate the inverse \ac{CDF} for arbitrary densities. The resulting high computational cost can be amortized by for example precomputing the inverse CDF over a fine grid and then using a spline interpolation to evaluate at arbitrary points.
+
+Although the inverse \ac{CDF} transform method gives a general recipe for sampling from univariate densities, it is not easy to generalise to multivariate densities and even for univariate densities, alternatives can be at simpler to implement and in some cases more numerically stable.
 
 \subsection{Rejection sampling}
 
@@ -18,4 +223,492 @@
 
 \subsection{Markov chain Monte Carlo}
 
+\newpage
+
+\section{Optimisation approaches}
+
+%A key observation in the previous chapter was that inference at both the level of computing conditional expectations of latent variables in a model and in evaluating evidence terms to allow model comparison, will for most models of interest correspond to being able to integrate (potentially constant) functions against a probability density defined with respect to a base measure\footnote{There are models for which the corresponding probability measure is not absolutely continuous with respect to another measure and so cannot be represented by a density, however we will concentrate on the common case were a density exists.}. In particular we wish to be able to compute integrals of the form
+%\begin{equation}\label{eq:integral-against-density}
+%  \int_{\set{X}} f(\vct{x}) \, \rho(\vct{x}) \,\dr\mu(\vct{x})
+%\end{equation}
+%where $\rho$ is the density on a space $\set{X}$ of a probability measure with respect to a base measure $\mu$ and $f$ is a measurable function. For instance in the case of computing the \emph{posterior mean} in a Bayesian inference problem with observed variables $\rvct{y}$ and latent variables $\rvct{x}$ where the posterior density $\pden{\rvct{x}|\rvct{y}}$ is defined with respect to the $D$-dimensional Lebesgue measure, we would have  $\rho(\vct{x}) = \pden{\rvct{x}|\rvct{y}}(\vct{x}\gvn\vct{y})$ for an observed $\vct{y}$, $\mu(\vct{x}) = \lebm{D}(\vct{x})$ and $f(\rvct{x}) = \vct{x}$. Often we will only be able to evaluate $\rho$ up to an unknown unnormalising constant i.e. $\rho(\vct{x}) = \frac{1}{Z}\pi(\vct{x})$ with we able to evaluate $\pi$ pointwise but $Z$ intractable to compute. For example in a Bayesian inference setting $\pi(\vct{x})$ would be the joint density $\pden{\rvct{x},\rvct{y}}(\vct{x},\vct{y})$ and $Z$ the model evidence $\pden{\rvct{y}}(\vct{y})$. When peforming inference in undirected graphical models, we would instead have that $\pi$ is the product of clique potentials and $Z$ the corresponding normaliser.
+
+The central idea of the methods we will review in this section is to try to find a normalised probability density $q(\vct{x})$ from a `simple' family that in some sense approximates the target density, i.e. $\rho(\vct{x}) \approx q(\vct{x})$. Depending on the family chosen for $q$, integrals of some functions $f$ against the target density $\rho$, can be approximated by analytic solutions to integrals of $f$ against $q$ e.g. if $q(\vct{x}) = \nrm{\vct{x} \gvn \vct{\mu},\mtx{\Sigma}}$ then we can approximate the mean of the target density as $\vct{\mu}$ and the covariance as $\mtx{\Sigma}$. To compute integrals of more general functions $f$ we will generally need to resort to using one of the sampling approaches we will review in the next section; generally it will be possible to directly generate independent samples from $q$ while often this will not be the case for $\rho$ hence this two-step approach still offers (computational) advantages over directly applying a sampling approach. Often the approaches we will discuss also allow estimation of the normalising constant $Z$ which may be needed for model comparison.
+
+\subsection{Laplace's method}
+
+For target densities $\rho$ defined with respect to a $D$-dimensional Lebesgue measure $\lebm{D}$, a simple approach for computing a multivariate normal approximate density $q$ to $\rho$ is \emph{Laplace's method}. Although not always strictly required, in general the method will work better for target densities with unbounded support, and more generally for targets which are as `close to normal' as possible. Therefore a useful initial step will often be to apply a change of variables to the target density, such that the density on the transformed space has unbounded support, for example working with the density on the logarithm of a random variable with support only on positive values.
+
+The key idea in Laplace's method is to form a truncated Taylor series approximation to the logarithm of the unnormalised target density
+\begin{equation}\label{eq:log-target-taylor-expansion}
+\begin{split}
+  \log\pi(\vct{x}) \approx 
+  \log\pi(\vct{x}^*) 
+  &+ \vct{g}(\vct{x}^*)\tr(\vct{x}-\vct{x}^*) \\
+  &+ \frac{1}{2} (\vct{x}-\vct{x}^*)\tr \mtx{H}(\vct{x}^*)(\vct{x}-\vct{x}^*),\\
+\end{split}
+\end{equation}
+where the \emph{gradient} and \emph{Hessian} of $\log\pi$ are defined respectively as
+\begin{equation}
+  \vct{g}(\vct{x}) = \pd{\log\pi(\vct{x})}{\vct{x}}\tr
+  \quad\textrm{and}\quad
+  \mtx{H}(\vct{x}) = \pdd{\log\pi(\vct{x})}{\vct{x}}{\vct{x}\tr}.
+\end{equation}
+\marginpar{A matrix $\mtx{M} \in \reals^{D\times D}$ is \emph{positive semi definite}, denoted $\mtx{M} \succeq 0$, \acs{iff} $\vct{x}\tr\mtx{M}\vct{x} \geq 0$ $\forall \vct{x} \in \reals^D$ and \emph{positive definite}, denoted $\mtx{M} \succ 0$, if the inequality is made strict. Corresponding definitions for a \emph{negative semi definite} matrices, $\mtx{M} \preceq 0$, and negative definite matrices, $\mtx{M} \prec 0$, are formed by reversing the sign of the inequality.}
+If the point $\vct{x}^*$ the expansion is formed around is chosen to be a (loca) maxima of $\log\pi$, which necessarily means that the gradient is zero, $\vct{g}(\vct{x}^*) = \vct{0}$, and the Hessian negative definite, $\mtx{H}(\vct{x}^*) \prec 0$, then
+\begin{equation}\label{eq:laplace-approximation-log}
+  \log\pi(\vct{x}) \approx
+  \log\pi(\vct{x}^*) + \frac{1}{2} (\vct{x}-\vct{x}^*)\tr \mtx{H}(\vct{x}^*)(\vct{x}-\vct{x}^*).
+\end{equation}
+Taking the exponential of both sides we therefore have that
+\begin{equation}\label{eq:laplace-approximation-exp}
+  \pi(\vct{x}) \approx
+  \pi(\vct{x}^*) \exp\lpa-\frac{1}{2} (\vct{x}-\vct{x}^*)\tr \lpa -\mtx{H}(\vct{x}^*)\rpa(\vct{x}-\vct{x}^*)\rpa.
+\end{equation}
+This has the form of an unnormalised multivariate normal density with mean $\vct{x}^*$ and inverse covariance (precision) $-\mtx{H}(\vct{x}^*)$.
+
+\begin{figure}[!t]
+\centering
+\pgfplotsset{cycle list/Dark2-3}
+\def\aParam{0.4}
+\begin{tikzpicture}
+  \begin{axis}[
+    name=dens,
+    cycle list name={Dark2-3},
+    domain=-10:10,
+    xmin=-10, xmax=10,
+    %ymin=0, ymax=0.7,
+    %ytick={0.5},
+    samples=200,
+    width=6.5cm,
+    height=4cm,
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    xlabel={\small $x$}, 
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.5,-0.35)},
+      anchor=north,
+      draw=none, 
+      legend columns=-1, 
+      column sep=0.5ex,
+      /tikz/nodes={anchor=base},
+      /tikz/every odd column/.style={yshift=2pt},
+      font=\scriptsize,
+    }
+  ]
+    \draw (axis description cs:0,0) -- (axis description cs:1,0); 
+    \addplot+[mark=none, thick] {
+      -\aParam * x - (1 + \aParam) * ln(1 + exp(-x)) + ln(\aParam)
+    };
+    \addlegendentry{$\log\pi(x)$};
+    \addplot+[mark=none, densely dashed, thick] {
+      -0.5 * \aParam * (x + ln(\aParam))^2 / (\aParam + 1) +
+     (\aParam + 1)* (ln(\aParam) - ln(\aParam + 1))
+    };
+    \addlegendentry{$\log\pi(x^*) + \frac{h}{2}(x-x^*)^2$};
+  \end{axis}
+  \begin{axis}[
+    name=logdens,
+    cycle list name={Dark2-3},
+    at=(dens.right of south east),
+    xshift=4mm,
+    anchor=left of south west,
+    domain=-10:10,
+    xmin=-10, xmax=10,
+    %ymin=0, ymax=8,
+    samples=200,
+    width=6.5cm,
+    height=4cm,
+    xlabel={\small $x$},
+    %ylabel={\small $-\log\pden{\rvar{x}}$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.5,-0.35)},
+      anchor=north,
+      draw=none, 
+      legend columns=-1, 
+      column sep=0.5ex,
+      /tikz/nodes={anchor=base},
+      /tikz/every odd column/.style={yshift=2pt},
+      font=\scriptsize,
+    }
+  ]
+    \addplot+[mark=none, solid, thick] {\aParam * exp(-\aParam * x) / ((1 + exp(-x))^(\aParam + 1))};
+    \addlegendentry{$\rho(x)$};
+    \addplot+[mark=none, densely dashed, thick] 
+      {exp(-0.5 * \aParam * (x + ln(\aParam))^2 / (\aParam + 1)) / (2 * pi * (\aParam + 1) / \aParam)^0.5};
+    \addlegendentry{$q(x) = \nrm{x \gvn x^*, -h^{-1}}$};
+  \end{axis}
+  %\node[anchor=north] at ($(dens.south east) + (2mm,-3mm)$) {\ref*{grouplegend}}; 
+\end{tikzpicture}
+\vspace{-3mm}
+\caption[Univariate example of Laplace's method.]{Univariate example of Laplace's method. Left axis shows the logarithm of the unnormalised target density $\log\pi(x)$ (green curve) and the corresponding quadratic Taylor series approximation $\log\pi(x^*) + \frac{h}{2}(x-x^*)^2$ (dashed orange curve) around the maxima $x^*$ with $h = (\nicefrac{\partial^2\log\pi}{\partial x^2})|_{x^*}$. The right axis shows the corresponding normalised target density $\rho(x)$ (green curve) and approximate density $q(x) = \nrm{x \gvn x^*, -h^{-1}}$ (dashed orange curve).}
+\label{fig:laplace-approximation-example}
+\end{figure}
+
+This suggests setting the approximate density $q$ to a multivariate normal density $\nrm{\vct{x} \gvn \vct{x}^*,\mtx{C}}$ with $\mtx{C} = -\mtx{H}(\vct{x}^*)^{-1}$, i.e.
+\begin{equation}\label{eq:laplace-approximation}
+  q(\vct{x}) = 
+  \frac{1}{(2\uppi)^{\frac{D}{2}}|\mtx{C}|^{\frac{1}{2}}} 
+  \exp\lpa-\frac{1}{2}(\vct{x}-\vct{x}^*)\tr\mtx{C}^{-1}(\vct{x}-\vct{x}^*)\rpa.
+\end{equation}
+An example of applying Laplace's method to fit a normal approximation to a univariate generalised logistic target is shown in Figure \ref{fig:laplace-approximation-example}.
+
+As $q(\vct{x}^*) \approx \rho(\vct{x}^*) = \pi(\vct{x}^*) / Z$ we can also form an approximation $\tilde{Z}$ to the normalising constant $Z$ for the target density
+\begin{equation}\label{eq:laplace-approximation-normalising-const}
+  Z \approx \tilde{Z} = (2\uppi)^{\frac{D}{2}} |\mtx{C}|^{\frac{1}{2}}\pi(\vct{x}^*).
+\end{equation}
+To use Laplace's method we need to be able to find a maxima of $\log\pi$ and evaluate the Hessian at this point. For simple unimodal target densities it may be possible to find the maxima and corresponding Hessian analytically. More generally if the gradient of $\log\pi$ can be calculated (using for example reverse-mode automatic differentation), then a maxima can be found by performing iterative gradient ascent. The Hessian can then be evaluated at this point using analytic expressions for the second partial derivatives or again by using automatic differentiation (by computing the Jacobian of the gradient of $\log\pi$).
+
+Though relatively simple to calculate, Laplace's method will often resulting in an approximate density which fits poorly to the target. As it only uses local information about the curvature of the (log) target density at the mode, away from the mode the approximate density can behave very differently from the target density, for instance observe the poor fit to the tails of the target of the example shown in Figure \ref{fig:laplace-approximation-example}. For multimodal densities, several different Laplace approximations can be calculated, each likely to at best capture a single mode well. For target densities which are well approximated by a normal distribution, for instance due to asymptotic convergence to normality of a posterior for \ac{iid} data, Laplace's method can give reasonable results however. 
+
+\subsection{Variational inference}
+
+Laplace's method is limited by using information about the target density evaluated at only one point to fit the approximation. An alternative approach is to instead try to fit the approximate density based on minimising a global measure of `goodness of fit' to the target; this is the strategy employed in \emph{variational inference}.
+
+The naming of variational inference arises from its roots in the \emph{calculus of variations}, which is concerned with \emph{functionals} (loosely a function of a function, often defined by a definite integral) and their derivatives. In particular it is natural to define the measure of the `goodness of fit' of the approximate density to the target as a functional of the approximate density. The value of this functional is then minimised with respect to the approximate density function. %Although the concepts of calculus of variations are important when considering general approximate densities, we will often consider approximate densities which are members of a fixed parameteric family. In these cases it will be sufficient to solely consider derivatives with respect to the parameters. % (which fall within the remit of standard calculus) rather than functional derivatives.
+
+The most common functional used to define goodness of fit in variational inference is the \ac{KL} divergence \citep{kullback1951information}. The \ac{KL} divergence in its most general form is defined for a pair of probability measures $P$ and $Q$ on a space $\set{X}$ with $P$ absolutely continuous with respect to $Q$ as
+\begin{equation}\label{eq:kullback-leibler-probability-measures}
+  \kldiv{P}{Q} =
+  \int_{\set{X}} \log\lpa\td{P}{Q}\rpa \,\dr P,
+\end{equation}
+which is read as the \ac{KL} divergence from $P$ to $Q$. The \ac{KL} divergence is always non-negative $\kldiv{P}{Q} \geq 0$, with equality if and only if $P = Q$ almost everywhere. Intutively the \ac{KL} divergence gives a measure of how `close' two measures are\footnote{From an information theory perspective $\kldiv{P}{Q}$ is typically termed the \emph{relative entropy of $P$ with respect to $Q$} and measures the expected information loss (in \emph{nats} for base-$\mathrm{e}$ logarithms or \emph{bits} for base-2 logarithms) of using $Q$ to model samples from $P$.}. It is not a true distance however as it is asymmetric: in general $\kldiv{P}{Q} \neq \kldiv{Q}{P}$.
+
+Generally we will work with probability densities rather than underlying probability measures. If $p$ and $q$ are the densities of two probability measures $P$ and $Q$ defined with respect to the same base measure $\mu$ on a space $\set{X}$, i.e. $p = \td{P}{\mu}$ and $q = \td{Q}{\mu}$, then we will denote the \ac{KL} divergence from $P$ to $Q$ in terms of the densities $p$ and $q$ by $\kldiv[\mu]{p}{q} = \kldiv{P}{Q}$, and from the definition \eqref{eq:kullback-leibler-probability-measures} we have that
+\begin{equation}\label{eq:kullback-leibler-probability-densities}
+  \kldiv[\mu]{p}{q} =
+  \int_{\set{X}} p(x) \, \log\frac{p(x)}{q(x)} \, \dr\mu(x),
+\end{equation}
+with absolute continuity of $P$ with respect to $Q$ corresponding to a requirement that $p(x) = 0 ~\forall x \in \set{X} : q(x) = 0$. Somewhat loosely, we will refer to $\kldiv[\mu]{p}{q}$ as the \ac{KL} divergence from the (density) $p$ to the (density) $q$ rather than refering to the underlying measures.
+
+When used without further qualification, variational inference is generally intended to mean inference performed by minimising a variational objective corresponding to the \ac{KL} divergence from an approximate density $q$ to the target density $\rho$. More specifically using the decomposition of the target density into an unnormalised density $\pi$ and normalising constant $Z$ we have that
+\begin{equation}\label{eq:kullback-leibler-var-obj}
+  \varobj\lsb q \rsb = \log Z - \kldiv[\mu]{q}{\rho} =
+  \int_{\set{X}} q(\vct{x})\,\log \frac{\pi(\vct{x})}{q(\vct{x})} \,\dr\mu(\vct{x}),
+\end{equation}
+with $\varobj\lsb q \rsb$ the specific objective usually maximised in variational inference problems, with all terms in the integrand being evaluable pointwise. As $\log Z$ is constant with respect to the approximate density, maximising $\varobj$ with respect to $q$ is directly equivalent to minimising $\kldiv[\mu]{q}{\rho}$. Due to the non-negativity of the \ac{KL} divergence we have that the following inequality holds
+\begin{equation}\label{eq:evidence-lower-bound}
+  \varobj\lsb q \rsb \leq \log Z.
+\end{equation}
+When the target density $\rho$ corresponds to a posterior $\pden{\rvct{x}|\rvct{y}}$ on latent variables $\rvct{x}$ given observed variables $\rvct{y}$ and $\pi$ the corresponding joint density $\pden{\rvct{x},\rvct{y}}$, the normalising constant $Z$ is equal to the model evidence term $\pden{\rvct{x}}$ in Bayes' theorem. As $\varobj$ is a lower bound on $\log Z$ and so the (log) model evidence, the variational objective $\varobj$ is therefore sometimes termed the \ac{ELBO} in this context.
+
+Using the \ac{KL} divergence from the approximate to target density as the variational objective is not the only choice avaialable. One obvious alternative is the reversed form of the \ac{KL} divergence, $\kldiv[\mu]{\rho}{q}$ from the target density to the approximate density. In general as this form of the divergence involves evaluating an integral with respect to the target density, precisely the intractable computational task we are hoping to find an approximate solution, direct applications of this approach are limited to toy problems were this integral can be solved exactly or efficiently approximated. An approach called \ac{EP} \citep{minka2001expectation} however locally optimises an objective closely related to $\kldiv[\mu]{\rho}{q}$; we will discuss \ac{EP} further later in the chapter.
+
+The \ac{KL} divergence can be considered as a special case of a broader class of $\alpha$-divergences. In particular the \emph{R\'{e}nyi divergence} \citep{renyi1961measures,van2014renyi} of order $\alpha > 0, \alpha \neq 1$ between two probability measures $P$ and $Q$ with probability densities $p = \td{P}{\mu}$ and $q = \td{Q}{\mu}$ on a space $\set{X}$ is defined as
+\begin{equation}\label{eq:renyi-alpha-divergence}
+  \rdiv{\alpha}{P}{Q} =
+  \rdiv[\mu]{\alpha}{p}{q} =
+  \frac{1}{\alpha -1} \log \lpa \int_{\set{X}} p(\vct{x})^\alpha\,q(\vct{x})^{1-\alpha}\,\dr\mu(\vct{x})\rpa.
+\end{equation}
+For $\alpha > 0$, $\rdiv{\alpha}{P}{Q}$ is a valid divergence, that is $\rdiv{\alpha}{P}{Q} \geq 0$ with equality if and only if $P = Q$ almost everywhere. The definition can also be extended to the cases $\alpha = 1$ and $\alpha=0$ by considering limits of \eqref{eq:renyi-alpha-divergence}. Using L'H\^{o}pital's rule it can be shown that $\lim_{\alpha \to 1} \rdiv{\alpha}{P}{Q} = \kldiv{P}{Q}$. For $\alpha \to 0$, we have that $\rdiv{\alpha}{P}{Q} \to -\log P\lpa\support(Q)\rpa$ where $\support(Q)$ represents the support of the probability measure $Q$; in this case $\rdiv{\alpha}{P}{Q}$ is no longer a valid divergence as it is equal to zero whenever $\support(P) = \support(Q)$. It can also be shown that for $\alpha \not\in \fset{0,1}$ that $\rdiv{\alpha}{P}{Q} = \frac{\alpha}{1-\alpha}\rdiv{1-\alpha}{Q}{P}$. This motivates extending the definition in \eqref{eq:renyi-alpha-divergence} for $\alpha < 0$, in which case we have that $\rdiv{\alpha}{P}{Q} = \frac{\alpha}{1-\alpha}\rdiv{1-\alpha}{Q}{P} \leq 0$ \citep{li2016renyi}.
+
+Analogously to using the decomposition of the target density $\rho$ in to an unnormalised density $\pi$ and unknown normaliser $Z$ when defining the previous variational objective in \eqref{eq:kullback-leibler-var-obj}, it is observed in \citep{li2016renyi} that a \emph{variational R\'{e}nyi bound}, $\varobj_{\alpha}$, can be defined as
+\begin{equation}\label{eq:renyi-variational-objective}
+\begin{split}
+  \varobj_{\alpha}\lsb q \rsb
+  = 
+  \log Z - \rdiv[\mu]{\alpha}{q}{\rho}
+  =
+  \frac{1}{1-\alpha} 
+  \log \int_{\set{X}} q(\vct{x}) \lpa \frac{\pi(\vct{x})}{q(\vct{x})}\rpa^{1-\alpha} \kern-3pt\dr\mu(\vct{x}).
+\end{split}
+\end{equation}
+For $\alpha > 0$, we have that $\rdiv[\mu]{\alpha}{q}{\rho} \geq 0$ and so $\varobj_\alpha$ is a lower bound on the $\log Z$, analogously to the \ac{ELBO}, and we should maximise $\varobj_\alpha$ with respect to $q$ to minimise $\rdiv[\mu]{\alpha}{q}{\rho}$. For $\alpha < 0$ we have instead that $\rdiv[\mu]{\alpha}{q}{\rho} \leq 0$ and so $\varobj_{\alpha}$ is an upper bound on $\log Z$ and that we should minimise $\varobj_\alpha$ to minimise $\rdiv[\mu]{1-\alpha}{\rho}{q}$ (note the swapped order of the density arguments). An equivalent observation of the possibility of upper bounding $\log Z$ is made in \citep{dieng2016chi} with a reparameterised version of \eqref{eq:renyi-variational-objective} in terms of $n=1-\alpha > 1$.
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}[b]{.32\linewidth}
+\centering
+\pgfplotsset{cycle list/Dark2-3}
+\begin{tikzpicture}
+  \begin{axis}[
+    cycle list name={Dark2-3},
+    xmin=-8, xmax=8,
+    width=48mm,
+    height=35mm,
+    xlabel={\small $x$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    ticks=none,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.55,1)},
+      fill=none,
+      anchor=north west,
+      draw=none, 
+      font=\scriptsize,
+      axis on top
+    }
+  ]
+    \addplot+[mark=none, thick] table [x=x, y=p, col sep=comma] 
+      {data/variational-objective-comparison.csv};
+    \addlegendentry{$\rho(x)$};
+    \addplot+[mark=none, thick, densely dashed] table [x=x, y=q_kl_pq, col sep=comma] 
+      {data/variational-objective-comparison.csv};
+    \addlegendentry{$q(x)$};
+\end{axis}
+\end{tikzpicture}
+\caption{$\kldiv[\lambda]{\rho}{q}$}
+\label{sfig:var-obj-kl-pq}
+\end{subfigure}
+\begin{subfigure}[b]{.32\linewidth}
+\centering
+\pgfplotsset{cycle list/Dark2-3}
+\begin{tikzpicture}
+  \begin{axis}[
+    cycle list name={Dark2-3},
+    xmin=-8, xmax=8,
+    width=48mm,
+    height=35mm,
+    xlabel={\small $x$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    ticks=none,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.55,1)},
+      fill=none,
+      anchor=north west,
+      draw=none, 
+      font=\scriptsize,
+      axis on top
+    }
+  ]
+    \addplot+[mark=none, thick] table [x=x, y=p, col sep=comma] 
+      {data/variational-objective-comparison.csv};
+    \addlegendentry{$\rho(x)$};
+    \addplot+[mark=none, thick, densely dashed] table [x=x, y=q_renyi, col sep=comma] 
+      {data/variational-objective-comparison.csv};
+    \addlegendentry{$q(x)$};
+\end{axis}
+\end{tikzpicture}
+\caption{$\rdiv[\lambda]{\alpha}{\rho}{q},~\alpha=\frac{1}{2}$}
+\label{sfig:var-obj-renyi}
+\end{subfigure}
+\begin{subfigure}[b]{.32\linewidth}
+\centering
+\pgfplotsset{cycle list/Dark2-3}
+\begin{tikzpicture}
+  \begin{axis}[
+    cycle list name={Dark2-3},
+    xmin=-8, xmax=8,
+    width=48mm,
+    height=35mm,
+    xlabel={\small $x$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    ticks=none,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.55,1)},
+      fill=none,
+      anchor=north west,
+      draw=none, 
+      font=\scriptsize,
+      axis on top
+    }
+  ]
+    \addplot+[mark=none, thick] table [x=x, y=p, col sep=comma] 
+      {data/variational-objective-comparison.csv};
+    \addlegendentry{$\rho(x)$};
+    \addplot+[mark=none, thick, densely dashed] table [x=x, y=q_kl_qp, col sep=comma] 
+      {data/variational-objective-comparison.csv};
+    \addlegendentry{$q(x)$};
+\end{axis}
+\end{tikzpicture}
+\caption{$\kldiv[\lambda]{q}{\rho}$}
+\label{sfig:var-obj-kl-qp}
+\end{subfigure}
+\caption[Variational objective comparison.]{Comparison of approximate densities fitted under different variational objectives. Each plot shows a bimodal target density $\rho(x)$ and a normal approximate density $q(x) = \nrm{x \gvn \mu,\sigma^2}$ where $\mu$ and $\sigma$ have been set to values which minimise the variational objective shown in the caption.}
+\label{fig:variational-objective-comparison}
+\end{figure}
+
+As generally the family chosen for the approximate density $q$ will not include the target density as a member, the choice of variational objective is important in determining the properties of how $q$ approximates the target density \citep{bishop2006pattern}. The standard variational objective corresponding to $\kldiv[\mu]{q}{\rho}$ strongly penalises regions in $\set{X}$ where $\frac{\rho(\vct{x})}{q(\vct{x})} \ll  1$, therefore the approximate densities fitted using this objective tend to be undispersed compared to the target density, and in the case of target densities with multiple separated modes fitted with a unimodal approximate density, the approximate density will tend to fit only one mode well (with fits to the different modes corresponding to different local optima in the objective). Conversely using the reversed \ac{KL} divergence $\kldiv[\mu]{\rho}{q}$ as the variational objective penalises approximate densities where $\frac{q(\vct{x})}{\rho(\vct{x})} \ll 1$ in regions with significant mass under the target density, therefore the approximate densities fitted using this objective tend to be overdispersed compared to the target density, and in the case of multimodal target densities, the approximate densities will tend to `cover' multiple modes. Using a variational objective corresponding to a R\'{e}nyi divergence with $0 < \alpha < 1$, allows interpolating between these two behaviours (with $\alpha$ close to one favouring undispersed approximate densities similar to $\kldiv[\mu]{q}{\rho}$, with the solutions becoming increasingly dispersed as $\alpha$ becomes lower). 
+
+Figure \ref{fig:variational-objective-comparison} gives examples of normal approximate densities fitted to a bimodal target with three variational objectives to illustrate the effect of the different objectives on the fitted approximation. In Figure \ref{sfig:var-obj-kl-pq} the approximate density $q$ was fitted by minimising $\kldiv[\lambda]{\rho}{q}$, the resulting $q$ putting mass on both modes in the target (and significant mass on the region of low density between the two target modes). The approximate density $q$ in Figure \ref{sfig:var-obj-kl-qp} was instead fitted by minimising $\kldiv[\lambda]{q}{\rho}$, with the result that $q$ concentrates its mass around one of the modes. Finally Figure \ref{sfig:var-obj-renyi} shows an approximate density fitted by minimising the R\'{e}nyi divergence \eqref{eq:renyi-alpha-divergence} with $\alpha = \frac{1}{2}$ for which $\rdiv[\lambda]{\alpha}{\rho}{q} = \rdiv[\lambda]{\alpha}{q}{\rho}$ and which interpolates between the behaviours of the two objectives used in Figures \ref{sfig:var-obj-kl-pq} and \ref{sfig:var-obj-kl-qp}. The approximate density here is less dispersed than in the $\kldiv[\lambda]{\rho}{q}$ case, but still places more mass on the minor mode than the $\kldiv[\lambda]{q}{\rho}$ case.
+
+Once the variational objective has been defined, it still remains to choose the family of the approximate density $q$ and optimisation scheme. 
+%We will deal with the former of these two issues first.
+%Defining the \ac{ELBO} as the variational objective still leaves open the choices of several of the key algorithmic elements of variational inference. One particularly important decision in variational inference methods is the choice of the approximate density $q_{\vct{\theta}}$. 
+A very common choice is to use an approximate density in the \emph{mean-field variational family}; this assumes that the variables the target density is defined on can be grouped in to a set of mutually independent vectors $\fset{\rvct{x}_i}_{i\in\set{I}}$ and so the approximate density can be factorised as
+\begin{equation}\label{eq:mean-field-variational-family}
+  q(\vct{x}) = \prod_{i\in\set{I}} q_i(\vct{x}_i).
+\end{equation}
+This assumption can signficantly reduce the computational demands of variational inference and facilitates simple evaluation of the approximate marginal density $q_{i}$ of each variable group once fitted. However the mutual independence assumption prevents the approximate density $q$ from being able to represent any of the dependencies between the variable groups in the target density. The early development of variational inference was largely based around mean-field family approximations \citep{peterson1987mean,saul1996mean}, with the naming arising from its origins in \emph{mean-field theory}, used to study the behaviour of systems such as the Ising spin model in statistical physics \citep{parisi1998statistical}. Despite the limitations in representational capacity imposed by the independence assumption, because of its computational tractability variational inference using mean-field family approximate densities remains very popular \citep{blei2017variational}.
+
+The mean-field family supports a particularly simple algorithm for optimising the standard variational objective \eqref{eq:kullback-leibler-var-obj}, \ac{CAVI} \citep{bishop2006pattern,blei2017variational}. If we define for each variable group vector $\vct{x}_i$ a corresponding vector $\vct{x}_{\setminus i} = [\vct{x}_j]_{j\in\set{I}\setminus i}$ concatenating all the remaining variables, then it can be shown that the optimal factors of a mean-field family approximate density satisfy
+\begin{equation}\label{eq:optimal-mean-field-factor}
+  q_i(\vct{x}_i) \propto \exp\lpa
+    \int \prod_{j\in\set{I}\setminus i} \lpa q_j(\vct{x}_j) \rpa \log\pi(\vct{x}_i, \vct{x}_{\setminus i})
+    \,\dr\vct{x}_{\setminus i}
+  \rpa.
+\end{equation}
+The optimal value for each factor is coupled to the values of all of the other factors and so cannot be explicitly solved for even when the integral in \eqref{eq:optimal-mean-field-factor} has an analytic solution. \ac{CAVI} therefore uses a fixed point iteration approach, sequentially updating each of the factors $q_{i}$ according to \eqref{eq:optimal-mean-field-factor} given the current values of the remaining factors. This iterative update scheme is guaranteed to eventually converge to a local optimum with all factors satisfying \eqref{eq:optimal-mean-field-factor}.
+
+The key computation in \ac{CAVI} is computing the integral in \eqref{eq:optimal-mean-field-factor} for the updates to each factor. For models with target densities where the conditional densities on each variable group $\vct{x}_i$ given the remaining variables $\vct{x}_{\setminus i}$ (termed the \emph{complete conditionals}) are all exponential family densities, an optimal parameteric form for each of the $q_{i}$ factors can be analytically derived. The optimal factors have a density from the same exponential family as the corresponding complete conditional, with the integral in \eqref{eq:optimal-mean-field-factor} having a closed form solution in this case. 
+
+For a model defined by a directed factor graph, a sufficient condition for the complete conditionals to all be exponential family densities is that all factors correspond to exponential family densities and that the factors specifying the (conditional) densities on any parent nodes to a factor are conjugate to the density on the child of the factor (in the sense of Section \ref{subsec:conjugacy-and-exact-inference}); such models are termed \emph{conjugate exponential}. 
+%The sequential updates of the factors forms a fixed point iteration which is guaranteed to converge to a local optimum of the variational objective.
+
+\emph{Variational message passing} \citep{winn2005variational}, is a \ac{CAVI} algorithm for performing inference in conjugate exponential models. It exploits factorisation structure in the target density, typically described by a directed graphical model or factor graph, to efficiently update the factors. General purpose implementations are available in software frameworks such as VIBES \citep{bishop2002vibes} and Infer.NET \citep{minka2014infer} which can automatically perform inference given a model specification. The conjugate exponential assumptions can be partially relaxed to also allow deterministic nodes which are multilinear functions of their parents and truncated forms of some exponential family densities which still admit analytic solutions to the factor updates \citep{winn2005variational}.
+
+A more recent alternative to \ac{CAVI} for mean-field variational inference is \ac{SVI} \citep{hoffman2013stochastic,sato2001online}. \ac{SVI} is designed for a common class of models consisting of a set of global latent variables $\rvct{g}$ plus a set of local latent variables $\lbrace \rvct{z}^{(i)}\rbrace_{i=1}^N$ each associated with one of $N$ observed data points $\lbrace \rvct{y}^{(i)}\rbrace_{i=1}^N$. Each pair of observed and local latent variable $(\rvct{y}^{(i)},\rvct{z}^{(i)})$ are conditionally independent from all the others given the global latent variables; this factorisation structure is visualised in Figure \ref{sfig:global-local-latent-structured-q-factor-graph}. The hierarchical model for the \emph{Observing Dark Worlds} problem encountered earlier for example matches this structure.
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}[b]{.32\linewidth}
+\centering
+\begin{tikzpicture}
+  \node[latent] (g) {$\rvct{g}$} ; %
+  \node[latent, below=1 of g, xshift=-8mm] (zi) {$\rvct{z}^{(i)}$} ; %
+  \node[latent, below=1 of g, xshift=8mm] (yi) {$\rvct{y}^{(i)}$} ; %
+  \factor[above=of g] {pr-g} {} {} {g} ; %
+  \factor[below=of g] {g-zi_yi} {} {g} {zi,yi} ; %
+  \plate {data} {(zi)(yi)(g-zi_yi)} {$i \in \fset{1 \,...\, N}$} ; %
+\end{tikzpicture}
+\caption{Target $\rho$}
+\label{sfig:global-local-latent-model-factor-graph}
+\end{subfigure}
+\begin{subfigure}[b]{.32\linewidth}
+\centering
+\begin{tikzpicture}
+  \node[latent] (gj) {$\rvar{g}_j$} ; %
+  \node[latent, below=1 of gj] (zik) {$\rvar{z}_k^{(i)}$} ; %
+  \factor[left=of gj] {q-gj} {} {} {gj} ; %
+  \factor[left=of zik] {q-zik} {} {} {zik} ; %
+  \plate {global} {(gj)(q-gj)(q-gj-caption)} {$j \in \fset{1 \,...\, D}$} ; %
+  \plate {local} {(zik)(q-zik)(q-zik-caption)} {$k \in \fset{1 \,...\, M_i}$} ; %
+  \plate {data} {(local)} {$i \in \fset{1 \,...\, N}$} ; %
+\end{tikzpicture}
+\caption{Mean-field $q$}
+\label{sfig:global-local-latent-mean-field-q-factor-graph}
+\end{subfigure}
+\begin{subfigure}[b]{.32\linewidth}
+\centering
+\begin{tikzpicture}
+  \node[latent] (gj) {$\rvar{g}_j$} ; %
+  \node[latent, below=1.5 of gj] (zi) {$\rvct{z}^{(i)}$} ; %
+  \factor[right=of gj] {q-gj} {} {} {gj} ; %
+  \factor[above=of zi] {q-gj-zi} {} {} {zi} ; %
+  \draw[-] (gj) to[bend right=45] (q-gj-zi) ; %
+  \plate {global} {(gj)(q-gj)} {$j \in \fset{1 \,...\, D}$} ; %
+  \plate {data} {(zi)(q-gj-zi)} {$i \in \fset{1 \,...\, N}$} ; %
+\end{tikzpicture}
+\caption{Structured $q$}
+\label{sfig:global-local-latent-structured-q-factor-graph}
+\end{subfigure}
+\caption[Global-local latent variable model factor graph.]{\subref{sfig:global-local-latent-model-factor-graph} Factor graph of a model with global latent variables $\rvct{g}$, per-datapoint local latent variables $\lbrace \rvct{z}^{(i)}\rbrace_{i=1}^N$ and observed variables $\lbrace \rvct{y}^{(i)}\rbrace_{i=1}^N$. \subref{sfig:global-local-latent-mean-field-q-factor-graph} and \subref{sfig:global-local-latent-structured-q-factor-graph} Factor graphs for mean-field and structured variational approximate densities for model shown in \subref{sfig:global-local-latent-model-factor-graph}.}
+\label{fig:global-local-latent-factor-graphs}
+\end{figure}
+
+\ac{CAVI} requires a complete pass through all local latent variables for each update to the global latent variables. As the data set size $N$ grows large this can become onerous computationally. Intuitively we might expect that redundancy in the data should mean that a subset of the data points should contain sufficient information to update the approximate density factors for the global variables, particularly early on in the optimisation when far from convergence and so even noisy information can allow significant improvements. The fixed-point iteration of \ac{CAVI} does not however easily lend itself to exploiting this intuition.
+
+If we instead consider using gradient ascent to maximise the objective, then the gradient of the \ac{ELBO} objective with respect to the natural parameters of the global variable approximate density factors takes the form of a sum of $N$ terms each dependent on a local latent variable and observation pair $(\rvct{z}^{(i)}, \rvct{y}^{(i)})$. We can form an unbiased estimate of this gradient by sampling a subset of $M$ of the local latent variable and observation pairs (commonly $M=1$). We can then leverage stochastic optimisation methods \citep{robbins1951stochastic} which are designed precisely to work in this setting, of optimising an objective given a noisy but unbiased estimate of it gradient with respect to parameters. 
+
+It is assumed in \ac{SVI} that the model is conjugate exponential, this meaning the gradients of the variational objective with respect to the natural parameters of the approximate density factors on both local and global latent variables can be computed in closed form. Further in this case of conjugate exponential models, the \emph{natural gradients} \citep{amari1982differential} with respect to the variational parameters can be efficiently computed; the natural gradient exploits the differential geometry of the natural parameter space (i.e. that it is a Riemannian manifold) by rescaling the standard (Euclidean) gradient by the inverse of a Riemannian metric for the natural parameter manifold. \ac{SVI} uses stochastic gradient ascent with noisy estimates of the natural parameter natural gradients to allow efficient mean-field variational inference with large datasets.  
+
+The methods discussed so far have only applied when using an approximate density in the mean-field family. An alternative is to use a more structured factorisation which reflects some or all of the known dependencies between variables in the target density \citep{saul1996exploiting,barber1999tractable,storkey2000dynamic,hoffman2015structured,sheth2016monte}. These \emph{structured variational inference} approaches use known dependency information such as from a factor graph of the target density, to inform the choice of approximate density factorisation. In general structured variational inference methods will still put some constraints on the factorisation of the approximate density to maintain tractability. 
+
+For example \emph{structured stochastic variational inference} \citep{hoffman2015structured} applies to the same class of conjugate exponential models as \ac{SVI}, i.e. with the factorisation structure shown in Figure \ref{sfig:global-local-latent-structured-q-factor-graph}. It extends on \ac{SVI} by allowing the approximate density to account for dependencies between the global latent variables and local latent variables, assuming a structured factorsiation corresponding to that shown in the factor graph in Figure \ref{sfig:global-local-latent-structured-q-factor-graph} as opposed to the typical mean-field factorisation shown in \ref{sfig:global-local-latent-mean-field-q-factor-graph} which would be used in standard \ac{SVI}. This improves on the mean-field approximate density by including the dependencies between the local latent variables and on the global latent variables, but still requires an assumption of independence between the global latent variables.
+
+%\begin{figure}[t]
+%\centering
+%\begin{tikzpicture}
+%  \node[latent] (sigma) {$\upsigma$} ; %
+%  \node[latent, right=of sigma] (mum) {$\upmu_{\rvar{m}}$} ; %
+%  \node[latent, right=of mum] (sigmam) {$\upsigma_{\rvar{m}}$} ; %
+%  \node[latent, right=of sigmam] (mut) {$\upmu_{\rvar{t}}$} ; %
+%  \node[latent, right=of mut] (sigmat) {$\upsigma_{\rvar{t}}$} ; %
+%  \factor[above=of sigmam] {q0} {$q_{0}$} {} {sigma,mum,sigmam,mut,sigmat} ; %
+%  \node[latent, below=1.5 of mum] (ti) {$\rvct{t}^{(i)}$} ; %
+%  \node[latent, left=of ti] (mi) {$\rvct{m}^{(i)}$} ; %
+%  \factor[above=of ti, yshift=1mm] {qi} 
+%    {left:$q_{i}$} {sigma,mum,sigmam,mut,sigmat} {mi,ti} ; %
+%  \plate {training} {(mi)(ti)(qi)} {$i \in \fset{1 \,...\, N_{\textrm{train}}}$} ; %
+%  \node[latent, right= of ti] (xj) {$\rvct{x}^{(j)}$} ; %
+%  \node[latent, right=0.4 of xj] (yj) {$\rvct{y}^{(j)}$} ; %
+%  \node[latent, right=0.4 of yj] (mj) {$\rvct{m}^{(j)}$} ; %
+%  \node[latent, right=0.4 of mj] (tj) {$\rvct{t}^{(j)}$} ; %
+%  \node[factor, label={right:$q_{j}$}] (qj) at (qi-|mut) {} ; %
+%  \factoredge {sigma,mum,sigmam,mut,sigmat} {qj} {xj,yj,mj,tj} ; %
+%  \plate {training} {(xj)(yj)(mj)(tj)(qj)} {$j \in \fset{N_{\textrm{train}} + 1 \,...\, N_{\textrm{train}}+N_{\textrm{test}}}$} ; %
+%\end{tikzpicture}
+%\caption[Example structured variational factor graph.]{Factor graph for example structured variational approximate density for \emph{Observing Dark Worlds} hierarchical model in Figure \ref{fig:odw-hierarchical-factor-graph}.}
+%\label{fig:odw-structured-variational-density}
+%\end{figure}
+
+The variational inference methods considered so far have made the strong assumption that the model being approximated is conjugate exponential. Although the analytic updates to factors made possibly by this assumption offers significant advatantages in terms of the computational tractability and stability of the optimisation of the approximate density (factors), conjugacy is a restrictive assumption which excludes many useful models. For instance the model proposed in the previous chapter for the \emph{Observing Dark Worlds} problem is not conjugate exponential and even seemingly `simple' models such as a logistic regression model for binary classification with a Gaussian prior on the regression weights breaks conjugacy assumptions.
+
+Various extensions have been proposed for applying mean-field \ac{CAVI} to non-conjugate exponential models where exact analytic solutions to the factor updates are no longer available. \emph{Non-conjugate variational message passing} \citep{knowles2011non} describes an extension of the variational message passing framework to models with non-conjugate factors, and provides a concrete algorithm for logistic regression models using model specific bounds on the factor update integrals for which analytic solutions are not available. In \citep{wang2013variational} an alternative approach with less model specific derivation is proposed. Laplace's method is used to approximate integrals with respect to non-conjugate factors, with a further option of using a Taylor series approximation to the underlying variational objective. It has also been proposed to use quadrature and tractable mixture density approximations to individual factors to approximate solutions to intractable integrals in non-conjugate factor updates \citep{wand2011mean}. %Most of these methods for working with non-conjugate models loose the convergence guarantee for \ac{CAVI} with conjugate exponential models, and in some cases results in a variational bound which is
+
+A proposed unifying view of many of the mean-field methods developed for dealing with non-conjugate models, is that they relax the assumption that the approximate factors take the `non-parameteric' optimal form given by the solution to \eqref{eq:optimal-mean-field-factor}, which is derived using a variational approach, and instead assume a fixed parameteric form for some or all of the approximate density factors \citep{rohde2016semiparametric}. This links these methods to other variational inference approaches which assume a fixed parametric form for the whole approximate density, i.e. $q(\vct{x}) = f_{\vct{\theta}}(\vct{x})$, where $f_{\vct{\theta}}$ is a density of a fixed parametric family with a vector of parameters $\vct{\theta}$ \citep{graves2011practical,blei2012variational,salimans2013fixed,kingma2013auto,rezende2014stochastic,ranganath2014black,baydin2015automatic}.   
+
+Under this parametric assumption, rather than a variational optimisation problem we can now consider the variational objective functional $\varobj[q]$ as instead a function of the parameters $\ell(\vct{\theta}) = \varobj[f_{\vct{\theta}}]$. Typically the integrals involved in evaluating the parameteric variational objective $\ell(\vct{\theta})$ (and its gradients) cannot be solved analytically however which seems to leave us with the same problems as encountered when trying to use standard mean-field variational inference approaches with non-conjugate models. By using the sampling methods we will discuss in the next section of this chapter however it is possible estimate these integrals.
+
+Under this parametric assumption, rather than a variational optimisation problem we can now consider the variational objective functional $\varobj[q]$ as instead a function of the parameters $\ell(\vct{\theta}) = \varobj[f_{\vct{\theta}}]$. For the standard variational objective \eqref{eq:kullback-leibler-var-obj} we have that
+\begin{equation}\label{eq:kl-var-obj-parameteric}
+  \ell(\vct{\theta}) = 
+  \int_{\set{X}} f_{\vct{\theta}}(\vct{x}) \log\pi(\vct{x}) \,\dr\vct{x} -
+  \int_{\set{X}}  f_{\vct{\theta}}(\vct{x}) \log f_{\vct{\theta}}(\vct{x})  \,\dr\vct{x}
+  \,\dr\vct{x}.
+\end{equation}
+By differentiating with respect to $\vct{\theta}$ and using the identity that for any $f_{\vct{\theta}}$ which is differentiable with respect to the $\vct{\theta}$
+\begin{equation}\label{eq:log-derivative-identity}
+  \pd{f_{\vct{\theta}}(\vct{x})}{\vct{\theta}} = 
+  f_{\vct{\theta}}(\vct{x}) \pd{\log f_{\vct{\theta}}(\vct{x})}{\vct{\theta}}
+\end{equation} 
+we have that
+\begin{equation}\label{eq:kl-var-obj-parameteric-gradient}
+  \pd{\ell}{\vct{\theta}} = 
+  \int_{\set{X}} f_{\vct{\theta}}(\vct{x}) \pd{\log f_{\vct{\theta}}(\vct{x})}{\vct{\theta}} \lpa \log\lpa \frac{\pi(\vct{x})}{f_{\vct{\theta}}(\vct{x})}\rpa -1 \rpa \,\dr\vct{x}.
+\end{equation}
+In \cite{salimans2013fixed} $f_{\vct{\theta}}$ is chosen as an exponential family distribution and $\vct{\theta}$ specified to be the natural parameters of the density. A linear-regression inspired algorithm w
+
+
+For instance for the \emph{Observing Dark Worlds} hierarchical model (Figure \ref{fig:odw-hierarchical-factor-graph}) discussed in the previous chapter, we have that the local latent variables corresponding to the halo masses $\rvct{m}^{(i)}$, core radii $\rvct{t}^{(i)}$ and centre coordinates $\rvct{x}^{(i)}, \rvct{y}^{(i)}$ (for the test set data) for a particular cluster are conditionally independent of the variables for all other clusters given the global variables $\upsigma,\upmu_{\rvar{m}},\upsigma_{\rvar{m}},\upmu_{\rvar{t}}$ and $\upsigma_{\rvar{t}}$. A natural structured factorisation for an approximate density in this case would therefore be that indicated by the factor graph in Figure \ref{fig:odw-structured-variational-density}.
+%\begin{equation}\label{eq:odw-structured-variational-family-example}
+%\begin{split}
+%  q_{\vct{\theta}}\lpa
+%    \fset{\vct{m}^{(i)}\kern-3pt, \vct{t}^{(i)}}_{i=1}^N,
+%    \fset{\vct{x}^{(j)}\kern-3pt, \vct{y}^{(j)}\kern-3pt, \vct{m}^{(j)}\kern-3pt, \vct{t}^{(j)}}_{j=N+1}^{N + M}, \sigma, \mu_m, \sigma_m, \mu_t, \sigma_t
+%  \rpa = \\
+%   q_{0,\vct{\theta}}\lpa \sigma, \mu_m, \sigma_m, \mu_t, \sigma_t \rpa
+%   \prod_{i=1}^N q_{i,\vct{\theta}}\lpa
+%     \vct{m}^{(i)}\kern-3pt, \vct{t}^{(i)} \gvn \sigma, \mu_m, \sigma_m, \mu_t, \sigma_t
+%   \rpa\\
+%   \prod_{j=N+1}^{N+M} q_{j,\vct{\theta}}\lpa
+%     \vct{x}^{(j)}\kern-3pt, \vct{y}^{(j)}\kern-3pt, \vct{m}^{(j)}\kern-3pt, \vct{t}^{(j)} 
+%     \gvn \sigma, \mu_m, \sigma_m, \mu_t, \sigma_t
+%   \rpa.
+%\end{split}
+%\end{equation}
+
+Even with a factorisation chosen for the approximate density, it remains to define the parametric form for each of the approximate factors. In general there is a tradeoff in the choice of approximate density parameterisation between representational power of the resulting approximate density and corresponding ability to represent the target density well, and the tractability of optimising the variational objective.
+
+ 
+
+% co-ordinate ascent VI
+% stochastic variational inference
+
+\subsection{Expectation propagation}
+
+
 \section{Hybrid approaches}
+
+% Monte Carlo VI
+%   - ADVI
+%   - BBVI
+%   - Autoencoding variational Bayes (amortised inference)
+% empirical Bayes
+% expectation propagation ESS
+% variational MCMC
+% variational inf and MCMC bridging the gap
