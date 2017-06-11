@@ -21,6 +21,8 @@
 \usepackage{xspace} % to get the spacing after macros right  
 \usepackage{mparhack} % get marginpar right
 \usepackage[printonlyused,smaller]{acronym} % nice macros for handling all acronyms in the thesis
+\renewcommand*{\acffont}[1]{\textit{#1}}
+\renewcommand*{\acfsfont}[1]{\textnormal{#1}}
 \usepackage{tabularx} % better tables
 \setlength{\extrarowheight}{3pt} % increase table row height
 \newcommand{\tableheadline}[1]{\multicolumn{1}{c}{\spacedlowsmallcaps{#1}}}
@@ -93,7 +95,8 @@
 
 \usepackage{enumitem}
 \usepackage{longtable}
- 
+\usepackage{nicefrac}
+
 % Use one-and-half line spacing as per University of Edinburgh requirements
 \usepackage[onehalfspacing]{setspace}
 
@@ -132,6 +135,9 @@
 \usepackage{pgfplots}
 \usepgfplotslibrary{colorbrewer}
 \pgfplotsset{compat=1.5.1}
+\usepackage{filecontents}
+\usepackage{pgfplotstable}
+%\usepackage[table]{xcolor}
 
 \definecolor{edblue}{RGB}{0, 50, 95}
 \definecolor{edred}{RGB}{193, 0, 67}
@@ -156,3 +162,39 @@
   \section*{#1}
   \addcontentsline{toc}{section}{#1}
 }
+
+% draw binary grid https://tex.stackexchange.com/a/123728
+
+\makeatletter
+\tikzset{
+    zero color/.initial=white,
+    zero color/.get=\zerocol,
+    zero color/.store in=\zerocol,
+    one color/.initial=red,
+    one color/.get=\onecol,
+    one color/.store in=\onecol,
+    cell wd/.initial=1ex,
+    cell wd/.get=\cellwd,
+    cell wd/.store in=\cellwd,
+    cell ht/.initial=1ex,
+    cell ht/.get=\cellht,
+    cell ht/.store in=\cellht,
+}
+
+\newcommand{\drawgrid}[2][]{
+\medskip
+\begin{tikzpicture}[#1]
+  \pgfplotstableforeachcolumn#2\as\col{
+    \pgfplotstableforeachcolumnelement{\col}\of#2\as\colcnt{%
+      \ifnum\colcnt=0
+        \fill[\zerocol]($ -\pgfplotstablerow*(0,\cellht) + \col*(\cellwd,0) $) rectangle+(\cellwd,\cellht);
+      \fi
+      \ifnum\colcnt=1
+        \fill[\onecol]($ -\pgfplotstablerow*(0,\cellht) + \col*(\cellwd,0) $) rectangle+(\cellwd,\cellht);
+      \fi
+    }
+  }
+\end{tikzpicture}
+\medskip
+}
+\makeatother
