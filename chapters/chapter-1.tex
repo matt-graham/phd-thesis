@@ -9,7 +9,8 @@ To make inferences under conditions of uncertainty, we must instead turn to prob
 
 %Various axiomatic bases have been proposed for deriving the laws of probability. Of particular note are the Kolmogorov axioms \citep{} which are the basis for the modern measure-theoretic formulation of probability theory. Cox's theorem \citep{} and related work by Polya \citep{} and Jaynes \citep{}, offers an alternative axiomatic basis for deriving probability theory from a minimal set of `common-sense' postulates, with resulting system of \emph{plausible reasoning} seen as natural extension of formal deductive logic under conditions of uncertainty. There has been much philosophical debate over the interpretation of probabilties
 
-In this chapter we will first introduce the probability notation we will use in the rest of this work, and state some basic results which will be important in the later chapters. We will introduce graphical models as a compact way of visualising structure in probabilistic models. Finally we will give a concrete definition of the inference tasks that the methods presented in the rest of this thesis are aimed at computing (approximate) solutions to, \marginpar{Probability theory is nothing but common sense reduced to calculation. \\--- Pierre-Simon Laplace}and motivate why such approximate computational methods are needed.
+%\marginpar{Probability theory is nothing but common sense reduced to calculation. \\--- Pierre-Simon Laplace}
+In this chapter we will first introduce the probability notation we will use in the rest of this work, and state some basic results which will be important in the later chapters. We will introduce graphical models as a compact way of visualising structure in probabilistic models. Finally we will give a concrete definition of the inference tasks that the methods presented in the rest of this thesis are aimed at computing (approximate) solutions to,and motivate why such approximate computational methods are needed.
 
 %We will here largely ignore philosophical disucssions of interpretations of probabilities, and instead concentrate on the computational aspects of performing probabilistic inference.
 
@@ -36,7 +37,7 @@ Kolmogorov's axioms:
   \end{enumerate}
 }
 %\marginpar{Kolmogorov's axioms\\1. The probability of an event is real and non-negative. \\2. The probability of the sample space is 1. \\3. The probability of any countable set of mutually exclusive events is equal to the sum of the individual event probabilties.}
-Given this definition of a probability space, Kolmogorov's axioms \citep{kolmogorov1950foundations} can be used to derive a measure-theoretic formulation of probability theory. The probability of an event $\set{E} \in \sset{E}$ is defined as the measure of that event $\probability(\set{E})$. Two events $\set{A},\set{B} \in \sset{E}$ are said to be \emph{independent} if $\probability(\set{A}\cap\set{B}) = \probability(\set{A})\probability(\set{B})$.
+Given this definition of a probability space, Kolmogorov's axioms \citep{kolmogorov1950foundations} can be used to derive a measure-theoretic formulation of probability theory. The probability of an event $\set{E} \in \sset{E}$ is defined as its measure $\probability(\set{E})$. Two events $\set{A},\set{B} \in \sset{E}$ are \emph{independent} if $\probability(\set{A}\cap\set{B}) = \probability(\set{A})\probability(\set{B})$.
 
 A measure-theoretic approach has the advantage of providing a unified treatment for describing probabilities on both finite and infinite sample spaces. Although alternative derivations of the laws of probability from different premises such as Cox's theorem \citep{cox1946probability,cox1963algebra} have been proposed, modern extensions of this work result in a calculus of probabilities that is equivalent to Kolmogorov's \citep{terenin2015cox}, with the differences mainly being in the philosophical interpretations of probabilities.
 
@@ -56,7 +57,7 @@ Due to the definition of a random variable as a measurable function, we can defi
   = \probability\lpa \lbr s \in \set{S}: \rvar{x}(s) \in A \rbr \rpa
   \quad \forall \set{A} \in \sset{F}.
 \end{equation}
-The measure $\prob{\rvar{x}}$ specifies that the probability of the event that the random variable $\rvar{x}$ takes a value in a measurable set $\set{A} \in \sset{F}$ is $\prob{\rvar{x}}(\set{A})$.
+The measure $\prob{\rvar{x}}$ specifies that the probability of the event that the random variable $\rvar{x}$ takes a value in a measurable set $\set{A} \in \sset{F}$ is $\prob{\rvar{x}}(\set{A})$. We will sometimes describe $\prob{\rvar{x}}$ as the \emph{probability distribution} of $\rvar{x}$.
 
 %Random variables will play a central role in the explanation of the work in this thesis. We will consider a random variable to represent a quantity we are uncertain about the value of; that uncertainty may be considered to arise from incomplete knowledge of the quantity or it having a fundamentally stochastic nature, this is mainly an issue of interpretation which we will largely sidestep.
 
@@ -68,7 +69,7 @@ Often we will jointly define multiple random variables on the same probability s
   \probability\lpa \rvar{x}^{-1}(\set{A}) \cap \rvar{y}^{-1}(\set{B})\rpa
   \quad \forall \set{A} \in \sset{F},\,\set{B} \in \sset{G}.
 \end{equation}
-The joint probability is related to the probabilities $\prob{\rvar{x}}$ and $\prob{\rvar{y}}$ by
+The joint probability is related to $\prob{\rvar{x}}$ and $\prob{\rvar{y}}$ by
 \begin{equation}\label{eq:sum-rule-rvar}
   \prob{\rvar{x},\rvar{y}}(\set{A},\,\set{Y}) =
   \prob{\rvar{x}}(\set{A}),~
@@ -121,9 +122,8 @@ The definition in \eqref{eq:joint-probability-rvar} of the joint probability of 
 \subsection{Probability densities}\label{subsec:probability-densities}
 
 So far we have ignored how the probability measure $\probability$ is defined and by consequence the probability of a random variable. 
-
 \marginpar{A measure on $\set{X}$ is $\sigma$-finite if $\set{X}$ is a countable union of finite measure sets.}
-The Radon--Nikodyn theorem guarantees that for a pair of $\sigma-$finite measures $\mu$ and $\nu$ on a measurable space $(\set{X},\,\sset{F})$ where $\nu$ is absolutely continuous with respect to $\mu$,  then there is a unique (up to $\mu$-null sets) measurable function $f : \set{X} \to [0,\infty)$ termed a \emph{density} such that
+The Radon--Nikodym theorem guarantees that for a pair of $\sigma-$finite measures $\mu$ and $\nu$ on a measurable space $(\set{X},\,\sset{F})$ where $\nu$ is absolutely continuous with respect to $\mu$,  then there is a unique (up to $\mu$-null sets) measurable function $f : \set{X} \to [0,\infty)$ termed a \emph{density} such that
 \begin{equation}\label{eq:radon-nikodym}
   \nu(\set{A}) = \int_{\set{A}} f\,\dr\mu
   \quad \forall \set{A} \in \sset{F}.
@@ -137,7 +137,7 @@ It can also be shown that if $f = \td{\nu}{\mu}$ and  $g$ is a 	 measurable func
 which we will use later when discussing calculation of expectations.
 
 %\marginpar{The Lebesgue measure $\lebm{1}(\set{E})$ of a subset $\set{E} \subseteq \reals$ is $\lebm{1}(\set{E}) = \inf\lbrace \sum_{i=1}^\infty (b_i - a_i) :$ $E \subseteq \cup_{i=1}^\infty [a_i,\,b_i],$ $a_i,b_i \in \reals, a_i \leq b_i ~\forall i\in\naturals\rbrace$.}
-For real random variables, an appropriate base measure is usually the \emph{Lebesgue measure}, $\lebm{1}$, on $\reals$. The probability $\prob{\rvar{x}}$ of a real random variable $\rvar{x}$ can then be defined via a \emph{probability density} $\pden{\rvar{x}} : \reals \to [0,\,\infty)$ by
+For real random variables, an appropriate base measure is the \emph{Lebesgue measure}, $\lebm{1}$, on $\reals$. The probability $\prob{\rvar{x}}$ of a real random variable $\rvar{x}$ can then be defined via a \emph{probability density} $\pden{\rvar{x}} : \reals \to [0,\,\infty)$ by
 \begin{equation}\label{eq:real-rv-prob-dens}
     \prob{\rvar{x}}(\set{A})
     = \int_{\set{A}} \pden{\rvar{x}} \,\dr\lebm{1}
@@ -558,7 +558,12 @@ $\expc{\rvar{x}\gvn\rvar{y}}$ is guaranteed to be uniquely defined almost everyw
 \end{equation}
 We will also use an alternative notation for the conditional expectation evaluated at point $\expc{\rvar{x}\gvn\rvar{y} = y} \equiv \expc{\rvar{x}\gvn\rvar{y}}(y)$ but use the latter in this section to stress its definition as a measurable function.
 
-We can use conditional expectation to motivate the definition of a conditional density. Assume a joint density $\pden{\rvar{x},\rvar{y}} = \td{\prob{\rvar{x},\rvar{y}}}{(\mu_{\rvar{x}}\times\mu_{\rvar{y}})}$ exists and has marginal density $\pden{\rvar{y}} = \td{\prob{\rvar{y}}}{\mu_{\rvar{y}}}$. Then for all $\set{A} \in \sset{G}$
+Conditional expectation can be used to define the \emph{regular conditional probability distribution} of a random variable conditioned on another random variable
+\begin{equation}\label{eq:regular-conditional-probability}
+  \prob{\rvar{x}}(\set{B} \gvn \rvar{y}) = \expc{\ind{A}\circ\,\rvar{x} \gvn \rvar{y}}
+  \quad\forall \set{B} \in \sset{F}.
+\end{equation}
+Likewise we can use conditional expectation to motivate a definition of conditional density. Assume a joint density $\pden{\rvar{x},\rvar{y}} = \td{\prob{\rvar{x},\rvar{y}}}{(\mu_{\rvar{x}}\times\mu_{\rvar{y}})}$ exists and has marginal density $\pden{\rvar{y}} = \td{\prob{\rvar{y}}}{\mu_{\rvar{y}}}$. Then for all $\set{A} \in \sset{G}$
 \begin{align}
   \int_{\rvar{y}^{-1}(\set{A})} \rvar{x}(s) \, \dr\probability(s) 
     &= \int_{\set{S}} \rvar{x}(s) \ind{\set{A}} \circ \, \rvar{y}(s) \,\dr\probability(s)\\
@@ -596,7 +601,7 @@ where the \emph{conditional density of $\rvar{x}$ given $\rvar{y}$}, $\pden{\rva
   \frac{\pden{\rvar{x},\rvar{y}}(x,y)}{\pden{\rvar{y}}(y)}
   \quad \forall x \in \set{X},\, y \in \set{Y} : \pden{\rvar{y}}(y) > 0
 \end{equation}
-which can be seen to be analagous to the definition of conditional probability in \eqref{eq:conditional-probability}. Note the definition of conditional expectation in \eqref{eq:conditional-expectation-property} was not dependent on a joint density $\pden{\rvar{x},\rvar{y}}$ being defined and so is more general than \eqref{eq:conditional-expectation-density}.
+which can be seen to be analagous to the definition of conditional probability in \eqref{eq:conditional-probability}. Note the definition of conditional expectation in \eqref{eq:conditional-expectation-property} was not dependent on a joint density $\pden{\rvar{x},\rvar{y}}$ being defined.% and so is more general than \eqref{eq:conditional-expectation-density}.
 
 \section{Graphical models}\label{sec:graphical-models}
 
@@ -606,15 +611,16 @@ When working with probabilistic models involving large numbers of random variabl
 Central to all graphical models is the concept of conditional independence. Let $(\set{S},\,\sset{E},\,\probability)$ be a probability space and $\rvar{x} : \set{S} \to \set{X}$, $\rvar{y} : \set{S} \to \set{Y}$ and $\rvar{z} : \set{S} \to \set{Z}$ be three random variables with corresponding $\sigma$-algebras, $\sset{F}_{\rvar{x}}$, $\sset{F}_{\rvar{y}}$ and $\sset{F}_{\rvar{z}}$ respectively. Following from our earlier definition of (unconditional) independence of random variables in \eqref{eq:independent-rvars}, we say that \emph{$\rvar{x}$ and $\rvar{y}$ are conditionally independent given $\rvar{z}$}, denoted $\rvar{x} \perp \rvar{y} \gvn \rvar{z}$, if
 \begin{equation}\label{eq:conditional-independence-property}
 \begin{split}
-  \expc{\ind{\set{A}}\circ\,\rvar{x} \, \ind{\set{B}}\circ\,\rvar{y} \gvn\rvar{z}} =
-  \expc{\ind{\set{A}}\circ\,\rvar{x}\gvn\rvar{z}}\,
-  \expc{\ind{\set{B}}\circ\,\rvar{y}\gvn\rvar{z}}
+  \prob{\rvar{x},\rvar{y}}(\set{A},\set{B} \gvn \rvar{z}) =
+  \prob{\rvar{x}}(\set{A} \gvn \rvar{z})\,
+  \prob{\rvar{y}}(\set{B} \gvn \rvar{z})
   ~\,\forall 
   \set{A} \in \sset{F}_{\rvar{x}},\,
   \set{B} \in \sset{F}_{\rvar{y}},
 \end{split}	
 \end{equation}
 holds almost everywhere with respect to $\prob{\rvar{z}}$. 
+
 %A consequence of this is that for any pair of measurable function $f: \set{X} \to \reals$ and $g: \set{Y} \to \reals$
 %\begin{equation}\label{eq:conditional-independence-property}
 %  \rvar{x} \perp \rvar{y} \gvn \rvar{z} \implies
@@ -696,14 +702,12 @@ Note that this factorisation would not be valid for all joint densities on the t
 \marginpar{Ancestral sampling in a directed graphical model corresponds to first sampling values from all the root nodes from their marginal densities, then iteratively sampling from the conditional densities on each node for which all the parents nodes already have sampled values to condition on.}
 Directed graphical models are a natural way of specifying \emph{generative models} - i.e. probabilistic models which can be used to generate simulated observable quantities. Typically the factorisation specified by a directed graphical model gives a straightforward method to generate values from the joint density via \emph{ancestral sampling}.
 
-An alternative formalism for graphically representing probabilistic models is that of \emph{undirected graphical models} \citep{kindermann1980markov}, which are also known as \emph{Markov random fields}. As with directed graphical models, each node in the graph represents a random variable, but here the edges connecting nodes are undirected. Rather than describing a factorisation of a joint density into conditional and marginal densities, an undirected graphical model indicates the factorisation of a joint density into a product of clique potentials on each of the maximal cliques in the graph.
-
-A \emph{clique} is a fully connected component of the graph - i.e. a subset of nodes in the graph such that all pairs of nodes in the subset are connected by an edge. A \emph{maximal clique} is a clique which is not a strict subset of any other clique. A \emph{clique potential} is a non-negative function of the values of the random variables in the clique; it does necessarily correspond to any conditional or marginal probabilty density. 
+An alternative formalism for graphically representing probabilistic models is that of \emph{undirected graphical models} \citep{kindermann1980markov}, which are also known as \emph{Markov random fields}. As with directed graphical models, each node in the graph represents a random variable, but here the edges connecting nodes are undirected. Rather than describing a factorisation of a joint density into conditional and marginal densities, an undirected graphical model indicates the factorisation of a joint density into a product of clique potentials on each of the maximal cliques in the graph. A \emph{clique} is a fully connected component of the graph - i.e. a subset of nodes in the graph such that all pairs of nodes in the subset are connected by an edge. A \emph{maximal clique} is a clique which is not a strict subset of any other clique. A \emph{clique potential} is a non-negative function of the values of the random variables in the clique; it does necessarily correspond to any conditional or marginal probabilty density. 
 
 An example undirected graphical model on four random variables, $\rvar{x}_1$, $\rvar{x}_2$, $\rvar{x}_3$ and $\rvar{x}_4$, is shown in Figure \ref{sfig:example-undirected-graphical-model}. Here the (maximal) cliques correspond to all the connected pairs of nodes. If $\psi_{a,b}$ denotes the clique potential on the pair $(a,\,b)$ then the graphical model implies the joint density can be factorised as
+%  \pden{\rvar{x}_1,\rvar{x}_2,\rvar{x}_3,\rvar{x}_4}(x_1,x_2,x_3,x_4) =\\
 \begin{equation}\label{eq:example-undirected-graphical-model-factorisation}
 \begin{split}
-  \pden{\rvar{x}_1,\rvar{x}_2,\rvar{x}_3,\rvar{x}_4}(x_1,x_2,x_3,x_4) =\\
   \frac{1}{Z} 
   \psi_{\rvar{x}_1,\rvar{x}_2}(x_1,x_2)
   \psi_{\rvar{x}_1,\rvar{x}_3}(x_1,x_3)
@@ -713,7 +717,7 @@ An example undirected graphical model on four random variables, $\rvar{x}_1$, $\
 \end{equation}
 with $Z$ a normalising constant such that the density integrates to 1 and so defines a valid probability measure.
 
-Undirected graphical models are a natural representation for models of systems of mutually interacting components. For example they are commonly used in models of images to represent dependencies between pixel values and models of ferromagnetism to represent interactions between lattices of particles. 
+Undirected graphical models are a natural representation for models of systems of mutually interacting components. For example they are commonly used in models of images to represent dependencies between pixel values and models of magnetic interactions in particle lattices. 
 
 Unlike directed models, generating joint configurations of the random variables in an undirected graphical model from the implied joint distribution is typically a non-trivial task, with no general equivalent to ancestral sampling. Further the joint density can typically only be evaluated up to an unknown normalising constant, with the integral needed to evaluate this constant often intractable for models involving a large number of variables or complex potentials. As we will see, these properties mean that inference in distributions defined by undirected graphical models is often particularly challenging.
 
@@ -966,7 +970,7 @@ A final additional notation used in Figure \ref{fig:hier-lin-regression-factor-g
 % plate notation
 % conditional indepence rules
 
-\subsection{Computation graphs}
+\subsection{Computation graphs}\label{subsec:computation-graphs}
 
 A final graph based tool we will make use of in this theis is that of \emph{computation graphs} \citep{bauer1974computational}. In particular computation graphs (via associated software frameworks \citep{theano2016theano}) will be used to allow automatic differentiation of complex probabilistic models used in later chapters. Computation graphs are not typically considered in the context of probabilistic graphical models, but they share many of the same features and as we will see are closely related to directed factor graphs.
 
@@ -1040,6 +1044,8 @@ is shown in Figure \ref{fig:gaussian-density-computation-graph}. The graph input
 Variable nodes in the computation graph have been represented by labelled circles and operation nodes with labelled diamonds. Undirected edges connecting from a variable node to an operation node correspond to the inputs to the operation, and directed edges from an operation node to variable nodes to the outputs of the operation.
 
 The computation graph associated with a given expression is not uniquely defined. There will usually be multiple possible orderings in which operations can be applied to achieve the same result (up to differences due to non-exact floating point computation). Similarly what should considered a single operation to be represented by a node in the computation graph as opposed to being split up into a sub-graph of multiple operations is a matter of choice. For example in Figure \ref{fig:gaussian-density-computation-graph} the addition of the constant $\frac{1}{2}\log(2\uppi)$ could have been included at various other points in the graph and the operation $\frac{1}{2}\rvar{z}^2$ could have been split in to separate multiplication and exponentation operations.
+
+\subsubsection{Automatic differentiation}
 
 The main motivation for representing expressions as computation graphs is to formalise an efficient general procedure for automatically calculating derivatives of the output of an expression with respect to its inputs termed automatic differentiation \citep{nolan1953analytical,beda1959programs}. The key ideas in automatic differentiation are to use the chain rule to decompose the derivatives into products and sums of the partial derivatives of the output of each individual operation in the expression with respect to its input, and to use an efficient recursive accumulation of these partial derivative sum-products corresponding to a traversal of the computation graph such that multiple derivatives can be efficiently calculated together.
 
@@ -1134,7 +1140,37 @@ We can immediately see that some of the chains of products of partial derivative
 
 Figure \ref{fig:gaussian-density-gradient-computation-graph} shows a visualisation of reverse-mode accumulation applied to the computation graph in Figure \ref{fig:gaussian-density-computation-graph}. The first step is for a \emph{forward pass} through the graph to be performed, i.e. values are provided for each of the input variables and then each of the intermediate and output variables calculated from the incoming operation applied to their parent values. Importantly the values of all variables in the graph calculated during the forward pass must be maintained in memory. 
 
-The \emph{reverse pass} recursively calculates the values of the partial derivatives of the relevant output node with respect to each variable node in the graph - we will term these intermediate derivatives \emph{accumulators} denoted with barred symbols in Figure \ref{fig:gaussian-density-gradient-computation-graph} e.g. $\bar{\rvar{a}} = \pd{\rvar{c}}{\rvar{a}}$. The reverse pass begins by seeding an accumulator for the output node to one (i.e. $\bar{\rvar{c}} = \pd{\rvar{c}}{\rvar{c}} = 1$ in Figure \ref{fig:gaussian-density-gradient-computation-graph}). Accumulators for the input variables of an operation are calculated by multiplying the accumulator for the operation output by the partial derivatives of the operation output with respect to each input variable. For non-linear operations multiplying by the operator partial derivatives will require access to the value of the input variables calculated in the forward pass. If a variable is an input to multiple operations, the derivative terms from each operation are added together in the relevant accumulator, as for example shown for $\bar{\rvar{s}}$ in Figure \ref{fig:gaussian-density-gradient-computation-graph}. By recursively applying these product and sum operations, the derivatives of the output with respect to all variables in the graph can be calculated.
+\begin{algorithm}[!t]
+\caption{Reverse-mode automatic differentiation.}
+\label{alg:reverse-mode-ad}
+\begin{algorithmic}
+\small
+    \Require
+    $\lbrace x_i \rbrace_{i=1}^M$ : computation graph input variables,\\
+    $\textrm{Pa}$ : indices of parent variables to an operation given its index,\\
+    $\textrm{Ch}$ : indices to child operations of a variable given its index,\\
+    $\lbrace f_i \rbrace_{i=M+1}^N$ : computation graph operations in topological order,\\% $\textrm{Pa}(i) < i \forall i \in \fset{M+1 \dots N}$,~
+    $\lbrace \lbrace \partial_j f_i\rbrace_{j \in \textrm{Pa}(i)}\rbrace_{i=M+1}^N$ : operation partial derivatives \acs{wrt} parent variables.
+    \Ensure\raggedright
+    $x_{N}$ : function output,\\
+    $\lbrace \bar{x}_i \rbrace_{i=1}^{N-1}$ : partial derivatives of output \acs{wrt} intermediate and input variables.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \For{$i \in \fset{M+1 \dots N}$}
+    \State $x_i \gets f_i\lpa \lbrace x_j \rbrace_{j \in \textrm{Pa}(i)}\rpa$
+  \EndFor
+  \State $\bar{x}_N \gets 1$
+  \For{$i \in \fset{N-1 \dots 1}$}
+    \State $\bar{x}_i \gets \sum_{j \in \textrm{Ch}(i)} \bar{x}_j \partial_i{f_j}(x_i)$
+  \EndFor
+\end{algorithmic}
+\end{algorithm}
+
+The \emph{reverse pass} recursively calculates the values of the partial derivatives of the relevant output node with respect to each variable node in the graph - we will term these intermediate derivatives \emph{accumulators} denoted with barred symbols in Figure \ref{fig:gaussian-density-gradient-computation-graph} e.g. $\bar{\rvar{a}} = \pd{\rvar{c}}{\rvar{a}}$. The reverse pass begins by seeding an accumulator for the output node to one (i.e. $\bar{\rvar{c}} = \pd{\rvar{c}}{\rvar{c}} = 1$ in Figure \ref{fig:gaussian-density-gradient-computation-graph}). 
+
+Accumulators for the input variables of an operation are calculated by multiplying the accumulator for the operation output by the partial derivatives of the operation output with respect to each input variable. For non-linear operations multiplying by the operator partial derivatives will require access to the value of the input variables calculated in the forward pass. If a variable is an input to multiple operations, the derivative terms from each operation are added together in the relevant accumulator, as for example shown for $\bar{\rvar{s}}$ in Figure \ref{fig:gaussian-density-gradient-computation-graph}. By recursively applying these product and sum operations, the derivatives of the output with respect to all variables in the graph can be calculated. A general description of the method for computation graphs with a single output node and multiple inputs is given in Algorithm \ref{alg:reverse-mode-ad}.
 
 This reverse accumulation method allows computation of numerically exact (up to floating point error) derivatives of a single output variable in a computation graph with respect to \emph{all input variables} with a computational cost, in terms of the number of atomic operations which need to be performed, that is a constant factor of the cost of the evaluation of the original expression represented by the computation graph in the forward pass. The constant factor is typically two to three and at most six \citep{baydin2015automatic}. This efficient computational cost is balanced by the requirement that the values of all intermediate variables in the computation graph evaluated in the forward pass through the graph must be stored in memory for the derivative accumulation in a reverse pass, which for large computational graphs can become a bottleneck.
 
@@ -1168,10 +1204,10 @@ Like directed graphical models, a directed factor graph naturally specifies a ge
 %\begin{minipage}{0.7\linewidth}
 \begin{algorithmic}
 \small
-\State $\rvct{y}_0 \gets \nrm{\vct{\nu},\mtx{\Psi}}$
-\State $\rvct{z} \gets \nrm{\vct{\mu},\mtx{\Sigma}}$
+\State $\rvct{y}_0 \sim \nrm{\vct{\nu},\mtx{\Psi}}$
+\State $\rvct{z} \sim \nrm{\vct{\mu},\mtx{\Sigma}}$
 \For {$t \in \lbr 1 \dots T\rbr$}
-  \State $\rvct{n}_{t-1} \gets \nrm{\vct{0},\mathbf{I}}$
+  \State $\rvct{n}_{t-1} \sim \nrm{\vct{0},\mathbf{I}}$
   \State $\rvct{y}_{t} \gets \rvct{y}_{t-1} + h \, \vct{m}(\rvct{y}_{t-1},\rvct{z}) + \sqrt{h} \, \mtx{S}(\rvct{y}_{t-1},\rvct{z})\rvct{n}_{t-1}$
 \EndFor
 \end{algorithmic}
@@ -1211,7 +1247,7 @@ Like directed graphical models, a directed factor graph naturally specifies a ge
 \caption{Directed factor graph of 3 time steps of \ac{SDE} simulation.}
 \label{sfig:sim-model-factor-graph}
 \end{subfigure}%
-\caption[Simulator model example.]{Example of a simulator model corresponding to Euler--Maruyma integration of a set of \acfp{SDE}, \\$\dr \rvct{y}(t) = \vct{m}\lpa\rvct{y}(t),\rvct{z}\rpa \,\dr t + \mtx{S}\lpa\rvct{y}(t),\rvct{z}\rpa \, \dr\rvct{n}(t)$, specified as pseudo-code in \subref{sfig:sim-model-code} and a directed factor graph in \subref{sfig:sim-model-factor-graph}. In the pseudo-code the notation $\gets$ followed by a distribution shorthand represents generating a value from the associated distribution and assigning it to a variable.} %
+\caption[Simulator model example.]{Example of a simulator model corresponding to Euler--Maruyma integration of a set of \acfp{SDE}, \\$\dr \rvct{y}(t) = \vct{m}\lpa\rvct{y}(t),\rvct{z}\rpa \,\dr t + \mtx{S}\lpa\rvct{y}(t),\rvct{z}\rpa \, \dr\rvct{n}(t)$, specified as pseudo-code in \subref{sfig:sim-model-code} and a directed factor graph in \subref{sfig:sim-model-factor-graph}. In the pseudo-code the notation $\sim$ followed by a distribution shorthand represents generating a value from the associated distribution and assigning it to a variable.} %
 \label{fig:simulator-model-example}
 \end{figure}
 
@@ -1800,13 +1836,12 @@ Some densities have a \emph{conjugacy} property that can simplify inference. If 
   \pden{\rvar{x}|\rvar{z}}(x\gvn z)\pden{\rvar{z}}(z) =
   \pden{\rvar{z}|\rvar{x}}(z\gvn x)\pden{\rvar{x}}(x).
 \end{equation}
-For certain pairs of $\pden{\rvar{x}|\rvar{z}}$ and $\pden{\rvar{z}}$ the corresponding $\pden{\rvar{z}|\rvar{x}}$ and $\pden{\rvar{x}}$ have closed-form expressions. Some examples are shown in Table \ref{tab:conjugate-distributions}. In all of these examples the conditional density $\pden{\rvar{x}|\rvar{z}}$ is a density for an \emph{exponential family distribution}. 
 \marginpar{A conditional density $\pden{\rvct{u}|\rvct{v}}$ is from the exponential family if it can be written as\\
 $\pden{\rvct{u}|\rvct{v}}(\vct{u}\gvn\vct{v})=$
 \\[1mm]
 $\frac{h(\vct{u}) \exp \lpa \vct{\eta}(\vct{v})\tr\vct{t}(\vct{u})\rpa}{z(\vct{v})}$,
 \\[1mm] with $\vct{\eta}(\vct{v})$ termed the \emph{natural parameters} and $\vct{t}(\vct{u})$ termed the \emph{sufficient statistics}.}
-For every exponential family distribution density $\pden{\rvar{x}|\rvar{z}}$ there exists a density $\pden{\rvar{z}}$ such that $\pden{\rvar{z}|\rvar{x}}$ is of the same parametric family as $\pden{\rvar{z}}$.
+For certain pairs of $\pden{\rvar{x}|\rvar{z}}$ and $\pden{\rvar{z}}$ the corresponding $\pden{\rvar{z}|\rvar{x}}$ and $\pden{\rvar{x}}$ have closed-form expressions. Some examples are shown in Table \ref{tab:conjugate-distributions}. In all of these examples $\pden{\rvar{x}|\rvar{z}}$ is a density for an \emph{exponential family distribution}. For every exponential family distribution density $\pden{\rvar{x}|\rvar{z}}$ there exists a $\pden{\rvar{z}}$ such that $\pden{\rvar{z}|\rvar{x}}$ is of the same parametric family as $\pden{\rvar{z}}$.
 
 If $\rvar{x}$ corresponds to an observed variable in the model, then if evaluating conditional expectations $\expc{f(\rvar{z}) \gvn \rvar{x}}$ the conjugacy property means that conditional density $\pden{\rvar{z}|\rvar{x}}$ which $f$ should be integrated against has a closed form expression. Often for simple $f$, e.g. $f(z) = z$ or $f(z) = z^2$, the conditional expectations will have closed form solutions in such cases (i.e. corresponding to moments of the distribution defined by $\pden{\rvar{z}|\rvar{x}}$). Even when $f$ is more complex, typically generating independent random samples from $\pden{\rvar{z}|\rvar{x}}$ in such cases will be possible, simplifying the use of Monte Carlo methods (which will be introduced in the next chapter). If both $\rvar{z}$ and $\rvar{x}$ are latent variables then the conjugacy property is also useful as in this case $\rvar{z}$ can be analytically marginalised out of conditional expectations of functions which do not depend on $\rvar{z}$.
 
@@ -1821,17 +1856,18 @@ If $\rvar{x}$ corresponds to an observed variable in the model, then if evaluati
     \node[latent, right=1.9 of z\s] (z\t) {$\rvct{z}_{\t}$} ; %
     \factor[left=of z\t, xshift=-5mm] {z\s-z\t} 
       {above:$\nrm{\mtx{A}_{\t}\rvct{z}_{\s} + \vct{m}_{\t}, \mtx{C}_{\t}}$} {z\s} {z\t} ; %
-    \node[obs, below=of z\s] (x\s) {$\rvct{x}_{\s}$} ; %
+    \node[obs, below=of z\s, yshift=2mm] (x\s) {$\rvct{x}_{\s}$} ; %
     \factor[above=of x\s] {z\s-x\s} 
       {left:$\nrm{\mtx{B}_{\s}\rvct{z}_{\s} + \vct{n}_{\s},\mtx{D}_{\s}}$} {z\s} {x\s} ; %
   }
-  \node[obs, below=of z\T] (x\T) {$\rvct{x}_{\T}$} ; %
+  \node[obs, below=of z\T, yshift=2mm] (x\T) {$\rvct{x}_{\T}$} ; %
   \factor[above=of x\T] {z\T-x\T} 
       {left:$\nrm{\mtx{B}_{\T}\rvct{z}_{\T} + \vct{n}_{\T},\mtx{D}_{\T}}$} {z\T} {x\T} ; %
 \end{tikzpicture}
 %\vskip 5pt
 \caption[Linear dynamical system factor graph.]{Factor graph for a latent linear dynamical system model.} %
 \label{fig:lds-factor-graph}
+\vspace{-2mm}
 \end{figure}
 
 \marginpar{A Markov process is a stochastic process such that future states are conditionally independent of past states given the current state.}
@@ -2064,7 +2100,7 @@ The general model comparison set up we will assume is that we have a finite set 
   \prod_{n=1}^M \pden{\rvct{z}_n}(\vct{z}_n).
 \end{split}
 \end{equation}
-The marginal density on the model indicator $\pden{\rvar{m}}$ represents our prior beliefs about the relative probabilities of the models before observing data. Importantly the value of the model indicator variable $\rvar{m}$ selects the relevant per model conditional density on the observed variables given latent variables $\pden{\rvct{x}|\rvar{m},\rvct{z}_m}$; this represents the assumption that conditioned on the model indicator assuming a particular model index $m$ the observed variables are conditionally independent of the latent variables of all other models $\rvct{x} \perp \fset{\rvct{z}_n}_{n\neq m} \gvn \rvar{m} = m$. An extension to factor graphs, \emph{gates} \citep{minka2009gates}, can be used to represent such context-dependent conditional independency relationships. Figure \ref{fig:model-comparison-factor-graph} shows a gated factor graph representation of equation \ref{eq:multi-model-joint}, with the gate indicated by the dashed box. %The semantics of the gate are that any edges from factors or variables nodes within the gate box to variables or factor outside the gate are only active when the gating variable, indicated by the the variable
+The marginal density on the model indicator $\pden{\rvar{m}}$ represents our prior beliefs about the relative probabilities of the models before observing data. Importantly the value of the model indicator variable $\rvar{m}$ selects the relevant per model conditional density on the observed variables given latent variables $\pden{\rvct{x}|\rvar{m},\rvct{z}_m}$; this represents the assumption that conditioned on the model indicator assuming a particular model index $m$ the observed variables are conditionally independent of the latent variables of all other models $\rvct{x} \perp \fset{\rvct{z}_n}_{n\neq m} \gvn \rvar{m} = m$. An extension to factor graphs, \emph{gates} \citep{minka2009gates}, can be used to represent such context-dependent conditional independencies. Figure \ref{fig:model-comparison-factor-graph} shows a gated factor graph of equation \ref{eq:multi-model-joint}, with the gate indicated by the dashed box. %The semantics of the gate are that any edges from factors or variables nodes within the gate box to variables or factor outside the gate are only active when the gating variable, indicated by the the variable
 
 Given this computational set up, the task in model comparison is then to compute the relative probabilities of each of the models given observed data. These probabilities\footnote{As $\rvar{m}$ is a discrete random variable the probability of the event of $\rvar{m}$ taking a value in the singleton set $\fset{m}$ given that $\rvct{x} = \vct{x}$ is equal to the density $\pden{\rvar{m}|\rvct{x}}(m\gvn\vct{x})$.} are given by
 \begin{equation}\label{eq:model-posterior}
