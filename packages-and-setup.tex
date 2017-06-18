@@ -15,7 +15,7 @@
     %backref=true,%
     natbib=true % natbib compatibility mode (\citep and \citet still work)
 ]{biblatex}
-\usepackage{amsmath}    
+\usepackage{amsmath}   
 \usepackage{textcomp} % fix warning with missing font shapes
 \usepackage{scrhack} % fix warnings when using KOMA with listings package          
 \usepackage{xspace} % to get the spacing after macros right  
@@ -36,7 +36,19 @@
 \usepackage{float}
 \usepackage{pdflscape}
 \usepackage{enumitem}
+
+\newcommand*{\noaddvspace}{\renewcommand*{\addvspace}[1]{}}
+
 \usepackage[noend]{algpseudocode}
+\usepackage{algorithm}
+% smaller line numbers in algorithms
+\algrenewcommand\alglinenumber[1]{\tiny #1:}
+% redefine presentation of algorithm \Require and \Ensure commands
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\algnewcommand{\IfThenElse}[3]{% \IfThenElse{<if>}{<then>}{<else>}
+  \State \algorithmicif\ #1\ \algorithmicthen\ #2\ \algorithmicelse\ #3}
+
 \usepackage[%
   %drafting, % prints the date and time at the bottom of each page
   %parts, % use part divisions in document (cannot be used with no chapters)
@@ -141,6 +153,9 @@
 
 \definecolor{edblue}{RGB}{0, 50, 95}
 \definecolor{edred}{RGB}{193, 0, 67}
+\definecolor{cborange}{RGB}{217,95,2}
+\definecolor{cbgreen}{RGB}{27,158,119}
+\definecolor{cbviolet}{RGB}{117,112,179}
 \definecolor{s3}{RGB}{77, 175, 74}
 \definecolor{s4}{RGB}{152, 78, 163}
 \definecolor{s5}{RGB}{255, 127, 0}

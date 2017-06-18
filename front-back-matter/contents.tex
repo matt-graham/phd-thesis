@@ -2,7 +2,7 @@
 
 %\phantomsection
 \refstepcounter{dummy}
-%\addcontentsline{toc}{section}{\contentsname}
+\addcontentsline{toc}{section}{\contentsname}
 %\pdfbookmark[1]{\contentsname}{tableofcontents}
 \setcounter{tocdepth}{2} % <-- 2 includes up to subsections in the ToC
 \setcounter{secnumdepth}{3} % <-- 3 numbers up to subsubsections
@@ -26,28 +26,41 @@
 \addcontentsline{toc}{section}{\listfigurename}
 \listoffigures
 
-\vspace{8ex}
+%\vspace{4ex}
+\newpage
 
 % List of tables
 \refstepcounter{dummy}
 \addcontentsline{toc}{section}{\listtablename}
 \listoftables
         
-\vspace{8ex}
+\vspace{4ex}
+
+\addtocontents{lof}{\protect\noaddvspace}
+
+% List of algorithms
+\refstepcounter{dummy}
+\addcontentsline{toc}{section}{\listalgorithmname}
+\listofalgorithms
+\addtocontents{loa}{\def\string\figurename{Algorithm}}
+
+%\vspace{4ex}
     
 % List of code listings
 %\refstepcounter{dummy}
 %\renewcommand{\lstlistlistingname}{List of Code Listings}
 %\addcontentsline{toc}{section}{\lstlistlistingname}
 %\lstlistoflistings 
-%\vspace{8ex}
+
+%\vspace{4ex}
+\newpage
        
 % Acronyms
 \refstepcounter{dummy}
 \addcontentsline{toc}{section}{List of Abbreviations}
 \section*{List of Abbreviations}
 
-\begin{acronym}[MCMC]
+\begin{acronym}[FLOPS]
 \input{front-back-matter/acronyms.tex}
 \end{acronym}
 

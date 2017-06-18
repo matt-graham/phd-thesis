@@ -1,6 +1,6 @@
 \chapter{Approximate inference}\label{ch:approximate-inference}
 
-In the previous chapter it was demonstrated that the key computational challenge in performing inference in probabilistic models is being able to evaluate integrals with respect to probability measures defined on high-dimensional spaces. Although in restricted cases such as conjugate exponential family models, the integrals involved in inference can be solved analytically, to exploit the full flexibility of probabilistic modelling we need to be able to compute such integrals in more general cases. As discussed in the previous chapter, for models with even moderate numbers of latent variables, numerical quadrature approaches to evaluating integrals are computationally infeasible due to the exponential scaling of computation cost with dimension.
+In the previous chapter we motivated the claim that the key computational challenge in performing inference in probabilistic models is being able to evaluate integrals with respect to probability measures defined on high-dimensional spaces. Although in restricted cases such as conjugate exponential family models, the integrals involved in inference can be solved analytically, to exploit the full flexibility of probabilistic modelling we need to be able to compute such integrals in more general cases. As discussed in the previous chapter, for models with even moderate numbers of latent variables, numerical quadrature approaches to evaluating integrals are computationally infeasible due to the exponential scaling of computation cost with dimension.
 
 %\marginpar{Although this may seem a paradox, all exact science is dominated by the idea of approximation. When a man tells you that he knows the exact truth about anything, you are safe in inferring that he is an inexact man.\\---Bertrand Russell}
 %\marginpar{Be approximately right rather than exactly wrong.\\--John W. Tukey}
@@ -11,82 +11,83 @@ Approximate inference methods can be coarsely divided in to two groups: those in
 
 \section{Sampling approaches}
 
-A key observation in the previous chapter was that inference at both the level of computing conditional expectations of latent variables in a model and in evaluating evidence terms to allow model comparison, will for most models of interest correspond to being able to integrate (potentially constant) functions against a probability density defined with respect to a base measure\footnote{There are models for which the corresponding probability measure is not absolutely continuous with respect to another measure and so cannot be represented by a density, however we will concentrate on the common case were a density exists.}. In particular we wish to be able to compute integrals of the form
+A key observation in the previous chapter was that inference at both the level of computing conditional expectations of latent variables in a model and in evaluating evidence terms to allow model comparison, will for most models of interest correspond to being able to integrate (potentially constant) functions against a probability density defined with respect to a base measure\footnote{There are models for which the corresponding probability measure is not absolutely continuous with respect to another measure and so cannot be represented by a density, however we will concentrate for now on the common case were a density exists.}. In particular we wish to be able to compute integrals of the form
 \begin{equation}\label{eq:integral-against-density}
-  \int_{\set{X}} f(\vct{x}) \, \rho(\vct{x}) \,\dr\mu(\vct{x})
+  \int_{\set{X}} f(\vct{x}) \, \dr \tgtprob(\vct{x}) =
+  \int_{\set{X}} f(\vct{x}) \, \tgtdens(\vct{x}) \,\dr\mu(\vct{x})
 \end{equation}
-where $\rho$ is the density on a space $\set{X}$ of a probability measure with respect to a base measure $\mu$ and $f$ is a measurable function. For instance in the case of computing the \emph{posterior mean} in a Bayesian inference problem with observed variables $\rvct{y}$ and latent variables $\rvct{x}$ where the posterior density $\pden{\rvct{x}|\rvct{y}}$ is defined with respect to the $D$-dimensional Lebesgue measure, we would have  $\rho(\vct{x}) = \pden{\rvct{x}|\rvct{y}}(\vct{x}\gvn\vct{y})$ for an observed $\vct{y}$, $\mu(\vct{x}) = \lebm{D}(\vct{x})$ and $f(\rvct{x}) = \vct{x}$. Often we will only be able to evaluate $\rho$ up to an unknown unnormalising constant i.e. $\rho(\vct{x}) = \frac{1}{Z}\pi(\vct{x})$ with we able to evaluate $\pi$ pointwise but $Z$ intractable to compute. For example in a Bayesian inference setting $\pi(\vct{x})$ would be the joint density $\pden{\rvct{x},\rvct{y}}(\vct{x},\vct{y})$ and $Z$ the model evidence $\pden{\rvct{y}}(\vct{y})$. When peforming inference in undirected graphical models, we would instead have that $\pi$ is the product of clique potentials and $Z$ the corresponding normaliser.
+where $\tgtdens$ is the density of a target distribution $\tgtprob$ on a space $\set{X}$ with respect to a base measure $\mu$ and $f$ is a measurable function. For instance in the case of computing the \emph{posterior mean} in a Bayesian inference problem with observed variables $\rvct{y}$ and latent variables $\rvct{x}$ where the posterior density $\pden{\rvct{x}|\rvct{y}}$ is defined with respect to the $D$-dimensional Lebesgue measure, we would have  $\tgtdens(\vct{x}) = \pden{\rvct{x}|\rvct{y}}(\vct{x}\gvn\vct{y})$ for an observed $\vct{y}$, $\mu(\vct{x}) = \lebm{D}(\vct{x})$ and $f(\vct{x}) = \vct{x}$. Often we will only be able to evaluate $\tgtdens$ up to an unknown unnormalising constant i.e. $\tgtdens(\vct{x}) = \frac{1}{Z}\utgtdens(\vct{x})$ with we able to evaluate $\utgtdens$ pointwise but $Z$ intractable to compute. For example in a Bayesian inference setting $\utgtdens(\vct{x})$ would be the joint density $\pden{\rvct{x},\rvct{y}}(\vct{x},\vct{y})$ and $Z$ the model evidence $\pden{\rvct{y}}(\vct{y})$. When peforming inference in undirected graphical models, we would instead have that $\utgtdens$ is the product of clique potentials and $Z$ the corresponding normaliser.
 
-The key idea of the methods we will discuss in this section is that we can estimate \eqref{eq:integral-against-density} by generating a set of random samples from a probability distribution defined on $\set{X}$ and then computing a (potentially weighted) average of the value of the function $f$ evaluated at these sample points. The most obvious approach is to sample independently from the probability distribution defined by the target density $\rho$. As we will see this is not necessarily feasible to do for the complex target densities defined on high dimensional spaces, however a host of related methods for generating and using random samples to approximate integrals with respect to target densities arising from complex probabilistic models have been developed.
+The key idea of the methods we will discuss in this section is that we can estimate \eqref{eq:integral-against-density} by generating a set of random samples from a probability distribution defined on $\set{X}$ and then computing a (potentially weighted) average of the value of the function $f$ evaluated at these sample points. The most obvious approach is to sample independently from the probability distribution defined by the target density $\tgtdens$. As we will see this is not necessarily feasible to do for the complex target densities defined on high dimensional spaces, however a host of related methods for generating and using random samples to approximate integrals with respect to target densities arising from complex probabilistic models have been developed.
 
-\subsection{Monte Carlo method}
+\subsection{Monte Carlo method}\label{subsec:monte-carlo-method}
 
 \marginpar{The eponym of the Monte Carlo method is a Monocan casino, favoured haunt of the uncle of Stanis{\l}aw Ulam, one of the method's inventors.}
 The framework that unifies all of the methods we will discuss in this section is the \emph{Monte Carlo method} for integration \citep{ulam1949monte}. We will briefly describe the key ideas and properties of Monte Carlo integration. 
 
-Let $\rvct{x}$ be a random (vector) variable distributed according to the target density i.e. $\pden{\rvct{x}} = \td{\prob{\rvct{x}}}{\mu} = \rho$. Given an arbitrary measurable function $f : \set{X} \to \reals$ we define a random variable $\rvar{f} = f(\rvct{x})$. Our task is to compute expectations $\expc{\rvar{f}} = \bar{f}$ corresponding to the integral \eqref{eq:integral-against-density}, with the assumption that $\bar{f}$ exists and is finite.
+Let $\rvct{x}$ be a random (vector) variable distributed according to the target density i.e. $\pden{\rvct{x}} = \td{\prob{\rvct{x}}}{\mu} = \tgtdens$. Given an arbitrary measurable function $f : \set{X} \to \reals$ we define a random variable $\rvar{f} = f(\rvct{x})$. Our task is to compute expectations $\expc{\rvar{f}} = \bar{f}$ corresponding to the integral \eqref{eq:integral-against-density}. We assume that $\expc{\rvar{f}}$ exists and both $\expc{\rvar{f}}$ and $\var{\rvar{f}}$ are finite.
 
 %We wish to be able to compute expectations of arbitrary measurable functions $f$ of the random variable $\rvct{x}$, the composition defining a new random variable $\rvar{f} = f(\rvct{x})$ 
 %\begin{equation}
-%  \bar{f} = \expc{\rvar{f}} = \int_{\set{X}} f(\vct{x}) \,\rho(\vct{x}) \,\dr\mu(\vct{x}),
+%  \bar{f} = \expc{\rvar{f}} = \int_{\set{X}} f(\vct{x}) \,\tgtdens(\vct{x}) \,\dr\mu(\vct{x}),
 %\end{equation}
 %with the implicit assumption that this expectation exists and is finite. 
 
-For now we assume we have a way of generating values of $N$ random variables $\lbrace \rvct{x}^{(n)}\rbrace_{n=1}^N$, each marginally distributed according to the target density i.e. $\pden{\rvct{x}^{(n)}} = \rho ~\forall n \in \fset{1 \dots N}$. We will initially not require any further properties on the joint distribution across all $N$ variables. We define random variables  $\lbrace \rvar{f}^{(n)} \rbrace_{n=1}^N$ and $\hat{\rvar{f}}$ by
+For now we assume we have a way of generating values of $N$ random variables $\lbrace \rvct{x}_n\rbrace_{n=1}^N$, each marginally distributed according to the target density i.e. $\pden{\rvct{x}_n} = \tgtdens ~\forall n \in \fset{1 \dots N}$. We will initially not require any further properties on the joint distribution across all $N$ variables. We define random variables  $\lbrace \rvar{f}_n \rbrace_{n=1}^N$ and $\hatf_N$ by
 \begin{equation}
-  \rvar{f}^{(n)} = f\lpa\rvct{x}^{(n)}\rpa \quad\forall n \in \fset{1\dots N}
+  \rvar{f}_n = f\lpa\rvct{x}_n\rpa \quad\forall n \in \fset{1\dots N}
   \quad\textrm{and}\quad
-  \skew{2}{\hat}{\rvar{f}} = \frac{1}{N} \sum_{n=1}^N \rvar{f}^{(n)}.
+  \hatf_N = \frac{1}{N} \sum_{n=1}^N \rvar{f}_n.
 \end{equation}
 Due to linearity of the expectation operator, we have that
 \begin{equation}
-  \expc{\skew{2}{\hat}{\rvar{f}}} = 
-  \frac{1}{N} \sum_{n=1}^N \expc{\rvar{f}^{(n)}} = 
+  \expc{\hatf_N} = 
+  \frac{1}{N} \sum_{n=1}^N \expc{\rvar{f}_n} = 
   \frac{1}{N} \sum_{n=1}^N \bar{f} = 
   \bar{f}
 \end{equation}
 %\marginpar{The variance of a random variable $\rvar{x}$ is defined as $\var{\rvar{x}} =\expc{(\rvar{x} - \expc{\rvar{x}})^2}$.}
-and so that in expectation $\skew{2}{\hat}{\rvar{f}}$ is equal to $\bar{f}$, i.e. realisations of $\skew{2}{\hat}{\rvar{f}}$ are unbiased estimators of $\bar{f}$. Note that this result does not require any independence assumptions about the generated random variables. Now considering the variance of $\skew{2}{\hat}{\rvar{f}}$ it can be shown that
+and so that in expectation $\hatf_N$ is equal to $\bar{f}$, i.e. realisations of $\hatf_N$ are unbiased estimators of $\bar{f}$. Note that this result does not require any independence assumptions about the generated random variables. Now considering the variance of $\hatf_N$ it can be shown that
 %\begin{align}
-%  \var{\hat{\rvar{f}}} 
+%  \var{\hatf_N} 
 %  =\,& 
-%  \expc{\lpa \frac{1}{N} \sum_{n=1}^N \lpa f(\rvct{x}^{(n)}) \rpa - \bar{f}\rpa^2}\\
+%  \expc{\lpa \frac{1}{N} \sum_{n=1}^N \lpa f(\rvct{x}_n) \rpa - \bar{f}\rpa^2}\\
 %  =\,&
-%  \frac{1}{N^2} \expc{\lpa \sum_{n=1}^N \lpa f(\rvct{x}^{(n)}) - \bar{f} \rpa\rpa^2}\\
+%  \frac{1}{N^2} \expc{\lpa \sum_{n=1}^N \lpa f(\rvct{x}_n) - \bar{f} \rpa\rpa^2}\\
 %  =\,&
-%  \frac{1}{N^2}\sum_{n=1}^N \expc{\lpa f(\rvct{x}^{(n)}) - \bar{f} \rpa^2} +\,\\
+%  \frac{1}{N^2}\sum_{n=1}^N \expc{\lpa f(\rvct{x}_n) - \bar{f} \rpa^2} +\,\\
 %  &
 %  \frac{2}{N^2}\sum_{n=1}^N \sum_{m=1}^{n-1} 
-%  \expc{\lpa f(\rvct{x}^{(m)}) - \bar{f} \rpa\lpa f(\rvct{x}^{(n)}) - \bar{f} \rpa}
+%  \expc{\lpa f(\rvct{x}_n) - \bar{f} \rpa\lpa f(\rvct{x}_m) - \bar{f} \rpa}
 %  \\
 %  =\,&
 %  \frac{\var{f(\rvct{x})}}{N}
 %  \lpa 
 %    1 +
 %    \frac{2}{N}\sum_{n=1}^N \sum_{m=1}^{n-1} 
-%      \frac{\expc{\lpa f(\rvct{x}^{(m)}) - \bar{f} \rpa\lpa f(\rvct{x}^{(n)}) - \bar{f} \rpa}}
+%      \frac{\expc{\lpa f(\rvct{x}_n) - \bar{f} \rpa\lpa f(\rvct{x}_m) - \bar{f} \rpa}}
 %      {\var{f(\rvct{x})}}
 %  \rpa
 %\end{align}
 \begin{align}\label{eq:monte-carlo-variance-general}
-  \var{\skew{2}{\hat}{\rvar{f}}}
+  \var{\hatf_N}
   =
   \frac{\var{\rvar{f}}}{N}
   \lpa 
-    1 +\frac{2}{N}\sum_{n=1}^N \sum_{m=1}^{n-1} \frac{\cov{\rvar{f}^{(m)}, \rvar{f}^{(n)}}}{\var{\rvar{f}}}
+    1 +\frac{2}{N}\sum_{n=1}^{N-1} \sum_{m=1}^{n-1} \frac{\cov{\rvar{f}_n, \rvar{f}_m}}{\var{\rvar{f}}}
   \rpa.
 \end{align}
-If the generated random variables $\lbrace \rvct{x}^{(n)}\rbrace_{n=1}^N$ and so $\lbrace \rvar{f}^{(n)}\rbrace_{n=1}^N$ are independent, then $\cov{\rvar{f}^{(m)}, \rvar{f}^{(n)}} = 0 ~\forall m\neq n$. In this case \eqref{eq:monte-carlo-variance-general} reduces to
+If the generated random variables $\lbrace \rvct{x}_n\rbrace$ and so $\lbrace \rvar{f}_n\rbrace$ are independent, then $\cov{\rvar{f}_n, \rvar{f}_m} = 0 ~\forall m\neq n$. In this case \eqref{eq:monte-carlo-variance-general} reduces to
 \begin{equation}\label{eq:monte-carlo-variance-independent}
-  \var{\skew{2}{\hat}{\rvar{f}}}
+  \var{\hatf_N}
   =
   \frac{\var{\rvar{f}}}{N},
 \end{equation}
-i.e. the variance of the \emph{Monte Carlo estimate} $\hat{\rvar{f}}$ for $\expc{\rvar{f}}$ is inversely proportional to the number of generated random samples $N$. Importantly this scaling does not depend on the dimension of $\rvct{x}$. 
+i.e. the variance of the \emph{Monte Carlo estimate} $\hatf_N$ for $\bar{f}$ is inversely proportional to the number of generated random samples $N$. Importantly this scaling does not depend on the dimension of $\rvct{x}$. 
 
 Therefore if we can generate a set of independent random variables from the target density, we can estimate expectations that asymptotically tend to the true value as $N$ increases, with a typical deviation from the true value (as measured by the standard deviation, i.e. the square root of variance) that is $\mathcal{O}\lpa N^{-\frac{1}{2}}\rpa$. In comparison a fourth-order quadrature method such as \emph{Simpson's rule} has an error that is $\mathcal{O}\lpa N^{-\frac{4}{D}}\rpa$ for a grid of $N$ points uniformly spaced across a $D$ dimensional space. Asymptotically for $D > 8$, Monte Carlo integration will therefore give better convergence than Simpson's rule, and even for smaller dimensions the large constant factors in the error dependence can sometimes favour Monte Carlo.
 
-Note that computing Monte Carlo estimates from independent random variables is not optimal in terms of minimising $\var{\skew{2}{\hat}{\rvar{f}}}$ for a given $f$; the covariance terms in \eqref{eq:monte-carlo-variance-general} can be negative which can reduce the overall variance. A wide range of \emph{variance reduction} methods have been proposed to exploit this and produce lower variance of Monte Carlo estimates for a given $f$ \citep{kroese2011variance}. Although these methods can be very important in pratice for achieving an estimator with a practical variance for a specific $f$ of interest, we will generally concentrate on the case where we do not necessarily know $f$ in advance and so cannot easily exploit these methods. %More generally applicable are \emph{quasi-Monte Carlo} methods \citep{niederreiter1992random,morokoff1995quasi} which use specially constructed \emph{low-discrepancy sequences} to more evenly tile the sample space. The error of quasi-Monte Carlo is upper bounded by $\mathcal{O}(\log(N)^D N^{-1})$ errors which can improve efficiency in some cases. The methods a
+Note that computing Monte Carlo estimates from independent random variables is not optimal in terms of minimising $\var{\hatf_N}$ for a given $f$; the covariance terms in \eqref{eq:monte-carlo-variance-general} can be negative which can reduce the overall variance. A wide range of \emph{variance reduction} methods have been proposed to exploit this and produce lower variance of Monte Carlo estimates for a given $f$ \citep{kroese2011variance}. Although these methods can be very important in pratice for achieving an estimator with a practical variance for a specific $f$ of interest, we will generally concentrate on the case where we do not necessarily know $f$ in advance and so cannot easily exploit these methods. %More generally applicable are \emph{quasi-Monte Carlo} methods \citep{niederreiter1992random,morokoff1995quasi} which use specially constructed \emph{low-discrepancy sequences} to more evenly tile the sample space. The error of quasi-Monte Carlo is upper bounded by $\mathcal{O}(\log(N)^D N^{-1})$ errors which can improve efficiency in some cases. The methods a
 
 \subsection{Pseudo-random number generation}
 
@@ -97,21 +98,21 @@ Virtually all statistical computations involving random numbers in practice make
 \centering
 \pgfplotstableread{data/lcg-37-61-128-37.cvs}{\lcgfile}
 \drawgrid[zero color=black!80, one color=Maroon, cell ht=0.22em, cell wd=0.22em]{\lcgfile}
-\caption[Example linear congruential generator sequence.]{Binary representation of linear congruential generator sequence $s_{n+1} = 37s_n + 61 \kern-4pt\mod 128$. Left to right represents successive integer states in sequence with most significant binary digit at the top.}
+\caption[Example linear congruential generator sequence.]{Binary representation of linear congruential generator sequence $s_{n+1} = 37s_n + 61 \kern-4pt\mod 128$. Columns left to right represents successive integer states in sequence. From least significant (bottom) to most significant (top), the bits in each column have patterns repeating with periods 2, 4, 8, 16, 32, 64, 128.}
 \label{fig:example-lcg-sequence}
 \end{figure}
 
-In particular through careful choice of the updates, sequences with a very long period (number of iterations before the sequence begins repeating), a uniform distribution across the numbers in the sequence range and low correlation between successive states can be constructed. A very simple example of a class of \acp{PRNG} is the \emph{linear congruential generator} which obeys the recurrent update
+In particular through careful choice of the updates, sequences with a very long period (number of iterations before the sequence begins repeating), a uniform distribution across the numbers in the sequence range and low correlation between successive states can be constructed. A very simple example of a class of \acp{PRNG} is the \emph{linear congruential generator} \citep{lehmer1951mathematical} which obeys the recurrent update
 \begin{equation}\label{eq:lcg-update}
   s_{n+1} = (a s_n + c) \kern-4pt\mod m
   \quad \textrm{with} \quad
    0 < a < m,~ 0 \leq c < m,
 \end{equation}
-with $a$, $c$ and $m$ integer parameters. If $a$, $c$ and $m$ are chosen appropriately, iterating the update \eqref{eq:lcg-update} from an initial seed $0 \leq s_0 < m$, will produce a sequence of states which visits all the integers in $[0, m)$ before repeating. An example state sequence with $m=128$ is shown in Figure \ref{fig:example-lcg-sequence}. In practice, linear congruential generators produce sequence with poor statistical properties, particularly when used to generate random points in high dimensional spaces \citep{marsaglia1968random}, hence most modern numerical computing libraries use more robust variants such as the \emph{Mersenne-Twister} \citep{matsumoto1998mersenne}, which is used in all experiments in this thesis.
+with $a$, $c$ and $m$ integer parameters. If $a$, $c$ and $m$ are chosen appropriately, iterating the update \eqref{eq:lcg-update} from an initial seed $0 \leq s_0 < m$, will produce a sequence of states which visits all the integers in $[0, m)$ before repeating. An example state sequence with $m=128$ is shown in Figure \ref{fig:example-lcg-sequence}. In practice, linear congruential generators produce sequences with poor statistical properties, particularly when used to generate random points in high dimensional spaces \citep{marsaglia1968random}, hence most modern numerical computing libraries use more robust variants such as the \emph{Mersenne-Twister} \citep{matsumoto1998mersenne}, which is used in all experiments in this thesis.
 
-The raw output of a \ac{PRNG} is an integer sequence, with typically the sequence elements uniformly distributed over all integers in a range $[0, 2^n)$ for some $n \in \naturals$. All real values are represented at a fixed precision on computers, typically using a floating point representation \citep{ieee2008standard} of \emph{single} (32-bit) or \emph{double} (64-bit) precision. Through an approriate multiply and shift transformation, the integer outputs of a \ac{PRNG} can be converted to floating-point values uniformly distributed across a finite interval. \ac{PRNG} implementations typically provide a primitive to generate floating-point values uniformly distributed on $[0, 1)$.
+The raw output of a \ac{PRNG} is an integer sequence, with typically the sequence elements uniformly distributed over all integers in a range $[0, 2^n)$ for some $n \in \naturals$. All real values are represented at a finite precision on computers, typically using a floating point representation \citep{ieee2008standard} of \emph{single} (24-bit mantissa) or \emph{double} (53-bit mantissa) precision. Through an approriate linear transformation, the integer outputs of a \ac{PRNG} can be converted to floating-point values uniformly distributed across a finite interval. \ac{PRNG} implementations typically provide a primitive to generate floating-point values uniformly distributed on $[0, 1)$.
 
-Given the ability to generate arbitrary long sequences of (effectively) independent samples from a uniform distribution $\mathcal{U}(0,1)$, the question is then how to use these values to produce random samples from arbitary densities. This will be the subject of the following sub-sections.
+Given the ability to generate sequences of (effectively) independent samples from a uniform distribution $\mathcal{U}(0,1)$, the question is then how to use these values to produce random samples from arbitary densities. This will be the subject of the following sub-sections.
 
 \subsection{Transform sampling}
 
@@ -127,6 +128,7 @@ Samples from a large class of distributions can be generated by directly exploit
     name=uaxis,
     xmin=0,xmax=1,
     ymin=0,ymax=1,
+    xshift=-0.2mm,
     width=66mm,height=66mm,
     x label style={at={(axis description cs:0.5,-0.025)},anchor=north},
     y label style={at={(axis description cs:-0.025,0.5)},anchor=south},
@@ -159,8 +161,8 @@ Samples from a large class of distributions can be generated by directly exploit
   {
     \foreach \j in {0,...,\numgrid} 
     {
-      \pgfmathsetmacro{\u}{0.05 + (0.9 * \i) / \numgrid};
-      \pgfmathsetmacro{\v}{0.05 + (0.9 * \j) / \numgrid};
+      \pgfmathsetmacro{\u}{0.0455 + (0.909 * \i) / \numgrid};
+      \pgfmathsetmacro{\v}{0.0455 + (0.909 * \j) / \numgrid};
       \pgfmathsetmacro{\x}{sqrt(-2 * ln(\u)) * cos(deg(2 * pi * \v))};
       \pgfmathsetmacro{\y}{sqrt(-2 * ln(\u)) * sin(deg(2 * pi * \v))};
       \pgfmathsetmacro{\c}{mod(\j,2)*80}
@@ -201,27 +203,947 @@ i.e. $\rvar{x}_1$ and $\rvar{x}_2$ are independent random variables with standar
 
 Due to the relatively high cost of the trigonometric function evaluations, more efficient alternatives to Box--Muller are usually used in practice to generate normal random variables such as a rejection sampling variant \citep{marsaglia1968random} (rejection sampling will be discussed in the next sub-section) or the \emph{Ziggurat algorithm} \citep{marsaglia2000ziggurat} (which also generalises to other symmetric univariate distributions).
 
-A general method for sampling from univarite densities is to use an inverse \ac{CDF} transform. For a probability density $\rho$ on a scalar random variable, the corresponding \ac{CDF} $r : \reals \to [0,1]$ is defined as
+A general method for sampling from univarite densities is to use an inverse \ac{CDF} transform. For a probability density $\tgtdens$ on a scalar random variable, the corresponding \ac{CDF} $r : \reals \to [0,1]$ is defined as
 \begin{equation}
-  r(x) = \int_{-\infty}^x \rho(v) \,\dr v
+  r(x) = \int_{-\infty}^x \tgtdens(v) \,\dr v
   \implies
-  \pd{r(x)}{x} = \rho(x).
+  \pd{r(x)}{x} = \tgtdens(x).
 \end{equation}
-If $\rvar{u}$ is a standard uniform random variable and $\rvar{x} = r^{-1}(u)$ then
+If $\rvar{u}$ is a standard uniform random variable and $\rvar{x} = r^{-1}(\rvar{u})$ then
 \begin{equation}
-  \pden{\rvar{x}}(x) = \left|\pd{r(x)}{x}\right| = \rho(x).
+  \pden{\rvar{x}}(x) = \left|\pd{r(x)}{x}\right| = \tgtdens(x).
 \end{equation}
-To be able to use the inverse \ac{CDF} transform method we need to be able to evaluate $r^{-1}$. For many univariate densities the \ac{CDF} $r$ itself does not have a closed form solution, though for some densities such as the standard normal $\nrm{0,1}$, even though the \ac{CDF} does not have an analytic form in terms of elementary functions it is common for numerical computing libraries to provide numerical approximations to both $r$ and $r^{-1}$ which are accurate to within small multiples of machine precision. In densities where a standard library function for the \ac{CDF} is not available, Chebyshev polynomial approximations to the density can be used to efficient compute an approximation to the \ac{CDF} and an iterative solving method used for the inversion \citep{olver2013fast}.
+To be able to use the inverse \ac{CDF} transform method we need to be able to evaluate $r^{-1}$. For many univariate densities the \ac{CDF} $r$ itself does not have a closed form solution. For some densities such as the standard normal $\nrm{0,1}$ even though the \ac{CDF} does not have an analytic form in terms of elementary functions it is common for numerical computing libraries to provide numerical approximations to both $r$ and $r^{-1}$ which are accurate to within small multiples of machine precision. In densities where a standard library function for the \ac{CDF} is not available, Chebyshev polynomial approximations to the density can be used to efficient compute an approximation to the \ac{CDF} and an iterative solver used for the inversion \citep{olver2013fast}.
 
 %numerical quadrature and iterative solving algorithms can be used to evaluate the inverse \ac{CDF} for arbitrary densities. The resulting high computational cost can be amortized by for example precomputing the inverse CDF over a fine grid and then using a spline interpolation to evaluate at arbitrary points.
 
-Although the inverse \ac{CDF} transform method gives a general recipe for sampling from univariate densities, it is not easy to generalise to multivariate densities and even for univariate densities, alternatives can be at simpler to implement and in some cases more numerically stable.
+Although the inverse \ac{CDF} transform method gives a general recipe for sampling from univariate densities, it is not easy to generalise to multivariate densities and even for univariate densities, alternatives can be simpler to implement and in some cases more numerically stable.
 
 \subsection{Rejection sampling}
 
+\begin{figure}[t]
+\centering
+\pgfplotsset{cycle list/Dark2-3}
+\begin{tikzpicture}
+  \begin{axis}[
+    cycle list name={Dark2-3},
+    xmin=-2, xmax=2,
+    samples=200,
+    width=100mm,
+    height=50mm,
+    xlabel={\small $x$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    ticks=none,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.75,0.9)},
+      fill=none,
+      anchor=north west,
+      draw=none, 
+      font=\scriptsize,
+    }
+  ]
+    \addplot+[mark=none, thick, draw=cborange, densely dashed, fill=cborange!10] {(
+      1.9 * exp(-0.5 * ((x-0.1) / 0.6)^2) / sqrt(2 * pi * 0.6^2)
+    )};
+    \addlegendentry{$M q(x)$};
+    \addplot+[mark=none, thick, draw=cbgreen, fill=cbgreen!20] {(
+      0.6 * exp(-0.5 * ((x - 0.5) / 0.5)^2) / sqrt(2 * pi * 0.5^2) +
+      0.4 * exp(-0.5 * ((x + 0.5) / 0.25)^2) / sqrt(2 * pi * 0.25^2)
+    )};
+    \addlegendentry{$\utgtdens(x)$};
+    \pgfmathsetmacro{\xr}{-0.25}
+    \pgfmathsetmacro{\ur}{0.6}
+    \pgfmathsetmacro{\yr}{1.9 * exp(-0.5 * ((\xr-0.1)/0.6)^2) / sqrt(2 * pi * 0.6^2)} ; %
+    \node[inner sep=0, outer sep=0, label={[label distance=-1mm]30:\tiny $\lpa x^*\kern-2pt, u^* Mq(x^*)\rpa$}] (rej) at (axis cs:\xr, \ur * \yr) [anchor=center] {$*$} ; %
+    \draw[densely dotted] (axis cs: \xr, 0.) -- (axis cs: \xr, \yr); %
+    \draw[densely dotted] (axis cs: \xr-0.55, \yr) -- (axis cs: \xr, \yr); %
+    \draw[->] (axis cs: \xr-0.5, 0.) -- 
+      node[sloped, pos=0.75, anchor=center, above] {\tiny $M q(x^*)$} 
+     (axis cs: \xr-0.5, \yr); %
+    \pgfmathsetmacro{\xa}{0.9}
+    \pgfmathsetmacro{\ua}{0.3}
+    \pgfmathsetmacro{\ya}{1.9 * exp(-0.5 * ((\xa-0.1)/0.6)^2) / sqrt(2 * pi * 0.6^2)} ; %
+    \node[inner sep=0, outer sep=0, label={[label distance=-1mm]180:\tiny $\lpa x^\diamond\kern-2pt, u^\diamond Mq(x^\diamond)\rpa$}] (rej) at (axis cs:\xa, \ua * \ya) [anchor=center] {$\diamond$} ; %
+    \draw[densely dotted] (axis cs: \xa, 0.) -- (axis cs: \xa, \ya); %
+    \draw[densely dotted] (axis cs: \xa+0.55, \ya) -- (axis cs: \xa, \ya); %
+    \draw[->] (axis cs: \xa+0.5, 0.) -- 
+      node[sloped, pos=0.6, anchor=center, below] {\tiny $M q(x^\diamond)$} 
+     (axis cs: \xa+0.5, \ya); %
+\end{axis}
+\end{tikzpicture}
+\caption[Visualisation of rejection sampling.]{Visualisation of rejection sampling. The green curve shows the (unnormalised) target density $\utgtdens$, the green region underneath representing the area we wish to sample points uniformly from. The dashed orange curve shows the scaled proposal density $M q$, with the orange (plus green) region representing the area we uniformly propose values from. Two example proposals are shown: $\diamond$ is under the target density and so accepted; $*$ is outside of the green region and so would be rejected.}
+\label{fig:rejection-sampling}
+\end{figure}
+
+An important class of generic sampling methods, particularly due their use as a building block in other algorithms, is rejection sampling \citep{vonneumann1951various}. Rejection sampling uses the observation that to sample from a probablity density $\tgtdens : \set{X} \to [0, \infty]$ it is sufficient to uniformly sample from the volume under the graph of $\lpa\vct{x}, \tgtdens(\vct{x})\rpa$.
+
+The key requirement in rejection sampling is to identify a \emph{proposal density} $q$ which can be independently sampled from and that upper bounds the potentially unnormalised target density $\utgtdens$ across its full support $\set{X}$ when multiplied by a known constant $M$, i.e. $\utgtdens(x) \leq M q(x) ~\forall x \in \set{X}$. The first requirement to be able to generate independent samples from $q$ can be met for example by distributions we can sample from using a transform sampling method as described in the previous subsection, e.g. standard normal. The second requirement is general more challenging, both from the perspective of ensuring the target density is upper bounded everywhere but also because as we will see how efficient the method is very dependent on how tight the bound is.
+
+\begin{algorithm}[!t]
+\caption{Rejection sampling.}
+\label{alg:rejection-sampling}
+\begin{algorithmic}
+\small
+    \Require
+    $\utgtdens$ : unnormalised target density,~
+    $q$ : normalised proposal density, \\
+    $M$ : constant such that $\utgtdens(\vct{x}) \leq Mq(\vct{x}) ~\forall \vct{x} \in \set{X}$.
+    \Ensure\raggedright
+    Independent sample from target density $\tgtdens(\vct{x}) = \frac{1}{Z} \utgtdens(\vct{x})$.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \Repeat
+    \State $\vct{x} \sim q$
+    \State $u \sim \mathcal{U}(0,1)$
+  \Until{ $u Mq(\vct{x}) \leq \utgtdens(\vct{x})$ }
+  \State \Return $\vct{x}$
+\end{algorithmic}
+\end{algorithm}
+
+Algorithm \ref{alg:rejection-sampling} describes the rejection sampling method to produce a single independent sample from the target density. A visualisation of how the algorithm works for a univariate target density is shown in Figure \ref{fig:rejection-sampling}. The overall aim is to generate points uniformly distributed across the green area under the (unnormalised) target density curve. This is achieved by generating points uniformly under the dashed orange curve corresponding to the scaled proposal density and then accepting only those which are below the green curve. To generate a point under the dashed orange curve we first generate an $x$ from the proposal density and then generate an auxilliary `height' variable by sampling uniformly from $[0, Mq(x)]$. If the sampled height is below the green curve we accept (as in the $\diamond$ example in Figure \ref{fig:rejection-sampling}) else we reject the sample (as in the $*$ example in Figure \ref{fig:rejection-sampling}).
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+  \node[latent] (a) {$\rvar{a}$} ; %
+  \node[latent, left=3 of a, yshift=5mm] (x) {$\rvct{x}$} ; %
+  \node[latent, left=3 of a, yshift=-5mm] (u) {$\rvar{u}$} ; %
+  \factor[left=of x] {pr-z} {$q$} {} {x} ; %
+  \factor[left=of u] {pr-u} {$\mathcal{U}(0,1)$} {} {u} ; %
+  \op[left=of a, xshift=-10mm] {x_u-a} {\small $\ind{\lsb 0,\frac{\utgtdens(\rvct{x})}{Mq(\rvct{x})}\rsb}(\rvar{u})$} {x,u} {a} ; %
+\end{tikzpicture}
+\caption{Factor graph of rejection sampling process.}
+\label{fig:rejection-sampling-factor-graph}
+\end{figure}
+
+Figure \ref{fig:rejection-sampling-factor-graph} shows the rejection sampling generative process as a directed factor graph, with $\rvct{x}$ be a random variable representing the proposal, $\rvar{u}$ the uniform auxilliary variable drawn to sample the `height' and $\rvar{a}$ a binary variable that indicates whether the proposal is accepted ($\rvar{a} = 1$) or not ($\rvar{a} = 0$). By marginalising out $\rvar{u}$ we have that that
+\begin{equation}\label{eq:rejection-sampling-joint-prob}
+  \pden{\rvct{x},\rvar{a}}(\vct{x},a) = 
+  q(\vct{x}) \lpa\frac{\utgtdens(\vct{x})}{Mq(\vct{x})}\rpa^a
+  \lpa1 - \frac{\utgtdens(\vct{x})}{Mq(\vct{x})}\rpa^{1-a},
+\end{equation}
+and further marginalising over the proposal $\rvct{x}$
+\begin{equation}\label{eq:rejection-sampling-accept-prob}
+  \pden{\rvar{a}}(a) = \lpa\frac{Z}{M}\rpa^a \lpa 1 - \frac{Z}{M}\rpa^{1-a}.
+\end{equation}
+Conditioning on the proposal being accepted we therefore have that
+\begin{equation}
+  \pden{\rvct{x}|\rvar{a}}(\vct{x}\gvn 1) =
+  \frac{q(\vct{x})\frac{\utgtdens(\vct{x})}{Mq(\vct{x})}}{\frac{Z}{M}} = \frac{\utgtdens(\vct{x})}{Z} = \tgtdens(\vct{x}).
+\end{equation}
+Therefore the accepted proposals are distributed according to the target density as required. Further from \eqref{eq:rejection-sampling-accept-prob} we have that the $\pden{\rvar{a}}(1) = \frac{Z}{M}$. This suggests we can use the accept rate to estimate $Z$ but also hints at the difficulty in finding a $M$ which guarantees the upper bound requirement as for $\frac{Z}{M}$ to be a valid probability $M \geq Z$ i.e. $M$ needs to be an upper bound on the unknown normalising constant $Z$. This relationship also suggests it is desirable to set $M$ as small as possible to maximise the acceptance rate; for a fixed proposal density $q$ this will involve setting $M$ to a value such that $M q(\vct{x}) = \utgtdens(\vct{x})$ for at least one $\vct{x}$ (as for example in Figure \ref{fig:rejection-sampling}).
+
+%For univariate target densities which are log-concave, \emph{adaptive rejection sampling} \citep{gilks1992adaptive} offers an efficient adaptive method 
+Although rejection sampling can be an efficient method of sampling from univariate target densities (particularly in the case of log-concave densities where an adaptive variant is available \citep{gilks1992adaptive}), it generally scales very poorly with the dimensionality of the target density. This is as the ratio of the volume under the target density to the volume under the scaled proposal (in terms of Figure \ref{fig:rejection-sampling} the ratio of the green area to the green plus orange regions), and so the probability of accepting a proposal, will tend become exponentially smaller as the dimensionality increases. This is the so-called \emph{curse of dimensionality}. Therefore although rejection sampling can be a useful subroutine for generating random variables from low-dimensional densities, in general it is not a viable option for generating samples directly for high-dimensional Monte Carlo integration.
+
 \subsection{Importance sampling}
 
+So far we have considered methods for generating samples directly from some target density. Although samples can be of value in themselves for giving a representative set of plausible values from the target density (e.g. for visualisation purposes), usually the end goal is to estimate integrals of the form in \eqref{eq:integral-against-density}. 
+
+\emph{Importance sampling} \citep{kahn1951estimation} is a Monte Carlo method which allows arbitrary integrals to be estimated. If $q$ is density of a probability measure which is absolutely continuous to the probability measure defined by the target density $\tgtdens$ (which requires that $\tgtdens(\vct{x}) > 0 \Rightarrow q(\vct{x}) > 0$), then importance sampling is based on the identity
+\begin{equation}\label{eq:importance-sampling-integral}
+  \bar{f} = \int_{\set{X}} f(\vct{x}) \,\tgtdens(\vct{x}) \,\dr\mu(\vct{x}) =
+  \frac
+  {\int_{\set{X}} f(\vct{x}) \,\frac{\utgtdens(\vct{x})}{q(\vct{x})} \, q(\vct{x}) \,\dr\mu(\vct{x})}
+  {\int_{\set{X}} \frac{\utgtdens(\vct{x})}{q(\vct{x})} \, q(\vct{x}) \,\dr\mu(\vct{x})}.
+\end{equation}
+Each of the numerator and denominator in \eqref{eq:importance-sampling-integral} take the form of an expectation of a measurable function of a random variable $\rvct{x}$ with probability density $\pden{\rvct{x}} = q$. Further the denominator is exactly equal to $Z = \int_{\set{X}}\utgtdens(\vct{x})\,\dr\mu(\vct{x})$. We therefore have that
+\begin{equation}\label{eq:importance-sampling-expectations}
+  Z \bar{f} = \expc{w(\rvct{x}) f(\rvct{x})}
+  ~~\textrm{and}~~
+  Z = \expc{w(\rvct{x})}
+  ~~\textrm{with}~~
+  w(\vct{x}) = \frac{\utgtdens(\vct{x})}{q(\vct{x})}.
+\end{equation}
+If we can generate random variables $\lbrace \rvct{x}_n \rbrace_{n=1}^N$ each with marginal density $q$ we can therefore form Monte Carlo estimates of both the numerator and denominator. We define $\hat{\rvar{Z}}_N$ and $\hat{\rvar{g}}_N$ as
+\begin{equation}\label{eq:importance-sampling-mc-estimates}
+  \hat{\rvar{Z}}_N = \frac{1}{N} \sum_{n=1}^N w\lpa\rvct{x}_n\rpa
+  ~~\textrm{and}~~
+  \hat{\rvar{g}}_N = \frac{1}{\hat{\rvar{Z}}} \sum_{n=1}^N w\lpa\rvct{x}_n\rpa f\lpa\rvct{x}_n\rpa.
+\end{equation}
+By the same argument as Section \ref{subsec:monte-carlo-method}, $\expc{\hat{\rvar{Z}}_N} = Z$ and $\expc{\hat{\rvar{g}}_N} = Z\bar{f}$. We can therefore use importance sampling to form an unbiased estimate of the unknown normalising constant $Z$. 
+
+If we define $\hatf_N = \hat{\rvar{g}}_N / \hat{\rvar{Z}}_N$, then this is a biased\footnote{In cases where the normalising constant $Z$ is known, we can instead use $w(\vct{x}) = \frac{\tgtdens(\vct{x})}{q(\vct{x})}$ in which case the ratio estimator is not required and an unbiased estimates can be calculated. As the problems we are interested in will generally have unknown $Z$ we do not consider this case further} estimator for $\bar{f}$ as in general the expectation of the ratio of two random variables is not equal to the ratios of their expectations. However if both the numerator and denominator have finite variance, i.e. $\var{\hat{\rvar{Z}}_N} < \infty$ and $\var{\hat{\rvar{g}}_N} < \infty$, then $\hatf_N$ is a \emph{consistent} estimator for $\bar{f}$ i.e. $\lim_{N\to\infty} \expc{\hatf_N} = \bar{f}$.
+
+\begin{figure}[t]
+\centering
+\pgfplotsset{cycle list/Dark2-3}
+\begin{subfigure}[b]{.48\linewidth}
+\centering
+\begin{tikzpicture}
+  \begin{axis}[
+    cycle list name={Dark2-3},
+    xmin=-2, xmax=2.5,
+    ymin=0, ymax=2,
+    samples=200,
+    width=65mm,
+    height=40mm,
+    xlabel={\small $x$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    ticks=none,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.75,0.9)},
+      fill=none,
+      anchor=north west,
+      draw=none, 
+      font=\scriptsize,
+    }
+  ]
+    \addplot+[mark=none, thick, draw=cbgreen] {0.75 * (
+      0.6 * exp(-0.5 * ((x - 0.5) / 0.5)^2) / sqrt(2 * pi * 0.5^2) +
+      0.4 * exp(-0.5 * ((x + 0.5) / 0.25)^2) / sqrt(2 * pi * 0.25^2)
+    )};
+    \addlegendentry{$\utgtdens(x)$};
+    \addplot+[mark=none, thick, draw=cborange, densely dashed] {(
+      exp(-0.5 * ((x-0.1) / 0.52)^2) / sqrt(2 * pi * 0.52^2)
+    )};
+    \addlegendentry{$q(x)$};
+    \addplot+[mark=none, thick, densely dotted, draw=cbviolet] {0.75 * (
+      0.6 * exp(-0.5 * ((x - 0.5) / 0.5)^2) / sqrt(2 * pi * 0.5^2) +
+      0.4 * exp(-0.5 * ((x + 0.5) / 0.25)^2) / sqrt(2 * pi * 0.25^2)
+    ) /
+    (
+      exp(-0.5 * ((x-0.1) / 0.52)^2) / sqrt(2 * pi * 0.52^2)
+    )
+    };
+    \addlegendentry{$w(x)$};
+\end{axis}
+\end{tikzpicture}
+\end{subfigure}
+\begin{subfigure}[b]{.48\linewidth}
+\centering
+\begin{tikzpicture}
+  \begin{axis}[
+    cycle list name={Dark2-3},
+    xmin=-2, xmax=2.5,
+    ymin=0, ymax=2,
+    samples=200,
+    width=65mm,
+    height=40mm,
+    xlabel={\small $x$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    ticks=none,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.75,0.9)},
+      fill=none,
+      anchor=north west,
+      draw=none, 
+      font=\scriptsize,
+    }
+  ]
+    \addplot+[mark=none, thick, draw=cbgreen] {0.75 * (
+      0.6 * exp(-0.5 * ((x - 0.5) / 0.5)^2) / sqrt(2 * pi * 0.5^2) +
+      0.4 * exp(-0.5 * ((x + 0.5) / 0.25)^2) / sqrt(2 * pi * 0.25^2)
+    )};
+    \addlegendentry{$\utgtdens(x)$};
+    \addplot+[mark=none, thick, draw=cborange, densely dashed] {(
+      exp(-0.5 * ((x-0.1) / 0.8)^2) / sqrt(2 * pi * 0.8^2)
+    )};
+    \addlegendentry{$q(x)$};
+    \addplot+[mark=none, thick, densely dotted, draw=cbviolet] {0.75 * (
+      0.6 * exp(-0.5 * ((x - 0.5) / 0.5)^2) / sqrt(2 * pi * 0.5^2) +
+      0.4 * exp(-0.5 * ((x + 0.5) / 0.25)^2) / sqrt(2 * pi * 0.25^2)
+    ) /
+    (
+      exp(-0.5 * ((x-0.1) / 0.8)^2) / sqrt(2 * pi * 0.8^2)
+    )
+    };
+    \addlegendentry{$w(x)$};
+\end{axis}
+\end{tikzpicture}
+\end{subfigure}
+\caption[Visualisation of importance sampling.]{Visualisation of importance sampling. On both axes the green curve shows the unnormalised target density $\utgtdens$, the dashed orange curve the density $q$ values are sampled from and the dotted violet curve the importance weighting function $w(x) = \frac{\utgtdens(x)}{q(x)}$ to estimate expectations with respect to the target density using samples from $q$. In the left axis the $q$ chosen is undispersed compared to $\utgtdens$ leading to very large $w$ values in the right tail. In constrast in the right axis, the broader $q$ leads to less extreme variation in $w$.}
+\label{fig:importance-sampling}
+\end{figure}
+
+The $w(\rvar{x}_n)$ values are typically termed the \emph{importance weights}. If a few of the weights are very large, the weighted sums in \eqref{eq:importance-sampling-mc-estimates} will be dominated by those few values, reducing the effective number of samples in the Monte Carlo estimates. This can particularly be a problem if the are regions of $\set{X}$ with low probability under $q$ where $\tgtdens(\vct{x}) \gg q(\vct{x})$. As sampling points in these regions will be a rare event, a large number of samples may be needed to diagnose the issue adding further difficulty. A general recommendation is to use densities $q$ with tails as least as heavy of thos of $\tgtdens$, and in general the closer the match between $q$ and $\tgtdens$ the better \citep{mackay2003information,owen2013importance}. Figure \ref{fig:importance-sampling} shows a visualisation of the effect of the choice of $q$ on the importance weights.
+
+A heuristic that can be used to help assess the quality of importance sampling estimates is what is sometimes termed the \emph{effective sample size} \citep{kong1992note,owen2013importance}. It approximately quantifies how many independent samples from the target $\tgtdens$ would be required to get a Monte Carlo estimate with a similar variance to that achieved using an importance sampling estimator with weights $\lbrace w(\rvct{x}_n) \rbrace_{n=1}^N$ given \ac{iid} $\lbrace \rvct{x}_n\rbrace_{n=1}^N$ generated from $q$. It can be calculated as
+\begin{equation}\label{eq:is-effective-sample-size}
+  \rvar{N}_{\textrm{eff}} = 
+  \lpa \sum_{n=1}^N \bar{\rvar{w}}_n^2 \rpa^{-1}
+  \quad\textrm{where}\quad \bar{\rvar{w}}_n  = \frac{w\lpa\rvct{x}_n\rpa}{\sum_{m=1}^N w\lpa\rvct{x}_m\rpa},
+\end{equation}
+i.e. as the reciprocal of the sum of squares of the normalised importance weights. If $\rvar{N}_{\textrm{eff}} \ll N$ this can suggest an issue with the choice of sampling density $q$. The diagnostic is not fool proof however as it is based on a finite sample size, and it may be that rare extreme importance weights due to e.g. a mode of the target $\tgtdens$ in the tails of $q$, are not encountered in a particular run giving a misleadingly high $\rvar{N}_{\textrm{eff}}$.
+
+When previously discussing rejection sampling, we introduced an auxiliary binary accept indicator variable, $\rvar{a}$, associated with each proposed sample $\rvct{x}$ (see Figure \ref{fig:rejection-sampling-factor-graph}). If we generate $N$ independent proposal -- indicator pairs $\lbrace \rvct{x}_n, \rvar{a}_n \rbrace_{n=1}^N$ then the number of accepted proposals is $\rvar{N}_{\textrm{acc}} = \sum_{n=1}^N \rvar{a}_n$. Conditioned on $\rvar{N}_{\textrm{acc}}$ being a value more than one, the generated rejection sampling variables $\lbrace \rvct{x}_n, \rvar{a}_n \rbrace_{n=1}^N$ can be used to form an \emph{unbiased} Monte Carlo estimate of $\bar{f}$ using the estimator
+\begin{equation}\label{eq:rejection-sampler-mc-estimator}
+  \hatf_N^{\,\textsc{rs}} = \frac{\sum_{n=1}^N\rvar{a}_n f\lpa\rvct{x}_n\rpa}{\sum_{m=1}^N \rvar{a}_m},
+\end{equation}
+which just correponds to computing the empirical mean of the accepted proposals i.e. the standard Monte Carlo estimator. In comparison importance sampling forms a biased but consistent estimator for $\bar{f}$ from $N$ samples $\lbrace \rvct{x}_n \rbrace_{n=1}^N$ from a density $q$ using the estimator
+\begin{equation}\label{eq:rejection-sampler-mc-estimator}
+  \hatf_N^{\,\textsc{is}} = \frac{\sum_{n=1}^N w\lpa\rvct{x}_n\rpa f\lpa\rvct{x}_n\rpa}{\sum_{m=1}^N w\lpa\rvct{x}_m\rpa}.
+\end{equation}
+From this perspective the accept indicators $\rvar{a}_n$ in rejection sampling can be seen to act like binary importance weights, in contrast importance sampling using `soft' weights which mean all sampled $\rvct{x}_n$ make a contribution to the estimator (assuming $w(\vct{x}) \neq 0 ~\forall \vct{x} \in \set{X}$). However this correspondence is only loose. The rejection sampling estimator $\hatf_N^{\,\textsc{rs}}$ is unbiased unlike $\hatf_N^{\,\textsc{is}}$, but this unbiasedness relies on conditioning on a non-zero value for $\rvar{N}_{\textrm{acc}}$ (i.e. the number of accepted samples to generate) and continuing to propose points until this condition is met. In contrast importance sampling generates a fixed number of samples from $q$ and does not use any auxiliary random variables.
+
+Unlike rejection sampling, there is no need in importance sampling for $q$ to upper-bound the target density (when multiplied by a constant). This allows more freedom in the choice of $q$ however it is still important to choose $q$ to be as close as possible to the target while remaining tractable to generate samples from. In general for target densities defined on high-dimensional spaces, it can be difficult to find an appropriate $q$ such that the variation in importance weights is not too extreme \citep{mackay2003information}. As we will see later however the importance sampling framework can be combined with other methods we will discuss in the following sections to allow it to be scaled to high dimensional problems.
+
+%The estimator $\hat{f}$ is however the ratio of two Monte Carlo estimates. It is therefore not an unbiased estimator for $\bar{f}$, however it is consistent, i.e. in the limit of $N \to \infty$ it converges to $\bar{f}$, providing both $\hat{Z}$ and $\hat{N}$ have finite variance.
+
 \subsection{Markov chain Monte Carlo}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+  \node[latent] (x0) {$\rvct{x}_0$} ; %
+  \factor[left=of x0] {pr-x0} {above:\footnotesize $q$} {} {x0} ; %
+  \def\T{4}
+  \foreach \t in {1,...,\T} {
+    \pgfmathtruncatemacro{\s}{\t-1}
+    \node[latent, right=1.5 of x\s] (x\t) {$\rvct{x}_{\t}$} ; %
+    \factor[left=of x\t, xshift=-3mm] {x\s-x\t} 
+      {above:\footnotesize $\fwdtrans_\t\lpa\rvct{x}_{\s}\rpa$} {x\s} {x\t} ; %
+  }
+\end{tikzpicture}
+\caption[Markov chain factor graph.]{Markov chain factor graph. The initial state $\rvct{x}_0$ is sampled from a density $q$ and each subsequent state $\rvct{x}_n$ is then generated from a transition density $\fwdtrans_n$ conditioned on the previous state $\rvct{x}_{n-1}$.}
+\label{fig:markov-chain-factor-graph}
+\end{figure}
+
+The sampling methods we have considered so far have involved using independent random variables to form Monte Carlo estimates. However when introducing the Monte Carlo method we saw that is was not necessary for the random variables used in a Monte Carlo estimator to be independent. While it can be impractically computationally expensive to generate independent samples from complex high-dimensional target distributions, simulating a stochastic process which converges in distribution to the target and produces a sequence of \emph{dependent} random variables is often a more tractable task. This is the idea exploited by \ac{MCMC} methods.
+
+A \emph{Markov chain} is an ordered sequence of random variables $\lbrace\rvct{x}_n\rbrace_{n=0}^N$ which have the \emph{Markov property} --- for all $n \in \fset{1 \dots N}$, $\rvct{x}_n$ is conditionally independent of $\lbrace \rvct{x}_n \rbrace_{m < n -1}$ given $\rvct{x}_{n-1}$. This conditional independence structure is visualised as a factor graph in Figure \ref{fig:markov-chain-factor-graph}.
+
+For a Markov chain defined on a general measurable state space $(\set{X}, \sset{F})$, the probability distribution of a state $\rvct{x}_n$ given the state $\rvct{x}_{n-1}$ is specified for each $n \in \fset{1\dots N}$ by a \emph{transition operator}, $\fwdtransop_n : \sset{F} \times \set{X} \to [0, 1]$. In particular the transition operators define a series of regular conditional distributions for each $n \in \fset{1 \dots N}$
+\begin{equation}\label{eq:markov-kernel-definition}
+  \prob{\rvct{x}_n}(\set{A} \gvn \rvct{x}_{n-1} = \vct{x}) =
+  \fwdtransop_n\lpa\set{A} \gvn \vct{x}\rpa
+  \quad 
+  \forall \set{A} \in \sset{F},~
+  \vct{x} \in \set{X}.
+\end{equation}
+We will generally assume that the chain is \emph{homogeneous}, i.e. that the same transition operator is used for all steps $\fwdtransop_n = \fwdtransop ~\forall n\in\fset{1 \dots N}$. 
+
+%A Markov chain is generated using a \emph{Markov kernel} or \emph{transition operator}, which is a regular conditional probability $\prob{\rvct{x}^{(n+1)}}(\set{A} \gvn \rvct{x}_n)$, which defines the probability of the state $\rvct{x}^{(n+1)}$ being in $\set{A}$ conditioned on the state $\rvct{x}_n$. 
+%A Markov chain is generated using a \emph{transition density}\footnote{More generally we can define a \emph{Markov kernel} as a regular conditional probability $\prob{\rvct{x}^{(n+1)}}(\set{A} \gvn \rvct{x}_n)$, which defines the probability of the state $\rvct{x}^{(n+1)}$ being in $\set{A}$ conditioned on the state $\rvct{x}_n$. The transition density corresponding to this Markov kernel may not be well defined, for example in the common case where the Markov kernel includes a singular measure term corresponding to remaining at the current state. However as we did previously when discussing deterministic factors, in the interests of readability we will informally treat the Dirac delta as defining the density of a singular measure, and refer to a transition density even when this is not strictly defined.} which defines the probability density of the next state given the current state. We will use the following shorthand notation for transition densities 
+%\begin{equation}\label{eq:time-dependent-transition}
+%  \fwdtrans_n\lpa \vct{x}' \gvn \vct{x}\rpa = \pden{\rvct{x}_n|\rvct{x}_{n-1}}(\vct{x}'\gvn%\vct{x}).
+%\end{equation}
+%If the transition density is the same for all steps, which we will assume in most cases, the Markov %chain is said to be \emph{homogeneous} and we will drop the subscript on the transition density.
+
+The key requirement of a transition operator for \ac{MCMC} is that the target distribution $\tgtprob$ is \emph{invariant} under the transition, that is it satisfies
+\begin{equation}
+  \label{eq:invariant-distribution}
+  \tgtprob(\set{A}) = \int_{\set{X}} \fwdtransop(\set{A} \gvn \vct{x}) \,\dr\tgtprob(\vct{x})
+  \quad\forall \set{A} \in \sset{F},  
+\end{equation}
+The invariance property means that if a chain state $\rvct{x}_n$ is distributed according to the target $\tgtprob$, all subsequent chain states $\rvct{x}_{n+1},\,\rvct{x}_{n+2}\dots$ will also be marginally distributed according to the target. Therefore given a single random sample $\rvct{x}_{0}$ from the target distribution, a series of dependent states marginally distributed according to the target could be generated and used to form Monte Carlo estimates of expectations.
+
+Being able to generate even one exact sample from a complex high-dimensional target distribution is in general infeasible. Importantly however, subject to further conditions on the transition operator, the marginal distribution on the chain state $\prob{\rvct{x}_n}$ of a Markov chain with a transition operator which leaves the target distribution invariant will converge to the target distribution irrespective of the distribution of the intial chain state. The requirements correspond to ensuring the target distribution is the \emph{unique} invariant distribution of the chain.%, in which case it is said to be the chain's \emph{stationary distribution}.
+
+To have a unique invariant distribution, a chain must be \emph{irreducible} and \emph{aperiodic} \citep{tierney1994markov}. For a chain on a measurable space $(\set{X},\sset{F})$, irreducibility is defined with respect to a measure $\nu$, which could but does not necessarily need to be the target distribution $\tgtprob$. A chain is $\nu$-irreducible if starting at any point in $\set{X}$ there is a non-zero probability of moving to any set with positive $\nu$-measure in a finite number of steps, i.e.
+\begin{equation}\label{eq:irreducibility-criteria}
+\begin{split}
+  \forall \vct{x} \in \set{X},\, \set{A} \in \sset{F} : \nu(\set{A}) > 0
+  ~~\exists\, m \in \integers^+ :
+  \prob{\rvct{x}_m}(\set{A} \gvn \rvct{x}_0 = \vct{x}) > 0. 
+\end{split}
+\end{equation}  
+A chain with invariant distribution $\tgtprob$ is periodic if disjoint regions of the state space are visited cyclically, i.e. there exists an integer $r > 1$ and an ordered set of $r$ disjoint $\tgtprob$-positive subsets of $\set{X}$, $\lbrace \set{A}_i \rbrace_{i=1}^r$ such that $\fwdtransop(\set{A}_{j} \gvn \vct{x}) = 1 ~\forall \vct{x} \in \set{A}_i,~ i \in \fset{1 \dots r}, ~j = (i + 1) \kern-2pt\mod r$.
+
+If we can construct a $\nu$-irreducible and aperiodic Markov chain $\lbrace \rvct{x}_n \rbrace_{n=0}^N$ which has the target distribution $\tgtprob$ as its invariant distribution, then the \emph{\ac{MCMC} estimator} $\hatf_N = \frac{1}{N}\sum_{n=1}^N f(\rvct{x}_n)$ converges almost surely as $N \to \infty$ to $\bar{f} = \int_{\set{X}} f \dr\tgtprob$ for all starting states except for a $\nu$-null set\footnote{The `except for a $\nu$-null set' caveat can be removed by requiring the stronger property of \emph{Harris recurrence} \citep{harris1956existence}.}% It has been argued \cite{chan1994discussion} that the floating-point implementations used in practice for \ac{MCMC} methods naturally avoid such `measure-theoretic pathologies' though see \citep{roberts2006harris} for a counter argument.}% The \ac{MCMC} implementations we will use in practice will generally ensure Harris recurrence.}%, and even if not the pathology of a chain starting in the `bad' $P$-null set should be easy to identify.}
+ \citep{meyn1993markov}. This convergence of \emph{time-averages} (i.e. over states at different steps of the Markov chain) to \emph{space-averages} (i.e. with respect to the stationary distribution across the state space), is termed \emph{ergodicity} and is a consequence of the \emph{Birkhoff--Khinchin ergodic theorem} \citep{birkhoff1931proof}.
+
+Although irreducibility and aperiodicity of a Markov chain which leaves the target distribution invariant are sufficient for convergence of \ac{MCMC} estimators, this does not tell us anything about the rate of that convergence and so how to quantify the error introduced by computing estimates with a Markov chain simulated for only a finite number of steps. Stronger notions of ergodicity can be used to help quantify convergence; we will concentrate on \emph{geometric ergodicity} here. We first define a notion of distance between two measures $\mu$ and $\nu$ on a measurable space $(\set{X},\sset{F})$, the \emph{total variation distance}, as
+\begin{equation}\label{eq:total-variation-measures}
+  \left\Vert \mu - \nu \right\Vert_{\textsc{tv}} = \sup_{\set{A} \in \sset{F}} \left| \mu(\set{A}) - \nu(\set{A}) \right|.
+\end{equation}
+For a $\nu$-irreducible and aperiodic chain with invariant distribution $P$ our earlier vague statement that the distribution on the chain state converges to $P$ can now be restated more precisely as that for $\nu$-almost all initial states $\rvct{x}_0 = \vct{x}$, $\lim_{n\to\infty} \left\Vert \prob{\rvar{x}^{(n)}}\lpa \cdot \gvn \rvct{x}_0 = \vct{x}\rpa - \tgtprob \right\Vert_{\textsc{tv}} = 0$. Geometric ergodicity makes a stronger statement that the convergence in total variation distance conditioned is geometric in $n$, i.e. that
+\vspace{-2mm}
+\begin{equation}\label{eq:geometric-ergodicity}
+  \left\Vert \prob{\rvar{x}^{(n)}}\lpa \cdot \gvn \rvct{x}_0 = \vct{x}\rpa - \tgtprob \right\Vert_{\textsc{tv}} \leq M(\vct{x}) r^n
+\end{equation}
+for a positive measurable function $M$ which depends on the initial chain state $\vct{x}$ and rate constant $r \in [0, 1)$. For chains which are geometrically ergodic, we can derive an expression for the \emph{asymptoptic variance} of an \ac{MCMC} estimator $\hatf_N$ related to the variance of a simple Monte Carlo estimator previously considered in Section \ref{subsec:monte-carlo-method}.
+
+\marginpar{A stochastic process is stationary if the joint distribution of the states at any set of time points does not change if all those times are shifted by a constant.}
+%\marginpar{A Markov process $\lbrace \rvct{x}_t \rbrace_{t \in \set{T}}$ is stationary if $\prob{\rvct{x}_0} = \prob{\rvct{x}_t} ~\forall t \in \set{T}$ and $\prob{\rvct{x}_0,\rvct{x}_t} = \prob{\rvct{x}_{s},\rvct{x}_{s+t}} ~\forall s, t, s+t \in \set{T}$.}
+As in Section \ref{subsec:monte-carlo-method} we define $\rvar{f}_n = f(\rvct{x}_n)$ and $\hatf_N = \frac{1}{N} \sum_{n=1}^N \rvar{f}_n$, with here the $\lbrace \rvct{x}_n \rbrace_{n=1}^N$ the states of a Markov chain. For a homogeneous Markov chain with a unique invariant distribution $P$ which is \emph{stationary}, the marginal density on the states $\prob{\rvct{x}_n}$ is equal to $P$ for all $n$ and we can use the expression for the variance of a general Monte Carlo estimator (which did not assume independence of the random variables) stated earlier in \eqref{eq:monte-carlo-variance-general}. Further the stationarity of the chain means that the covariance $\cov{\rvar{f}_n, \rvar{f}_m}$ depends only on the difference $n - m$, and so the variance of the estimator simplifies to
+\begin{equation}\label{eq:monte-carlo-variance-stationary}
+  \var{\hatf_N}
+  =
+  \frac{\var{\rvar{f}}}{N}
+  \lpa 
+    1 + 2\sum_{n=1}^{N-1} \lpa \frac{N-n}{N} \frac{\cov{\rvar{f}_0, \rvar{f}_n}}{\var{\rvar{f}}}\rpa
+  \rpa.
+\end{equation}
+If we multiply both sides of \eqref{eq:monte-carlo-variance-stationary} by $N$ and define $\rho_{n} = \frac{\cov{\rvar{f}_0, \rvar{f}_n}}{\var{\rvar{f}}}$ (the lag $n$ autocorrelations of $\rvar{f}$), under the assumption that $\sum_{n=1}^\infty |\rho_n| < \infty$ in the limit of $N \to \infty$ we have that
+\begin{equation}\label{eq:asymptotic-variance}
+  \lim_{N\to\infty} \lpa N \, \var{\hatf_N} \rpa = \var{\rvar{f}} \lpa 1 + 2\sum_{n=1}^\infty \rho_n\rpa.
+\end{equation}
+Now considering a chain which is geometrically ergodic from its initial state, if $\expc{|\rvar{f}|^{2+\delta}}$ is finite for some $\delta > 0$ then it can be shown \citep{chan1994discussion,geyer1998markov,roberts2004general} that \eqref{eq:asymptotic-variance} is also the asymptoptic variance for a \emph{MCMC} estimator calculated using the chain states.
+
+This motivates a definition of the \ac{ESS}\footnote{Note this is unrelated to the previous definition for importance sampling.} for an \ac{MCMC} estimator $\hatf_N$ computed using a geometrically ergodic chain as
+\begin{equation}\label{eq:effective-sample-size-mcmc}
+  N_{\textrm{eff}} = \frac{N}{1 + 2\sum_{n=1}^\infty \rho_n}.
+\end{equation} 
+The \ac{ESS} quantifies the number of independent samples that would be required in a Monte Carlo estimator to give an equivalent variance to the \ac{MCMC} estimator $\hatf_N$ \emph{in the asymptoptic limit $N \to \infty$}. In practice we cannot evaluate the exact autocorrelations and so we can only compute an estimated \ac{ESS}, $\hat{N}_{\textrm{eff}}$, from one or more simulated chains with the estimation method needing to be carefully chosen to ensure reasonable values \citep{thompson2010comparison}. Although the assumption of geometric ergodicity can often be hard to verify in practice and \ac{ESS} estimates can give misleading results in chains far from convergence, when used appropriately estimated \acp{ESS} can still be a useful heuristic for evaluating and comparing the effiency of Markov chain estimators and are often available as a standard diagnostic in \ac{MCMC} software packages \citep{plummer2006coda,carpenter2016stan,salvatier2016probabilistic}.
+
+So far we have not discussed how to actually construct a transition operator giving a chain with the required invariant distribution. As a notational convenience we will consider the transition operator as being specified by a \emph{transition density} $\fwdtrans : \set{X} \times \set{X}  \to [0, \infty)$ which is defined with respect to a base measure $\mu$ (which we will later assume to be the same as that which the target density we wish to integrate against is defined with respect to, hence the reuse of notation). The transition operator is then 
+\begin{equation}
+  \fwdtransop(\set{A} \gvn \vct{x}) =
+  \int_{\set{A}} \fwdtrans(\vct{x}' \gvn \vct{x}) \,\dr\mu(\vct{x}')
+  \quad \forall \set{A} \in \sset{F},~ \vct{x} \in \set{X}. 
+\end{equation}
+In practice the probability measure defined by a transition operator will often have a singular component, for example corresponding to a non-zero probability of the chain remaining in the current state. In this case $\fwdtransop$ is not absolutely continuous with respect to $\mu$ and the transition density is not strictly defined. As we did in the previous chapter however we will informally use Dirac deltas to represent a `density' of singular measures, and so still consider a transition density as existing. The requirement that the transtion operator leaves the target distribution invariant, can then be expressed in terms of the target density $\tgtdens$ and transition density $\fwdtrans$ as
+\begin{equation}
+  \label{eq:invariant-density}
+  \tgtdens(\vct{x}') = 
+  \int_{\set{X}} \fwdtrans\lpa \vct{x}' \gvn \vct{x}\rpa \,\tgtdens(\vct{x}) \,\dr\mu(\vct{x}) 
+  \quad\forall\vct{x}'\in \set{X}.
+\end{equation}
+Finding a transition density which leaves the target density invariant by satisfying \eqref{eq:invariant-density} seems difficult in general as it involves evaluating an integral against the target density - precisely the computational task which we have been forced to seek approximate solutions to. We can make progress by considering the joint density of a pair of successive states for a chain with invariant distribution $P$ that has converged to stationarity. Then we have that
+\begin{equation}\label{eq:chain-state-pair-joint-density-stationary}
+  \pden{\rvct{x}_{n}, \vct{x}_{n-1}}(\vct{x}',\vct{x}) = 
+  \pden{\rvct{x}_{n}|\vct{x}_{n-1}}(\vct{x}'\gvn\vct{x}) \,\pden{\rvct{x}_{n-1}}(\vct{x}) =
+  \fwdtrans(\vct{x}'\gvn\vct{x}) \,\tgtdens(\vct{x}).
+\end{equation}
+We can also consider factorising this joint density into the product of the marginal density of the current state $\pden{\rvct{x}_{n}}$ and the conditional density of the previous state given the current state $\pden{\rvct{x}_{n-1}|\vct{x}_{n}}$. Due to stationarity $\pden{\rvct{x}_n}$ is also equal to $\tgtdens$ and so we have that $\pden{\rvct{x}_{n-1}|\vct{x}_{n}}$ must be the density of a transition operator which also leaves $\tgtprob$ invariant, corresponding to a time reversed version of the original (stationary) Markov chain\footnote{The time reversal of a Markov chain is always itself a a Markov chain irrespective of stationarity (as the definining conditional independence structure is symmetric with respect to the direction of time), however the reverse of a homogeneous Markov chain which is not stationary will not in general itself be homogeneous.}. If we therefore denote $\bwdtrans=\pden{\rvct{x}_{n-1}|\vct{x}_{n}}$ (and which we will term the \emph{backward transition density} in contrast to $\fwdtrans$ which in this context we will qualify as the \emph{forward transition density}), we have that
+\begin{equation}\label{eq:foward-backward-transition-density-balance}
+  \fwdtrans(\vct{x}'\gvn\vct{x}) \,\tgtdens(\vct{x}) = 
+  \bwdtrans(\vct{x}\gvn\vct{x}') \,\tgtdens(\vct{x}')
+  ~~\forall \vct{x} \in \set{X},\, \vct{x}' \in \set{X}.
+\end{equation}
+Integrating both sides with respect to $\vct{x}$, we have that $\forall \vct{x}' \in \set{X}$
+\begin{equation}\label{eq:backward-transition-density-invariance-derivation}
+\begin{split}
+  \int_{\set{X}} \fwdtrans(\vct{x}'\gvn\vct{x}) \,\tgtdens(\vct{x}) \,\dr\mu(\vct{x}) 
+  &= 
+  \int_{\set{X}} \bwdtrans(\vct{x}\gvn\vct{x}') \,\tgtdens(\vct{x}')  \,\dr\mu(\vct{x})
+  \\
+  &=
+  \int_{\set{X}} \bwdtrans(\vct{x}\gvn\vct{x}')  \,\dr\mu(\vct{x}) \,\tgtdens(\vct{x}')
+  =
+  \tgtdens(\vct{x}'),
+\end{split}
+\end{equation}
+and so that \eqref{eq:invariant-density} is satisfied, with the last inequality arising due to $\bwdtrans$ being a normalised density on its first argument. Therefore if we can find a pair of transition densities, $\fwdtrans$ and $\bwdtrans$, satisfying \eqref{eq:foward-backward-transition-density-balance}, then the transition operator specified by $\fwdtrans$ will leave the target distribution $\tgtprob$ invariant (and by an equivalent argument so will the transition operator specified by $\bwdtrans$). We can further simplify \eqref{eq:foward-backward-transition-density-balance} by requiring that $\fwdtrans = \bwdtrans = \trans$, i.e. that both forward and backward transition densities (and corresponding operators) take the same form and so that the chain at stationarity is \emph{reversible}, in which case have that
+\begin{equation}\label{eq:detailed-balance}
+  \trans(\vct{x}'\gvn\vct{x}) \,\tgtdens(\vct{x}) = 
+  \trans(\vct{x}\gvn\vct{x}') \,\tgtdens(\vct{x}')
+  ~~\forall \vct{x} \in \set{X},\, \vct{x}' \in \set{X}.
+\end{equation}
+This is often termed the \emph{detailed balance} condition. Importantly both the detailed balance \eqref{eq:detailed-balance} and \emph{generalised balance} \eqref{eq:foward-backward-transition-density-balance} conditions can also be written in terms of the unormalised density $\utgtdens$ by multiplying both sides by $Z$, and so can be checked even when $Z$ is unknown.
+
+The restriction to reversible transition operators in detailed balance, while sufficient for \eqref{eq:invariant-density} to hold is not necessary. Markov chains which satisfy the generalised balance condition but not detailed balance are termed \emph{non-reversible}, and there are theoretical results suggesting that non-reversible Markov chains can sometimes achieve significantly improved convergence compared to related reversible chains \citep{diaconis2000analysis,neal2004improving,ichiki2013violation} (a criticism made of some of these results is that choice of `reference' reversible chain to compare to can be somewhat arbitrary\citep{mira2000non}).
+
+While there are several general purpose frameworks for specifying reversible transition operators which leave a target distribution invariant, developing methods for constructing irreversible transition operators with a desired invariant distribution has proven more challenging. The approaches proposed to date are generally limited in practice to special cases such as finite state spaces \citep{suwa2010markov,turitsyn2011irreversible,sun2010improving} or chains with tractable invariant distributions such as multivariate normal \citep{bierkens2016non}. 
+
+Nonetheless non-reversible Markov chains are still commonly used in \ac{MCMC} applications. Given a set of transition operators which each individually leave a target distribution invariant, the sequential composition of the transition operators will necessarily by induction also leave the target distribution invariant. Even if the individual transition operators are all reversible, the overall sequential composition will generally not be (instead having an adjoint `backward' operator corresponding to applying the individual transitions in the reversed order). Sequentially combining several reversible transition operators is common in \ac{MCMC} implementations, though this is more often the result of each individual operator not meaning the requirements for ergodicity in isolation and so needing to be combined with other operators, rather than due to a specific aim of introducing irreversibility.
+
+Having now introduced the key theoretical concepts underlying \ac{MCMC} methods, we will now move on to discussing details of their implementation. In the following sub-sections we will review three widely applicable frameworks for constructing reversible transition operators which leave a target distribution invariant: the \emph{Metropolis--Hastings} algorithm, \emph{Gibbs sampling} and \emph{slice sampling}. These three methods will form the basis for much of the work introduced in this thesis.
+
+\subsubsection{Metropolis--Hastings}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+    declare function={
+      target(\x) = 
+      0.5 * exp(-0.5 * ((\x - 0.5) / 0.4)^2) / sqrt(2 * pi * 0.4^2) +
+      0.5 * exp(-0.5 * ((\x + 0.5) / 0.2)^2) / sqrt(2 * pi * 0.2^2);
+    },
+    declare function={
+      proposal(\x,\y,\s)=exp(-0.5 * ((\x-\y) / \s)^2) / sqrt(2 * pi * \s^2);
+    }
+    ]
+  \begin{axis}[
+    domain=-2:2,
+    name=narrowerprop,
+    xmin=-2, xmax=2,
+    samples=200,
+    width=65mm,
+    height=40mm,
+    xlabel={\small $x$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    ticks=none,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(1.1,0.9)},
+      fill=none,
+      anchor=north,
+      draw=none, 
+      font=\scriptsize,
+      %legend columns=-1, 
+      %column sep=1ex,
+    }
+  ]
+    \addplot+[mark=none, thick, draw=cborange, fill=cborange!20, densely dashed] {(
+      0.75 * proposal(x, -0.75, 0.3)
+    )};
+    \addlegendentry{$q(x\gvn x_{n})$};
+    \addplot+[mark=none, thick, draw=cbviolet, fill=cbviolet!20, densely dotted] {(
+      0.75 * proposal(x, -0.75, 0.3) * min(1, target(x) / target(-0.75))
+    )};
+    \addlegendentry{$\alpha(x\gvn x_{n})\,q(x\gvn x_{n})$};
+    \addplot+[mark=none, thick, draw=cbgreen] {target(x)};
+    \addlegendentry{$\utgtdens(x_n)$};
+    %\draw (axis cs: -2,1) -- (axis cs: 2, 1);
+    \draw[->] (axis cs: -0.72,0.1) --(axis cs: -0.72, 0);
+    \node[anchor=south west, xshift=-2mm] at (axis cs: -0.72,0.1) {$x_{n}$};
+\end{axis}
+\begin{axis}[
+    at=(narrowerprop.right of south east),
+    xshift=-8mm,
+    anchor=left of south west,
+    domain=-2.5:2,
+    xmin=-2, xmax=2,
+    samples=200,
+    width=65mm,
+    height=40mm,
+    xlabel={\small $x$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    ticks=none,
+  ]
+    \addplot+[mark=none, thick, draw=cborange, fill=cborange!20, densely dashed] {(
+      0.75 * proposal(x, -0.75, 0.5)
+    )};
+    \addplot+[mark=none, thick, draw=cbviolet, fill=cbviolet!20, densely dotted] {(
+      0.75 * proposal(x, -0.75, 0.5) * min(1, target(x) / target(-0.75))
+    )};
+    \addplot+[mark=none, thick, draw=cbgreen] {target(x)};
+    %\draw (axis cs: -2,1) -- (axis cs: 2, 1);
+    \draw[->] (axis cs: -0.72,0.1) --(axis cs: -0.72, 0);
+    \node[anchor=south west, xshift=-2mm] at (axis cs: -0.72,0.1) {$x_{n}$};
+\end{axis}
+\end{tikzpicture}
+\caption[Visualisation of Metropolis--Hastings algorithm.]{Visualisation of Metropolis--Hastings algorithm in a univariate target density. The green curves shows the unnormalised target density. The arrows indicate the current chain state. The orange curves show the density of proposed moves from this state, with the left axis using a narrower proposal than the right. The violet curves show the proposal density scaled by the acceptance probability of the proposed move, this reducing the probability of transitions to states with lower density than the current state. The orange region between the violet and orange curves represents the probability mass reallocated to rejections by the downscaling by the acceptance function. The broader proposal in the right axis has an increased probability of making a move to the other mode in the target density but at a cost of an increased rejection probability.}
+\label{fig:metropolis-hastings}
+\end{figure}
+
+\begin{algorithm}[!t]
+\caption{Metropolis--Hastings transition.}
+\label{alg:metropolis-hastings}
+\begin{algorithmic}
+\small
+    \Require
+    $\vct{x}_n$ : current chain state,~
+    $\utgtdens$ : unnormalised target density,\\
+    $q$ : normalised proposal density which we can sample from.
+    \Ensure\raggedright
+    $\vct{x}_{n+1}$ : next chain state with $\vct{x}_n \sim \tgtdens \implies \vct{x}_{n+1} \sim \tgtdens$.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $\vct{x}^* \sim q(\vct{x}_{n})$
+  \State $u \sim \mathcal{U}(0,1)$
+  \vspace{0.2mm}
+  \If{$u < \frac{\utgtdens(\vct{x}^*) \, q(\vct{x} \gvn \vct{x}^*)}{\utgtdens(\vct{x}) \, q(\vct{x}^* \gvn \vct{x})}$}
+    \vspace{0.1mm}
+    \State $\vct{x}_{n+1} \gets \vct{x}^*$
+  \Else
+    \State $\vct{x}_{n+1} \gets \vct{x}_{n}$
+  \EndIf
+  \State \Return $\vct{x}_{n+1}$
+\end{algorithmic}
+\end{algorithm}
+
+\marginpar{Although the algorithm has come to be commonly known by Edward Metropolis' name as first author on the 1953 paper \citep{metropolis1953equation}, it is believed that Arianna and Marshall Rosenbluth, two of the other co-authors, were the main contributors to the development of the algorithm \citep{gubernatis2005marshall}.}
+The seminal \emph{Metropolis--Hastings} algorithm provides a general framework for constructing Markov chains with a desired invariant distribution and is ubitiqous in \ac{MCMC} methodology. The original Rosenbluth--Teller--Metropolis variant of the algorithm \citep{metropolis1953equation} dates to the very beginnings of the Monte Carlo method, having being first implemented on Los Alamos' MANIAC\footnote{\emph{Mathematical Analyzer, Numerical Integrator and Computer.}} one of the earliest programmable computers. The method was generalised in a key paper by Hastings \citep{hastings1970monte}, and the optimality among several competing alternatives of the form now used demonstrated by Peskun \cite{peskun1973optimum}. An extension to Markov chains on trans-dimensional spaces was proposed by Green \citep{green1995reversible}.
+
+An outline of the method is given in Algorithm \ref{alg:metropolis-hastings} and a visualisation of terms involved in the transition operator in a univariate target density shown in Figure \ref{fig:metropolis-hastings}. The key idea is to propose updates to the state using an arbitrary transition operator, and then correct for this transition operator not necessarily leaving the target distribution invariant by stochastically accepting or rejecting the proposal. If a proposal is rejected the chain remains at the current state, otherwise the chain state takes on the proposed value. 
+
+The transition density corresponding to Algorithm \ref{alg:metropolis-hastings} is
+\begin{equation}\label{eq:metropolis-hastings-transition-density}
+\begin{split}
+  \trans(\vct{x}' \gvn \vct{x}) &=
+  \alpha(\vct{x}'\gvn \vct{x})\,q(\vct{x}'\gvn \vct{x}) + \, \\
+  &\phantom{=}  
+  \lpa 1 - 
+  \int_{\set{X}} \alpha(\vct{x}^*\gvn \vct{x})\,q(\vct{x}^*\gvn \vct{x}) \,\dr\mu(\vct{x}^*)
+  \rpa
+  \delta(\vct{x}' - \vct{x}),
+\end{split}
+\end{equation}
+with the \emph{acceptance probability} $\alpha : \set{X} \times \set{X} \to [0,1]$ defined as
+\begin{equation}\label{eq:metropolis-hastings-acceptance-probability}
+  \alpha(\vct{x}'\gvn \vct{x}) =
+  \min\lbr 1,\, \frac{q(\vct{x}\gvn\vct{x}')\,\tgtdens(\vct{x}')}{q(\vct{x}'\gvn\vct{x})\,\tgtdens(\vct{x})} \rbr =
+  \min\lbr 1,\, \frac{q(\vct{x}\gvn\vct{x}')\,\utgtdens(\vct{x}')}{q(\vct{x}'\gvn\vct{x})\,\utgtdens(\vct{x})} \rbr,
+\end{equation}
+and $q : \set{X} \times \set{X} \to [0, \infty)$ the density of the proposal transition operator (from herein \emph{proposal density}). This transition density corresponds to a reversible transition operator which leaves the target distribution $\tgtprob$ invariant as we will now show.
+
+For the purposes of verifying the detailed balance condition \eqref{eq:detailed-balance}, the density of \emph{self-transitions}, i.e. a transition to the same state, can be ignored as \eqref{eq:detailed-balance} is trivially satisfied for $\vct{x}' = \vct{x}$. Considering therefore the cases $\vct{x} \neq \vct{x}'$ where the Dirac delta term representing the singular measure corresponding to rejected proposals can be neglected, we therefore have $\forall \vct{x} \in \set{X},\,\vct{x}' \in \set{X} : \vct{x} \neq \vct{x}$
+\begin{align}\label{eq:metropolis-hastings-detailed-balance-derivation}
+  \trans(\vct{x}'\gvn\vct{x})\,\tgtdens(\vct{x}) &=
+  \min\lbr 
+    1,\, 
+    \frac
+      {q(\vct{x}\gvn\vct{x}')\,\tgtdens(\vct{x}')}
+      {q(\vct{x}'\gvn\vct{x})\,\tgtdens(\vct{x})} 
+  \rbr\,
+  q(\vct{x}'\gvn \vct{x})\,\tgtdens(\vct{x})
+  \\
+  &=
+  \min\lbr 
+    q(\vct{x}'\gvn \vct{x})\,\tgtdens(\vct{x}),\, 
+    q(\vct{x}\gvn\vct{x}')\,\tgtdens(\vct{x}')
+  \rbr
+  \\
+  &=
+  \min\lbr 
+    \frac
+      {q(\vct{x}'\gvn\vct{x})\,\tgtdens(\vct{x})}
+      {q(\vct{x}\gvn\vct{x}')\,\tgtdens(\vct{x}')} 
+    ,\, 1
+  \rbr\,
+  q(\vct{x}\gvn \vct{x}')\,\tgtdens(\vct{x}')
+  \\
+  &=
+  \trans(\vct{x}\gvn\vct{x}')\,\tgtdens(\vct{x}').
+\end{align}
+Therefore the detailed balance condition is satisfied, and the Metropolis--Hastings transition operator leaves the target distribution $\tgtprob$ invariant.
+
+The original Rosenbluth--Teller--Metropolis algorithm used a symmetric proposal density $q(\vct{x}' \gvn \vct{x}) = q(\vct{x} \gvn \vct{x}') ~\forall \vct{x} \in \set{X},\,\vct{x}'\in\set{X}$ (with the extension to the non-symmetric case being due to Hastings), in which case the acceptance probability definition simplifies to
+\begin{equation}\label{eq:metropolis-acceptance-probability}
+  \alpha(\vct{x}'\gvn \vct{x}) =
+  \min\lbr 1,\, \frac{\tgtdens(\vct{x}')}{\tgtdens(\vct{x})} \rbr =
+  \min\lbr 1,\, \frac{\utgtdens(\vct{x}')}{\utgtdens(\vct{x})} \rbr.
+\end{equation}
+Note that importantly in both \eqref{eq:metropolis-hastings-acceptance-probability} and \eqref{eq:metropolis-acceptance-probability} the target density only appears as a ratio and so the density need only be known up to a proportionality constant.
+
+An important special case for chains on a Euclidean state space with a Borel $\sigma$-algebra i.e. $(\set{X},\,\sset{F}) = (\reals^D, \, \borel(\reals^D))$, is when the proposal transition operator is deterministic and corresponds to a differentiable involution of the current state. Let $\vct{\phi} : \set{X} \to \set{X}$ be an involution, i.e. $\vct{\phi} \circ \vct{\phi}(\vct{x}) = \vct{x} ~\forall \set{X}$ with Jacobian determinant $J_{\vct{\phi}}(\vct{x}) = \left|\pd{\vct{\phi}(\vct{x})}{\vct{x}}\right|$ which is defined and non-zero $\tgtprob$-almost everywhere. Then if we define a transition operator via the transition density
+\begin{equation}\label{eq:metropolis-hastings-transition-deterministic-proposal}
+\begin{split}
+  \trans(\vct{x}' \gvn \vct{x}) &=
+  \delta\lpa\vct{x}' - \vct{\phi}(\vct{x})\rpa \alpha(\vct{x}) +
+  \delta(\vct{x}' - \vct{x}) \lpa 1 - \alpha(\vct{x}) \rpa,
+  \\
+  \alpha(\vct{x}) &=
+  \min\lbr 
+    1,\,\frac{\tgtdens \circ \vct{\phi}(\vct{x})}{\tgtdens(\vct{x})} J_{\vct{\phi}}(\vct{x})
+  \rbr,
+\end{split}
+\end{equation}
+then this transition operator will leave the target distribution $\tgtprob$ invariant. This deterministic transition operator variant can be viewed as a special case of the trans-dimensional Metropolis--Hastings extension introduced by Green \citep{green1995reversible,geyer2003metropolis}. To generate from this transition operator from a current state $\vct{x}$ we compute the proposed move $\vct{\phi}(\vct{x})$ and accept the move with probablity $\alpha(\vct{x})$. We can demonstrate that this transition operator leaves $\tgtprob$ invariant by directly verifying \eqref{eq:invariant-density}
+\begin{align}
+  \label{eq:mh-det-proposal-derivation-1}
+  &\int_{\set{X}} \trans(\vct{x}' \gvn \vct{x}) \, \tgtdens(\vct{x}) \,\dr\vct{x}
+  \\
+  \label{eq:mh-det-proposal-derivation-2}
+  &=
+  \int_{\set{X}} 
+    \delta\lpa\vct{x}' - \vct{\phi}(\vct{x})\rpa \,\alpha(\vct{x}) \, \tgtdens(\vct{x}) +
+    \delta(\vct{x}' - \vct{x}) \lpa 1 - \alpha(\vct{x}) \rpa \, \tgtdens(\vct{x})
+  \,\dr\vct{x}
+  \\
+  \label{eq:mh-det-proposal-derivation-3}
+  &=
+  \int_{\set{X}} 
+    \delta\lpa\vct{x}' - \vct{y}\rpa \,\alpha\circ\vct{\phi}(\vct{y}) \, 
+    \tgtdens\circ\vct{\phi}(\vct{y}) \, J_{\vct{\phi}}(\vct{y}) \,\dr\vct{y} +
+  \lpa 1 - \alpha(\vct{x}') \rpa \, \tgtdens(\vct{x}')
+  \\
+  \label{eq:mh-det-proposal-derivation-4}
+  &=
+  p(\vct{x}') +
+  \alpha\circ\vct{\phi}(\vct{x}') \, \tgtdens\circ\vct{\phi}(\vct{x}') \, 
+  J_{\vct{\phi}}(\vct{x}') -
+  \alpha(\vct{x}') \, \tgtdens(\vct{x}').
+\end{align}
+In going from \eqref{eq:mh-det-proposal-derivation-2} to \eqref{eq:mh-det-proposal-derivation-3} we use a change of variables $\vct{y} = \vct{\phi}(\vct{x})$ in the integral. As $\vct{\phi}$ is an involution we have that $\vct{\phi}\circ\vct{\phi}(\vct{x}') = \vct{x}'$ and $J_{\vct{\phi}}\circ\vct{\phi}(\vct{x}') = J_{\vct{\phi}}(\vct{x}')^{-1}$ and so
+\begin{equation}\label{eq:mh-det-proposal-derivation-5}
+\begin{split}
+  \alpha\circ\vct{\phi}(\vct{x}') \, \tgtdens\circ\vct{\phi}(\vct{x}') \, 
+  J_{\vct{\phi}}(\vct{x}') &=
+  \min\lbr 
+    \tgtdens\circ\vct{\phi}(\vct{x}') \, J_{\vct{\phi}}(\vct{x}'),\,
+    p(\vct{x}')
+  \rbr 
+  \\
+  &=
+  \alpha(\vct{x}')\,\tgtdens(\vct{x}').
+\end{split}
+\end{equation}
+The last two terms in \eqref{eq:mh-det-proposal-derivation-4} therefore cancel and we have that \eqref{eq:invariant-density} is satisfied by the transition operator defined by \eqref{eq:metropolis-hastings-transition-deterministic-proposal}. Although this transition operator leaves the target distribution $P$ invariant, it is clear that it will not generate an ergodic Markov chain. Starting from a point $\vct{x}$ the next chain state will be either $\vct{\phi}(\vct{x})$ if the proposed move is accepted or $\vct{x}$ if rejected. In the former case the next proposed move will be to $\vct{\phi} \circ \vct{\phi}(\vct{x}) = \vct{x}$ i.e. back to the original state. Therefore the chain will visit a maximum of two states. However as noted previously we can sequentially compose individual transition operators which all leave a target distribution invariant. Therefore a deterministic proposal Metropolis--Hastings transition can be combined with other transition operators to ensure the chain is irreducible and aperiodic.
+
+In general for a Metropolis--Hastings transition operator to be irreducible, it is necessary that the proposal operator is irreducible \citep{tierney1994markov}, however this is not sufficient. For a target density which is positive everywhere on $\set{X} = \reals^D$, then a sufficient but not necessary condition for irreducibility is that the proposal density is positive everywhere \citep{roberts2004general}. If the set of points with a non-zero probability of rejection has non-zero $\tgtprob$-measure, then the transition operator is aperiodic \citep{tierney1994markov}.
+
+A common choice of proposal density when the target distribution is defined on a $(\reals^D, \, \borel(\reals^D))$ is a multivariate normal density centred at the current state i.e. $q(\vct{x}'\gvn\vct{x}) = \nrm{\vct{x}' \gvn \vct{x}, \mtx{\Sigma}}$ which satisfies the positivity condition for irreducibility. In general we would expect improved performance with a proposal density covariance $\mtx{\Sigma}$ which is proportional to the true covariance of the target distribution \citep{rosenthal2011optimal}, in practice we do not have access to the true covariance and so typically an isotropic proposal density is used with covariance $\mtx{\Sigma} = \sigma^2\mathbf{I}$ controlled by a single scale parameter $\sigma$, often termed the \emph{step size} or \emph{proposal width}. This proposal density is symmetric so the simplified acceptance rule \eqref{eq:metropolis-acceptance-probability} can be used, further the prosal density depends only on the difference $\vct{x}' - \vct{x}$ with Metropolis--Hastings methods having these properties often termed \emph{random-walk Metropolis}. 
+
+Random walk Metropolis methods have been extensively theoretically studied, with sufficient conditions known in some cases to ensure geometric ergodicity of a chain \citep{mengersen1996rates,roberts1996geometric} though these can be hard to verify in practical problems. There has also been much work on practical guidelines and methods for tuning the free parameters in the algorithm, including approaches for tuning the step-size using acceptance rates \citep{gelman1997weak,roberts2001optimal} and adaptive variants which automatically estimate a non- isotropic proposal covariance \citep{haario2001adaptive,rosenthal2011optimal}.
+
+In general the choice of proposal density will be key in determining the efficiency of Metropolis--Hastings \ac{MCMC} methods. Ideally we want to be able to propose large moves in the state space to reduce the depencies between successive chain states and so increase the number of effective samples, however this needs to be balanced with maintaining a reasonable acceptance probability with large proposed moves often having a low acceptance probability. Figure \ref{fig:metropolis-hastings} gives an illustration of this tradeoff in a one-dimensional example. 
+
+\begin{figure}[!t]
+\pgfplotsset{cycle list/Dark2-5}
+\centering
+\begin{tikzpicture}[
+    declare function={gamma(\z)=
+    (2.506628274631*sqrt(1/\z) + 0.20888568*(1/\z)^(1.5) + 0.00870357*(1/\z)^(2.5) - (174.2106599*(1/\z)^(3.5))/25920 - (715.6423511*(1/\z)^(4.5))/1244160)*exp((-ln(1/\z)-1)*\z);},
+    declare function={chipdf(\x,\d) = \x^(\d-1)*exp(-\x^2/2) / (2^(0.5*\d-1)*gamma(0.5*\d));}
+]
+  \begin{axis}[
+    name=dens,
+    cycle list name={Dark2-5},
+    domain=0:13,
+    xmin=0, xmax=13,
+    ymin=0, ymax=1.,
+    samples=200,
+    width=10cm,
+    height=4cm,
+    every tick label/.append style={font=\tiny},
+    %hide y axis,
+    %axis x line=bottom,
+    ytick={0.2, 0.4, 0.6, 0.8},
+    axis y line=center,
+    axis x line=middle,
+    xlabel={\small $r$}, 
+    ylabel={\small $\pden{\rvar{r}}$},
+    %every axis y label/.style={
+    %  at={(ticklabel* cs:0.5)},
+    %  anchor=east,
+    %  xshift=-1mm
+    %},
+    %every axis x label/.style={
+    %  at={(ticklabel* cs:0.5)},
+    %  anchor=north,
+    %  yshift=-4mm
+    %},
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.5,-0.2)},
+      anchor=north,
+      draw=none, 
+      legend columns=-1, 
+      column sep=1ex,
+      /tikz/nodes={anchor=base},
+      /tikz/every odd column/.style={yshift=2pt},
+      font=\scriptsize,
+    }
+  ]
+    \addplot+[smooth, mark=none, thick, domain=0.001:5, fill, fill opacity=0.1] 
+      {chipdf(x, 1)} \closedcycle;
+    \addlegendentry{$D=1$};
+    \addplot+[smooth, mark=none, thick, domain=1:7, fill, fill opacity=0.1, densely dashed] 
+      {chipdf(x, 16)};
+    \addlegendentry{$D=16$};
+    \addplot+[smooth, mark=none, thick, domain=4:10, fill, fill opacity=0.1, densely dotted]
+      {chipdf(x, 49)};
+    \addlegendentry{$D=49$};
+    \addplot+[smooth, mark=none, thick, domain=7:13, fill, fill opacity=0.1, densely dashdotted] 
+      {chipdf(x, 100)};
+    \addlegendentry{$D=100$};
+  \end{axis}
+\end{tikzpicture}
+\caption[Concentration of measure in high dimensions.]{Illustration of concentration of measure in a multivariate normal distribution. The plots shows the probability density of the distance from the origin $\rvar{r} = \left\Vert\rvct{x}\right\Vert_2$ of a $D$-dimensional multivariate normal random vector $\rvct{x} \sim \nrm{\vct{0},\mathbf{I}}$ for different dimensionalities $D$. As the dimension increases most of the mass concentrates away from the origin around a spherical shell of radius $\sqrt{D}$. For a multivariate normal random vector with mean $\vct{\mu}$ and covariance $\mtx{\Sigma}$ this generalises to the mass being mainly in an ellipsoidal shell aligned with the eigenvectors of $\mtx{\Sigma}$ and centred at $\vct{\mu}$.}
+\label{fig:concentration-of-measure-gaussian}
+\end{figure}
+
+In high-dimensional spaces this issue is much more severe due to the phenomenon of \emph{concentration of measure}: in probability distributions defined on high-dimensional spaces most of the probability mass will tend to be concentrated into a `small' subset of the space \citep{mackay2003information,barp2017geometry}. An illustration of this phenomenon for the multivariate normal distribution is shown in Figure \ref{fig:concentration-of-measure-gaussian}, where the mass in high dimensions is mostly located in a thin ellipsoidal shell. The region where most of the mass concentrates, termed the \emph{typical set} of the distribution, will for the target distributions of interest generally have a significantly more complex geometry. Finding proposals which can make large moves in such settings is challenging: moves in most directions will have a probability of acceptance which exponentially drops to zero as the distance away from the current state is increased and so simple proposal densities which ignore the geometry the typical set such as those used in random-walk Metropolis will need to make very small moves to have a reasonable probability of acceptance \cite{betancourt2017conceptual}.
+
+To tackle this issue methods have been proposed which exploit more information about the target distribution than just the point evaluations of the density in the Metropolis--Hasting acceptance probability term. \ac{HMC} methods, which make use of the \emph{gradient} of the target density, are a particularly important class of such methods and a central focus of this thesis. We will discuss \ac{HMC} methods in detail in Chapter \ref{ch:hamiltonian-monte-carlo}.
+
+%which can be efficiently automatically calculated using the reverse-mode automatic differentiation approach discussed in the previous chapter (\S\ref{subsec:computation-graphs}),
+
+\subsubsection{Gibbs sampling}
+
+\begin{figure}[!t]
+\pgfplotsset{cycle list/Dark2-5}
+\centering
+\begin{tikzpicture}[
+    declare function={normpdf(\x,\m,\s) = exp(-0.5*((\x-\m)/\s)^2) / (2*pi*\s^2)^0.5;}
+  ]
+  \draw[rotate=45, densely dotted] (0, 0) ellipse (3 and 1);
+  \draw[rotate=45, densely dotted] (0, 0) ellipse (1.5 and 0.5);
+  \draw[gray] (-2.2, -1) -- (0.6, -1) ; %
+  \draw[gray] (-0.1, -1.6) -- (-0.1, 1.4) ; %
+  \node[draw=Maroon, fill=white, circle, inner sep=1pt, outer sep=0pt] (xs) at (-1.3, -1) {} ; %
+  \node[below=0.01 of xs] {\small $(x_1, x_2)$};
+  \node[draw=Maroon, fill=white, inner sep=1pt, outer sep=0pt] (ys) at (-0.1, -1) {} ; %
+  \node[below right=0.05 of ys] {\small $(x_1^*, x_2)$};
+  \node[draw=Maroon, fill=Maroon, circle, inner sep=1pt, outer sep=0pt] (zs) at (-0.1, 0.3) {} ; %
+  \node[left=0.01 of zs] {\small $(x_1^*, x_2^*)$};
+  \draw[->] (xs) -- (ys) ; %
+  \draw[->] (ys) -- (zs) ; %
+  \node (sx) at (-2.2, -1) {} ; %
+  \node (sy) at (-0.1, -1.6) {} ; %
+  \begin{axis}[
+    width=28mm, height=8mm, inner sep=0pt,
+    enlargelimits=false,
+    clip=false,
+    hide y axis, hide x axis, 
+    at=(sx.center), 
+    scale only axis,
+  ]
+    \addplot[domain=-3:3, samples=100, thick, draw=cborange] {normpdf(x,0,1)};
+  \end{axis}
+  \begin{axis}[
+    width=30mm, height=7mm, inner sep=0pt,
+    rotate=270,
+    enlargelimits=false,
+    clip=false,
+    hide y axis, hide x axis, 
+    at=(sy.center), 
+    scale only axis,
+  ]
+    \addplot[domain=-3:3, samples=100, thick, draw=cbgreen] {normpdf(x,0,1)};
+  \end{axis}
+\end{tikzpicture}
+\caption[Gibbs sampling schematic.]{Schematic of Gibbs sampling transition in a bivariate normal target distribution (ellipses indicate constant density contours). Given an initial state $\rvct{x} = (x_1,x_2)$, the $\rvar{x}_1$ (horizontal) co-ordinate is first updated by independently sampling from the normal conditional $\pden{\rvar{x}_1|\rvar{x}_2}(\cdot\gvn x_2)$, represented by the orange curve. The new partially updated state is then $\rvct{x} = (x_1^*, x_2)$. The second $\rvar{x}_2$ (vertical) co-ordinate is then independently resampled from the normal conditional $\pden{\rvar{x}_2|\rvar{x}_1}(\cdot\gvn x_1^*)$, shown by the green curve. The final updated state is then $\rvct{x} = (x_1^*, x_2^*)$.}
+\label{fig:gibbs-sampling}
+\end{figure}
+
+\begin{algorithm}[!t]
+\caption{Sequential Gibbs transition.}
+\label{alg:gibbs-sampling}
+\begin{algorithmic}
+\small
+    \Require
+    $\vct{x}_n$ : current chain state,~
+    $\set{I}$ : ordered index set over individual variables in chain state,~
+    $\lbrace \tgtdens_{i} \rbrace_{i\in\set{I}}$ : set of complete conditionals of target density $\tgtdens$ which can all be sampled from.
+    \Ensure\raggedright
+    $\vct{x}_{n+1}$ : next chain state with $\vct{x}_n \sim \tgtdens \implies \vct{x}_{n+1} \sim \tgtdens$.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $\vct{x} \gets \vct{x}_n$
+  \For{$i \in \set{I}$}
+    \State $x_i \sim \tgtdens_{i}(\vct{x}_{\backslash i})$
+  \EndFor
+  \State $\vct{x}_{n+1} \gets \vct{x}$
+  \State \Return $\vct{x}_{n+1}$
+\end{algorithmic}
+\end{algorithm}
+
+\emph{Gibbs sampling} \citep{geman1984stochastic,gelfand1990sampling}, originally proposed by Geman and Geman for image restoration using a Markov random field image model, is based on the observation that a valid transition operator for a joint target distribution across many variables, is one which updates only a subset of the variables and leaves the conditional distribution on that subset given the rest invariant. Although if used in isolation a transition operator which only updates some components of the state will not give an ergodic chain, as discussed previously multiple transition operators can be combined together to achieve ergodicity. 
+
+More specifically the original formulation of Gibbs sampling defines a Markov chain by sequentially independently resampling each individual variable in the model from its conditional distribution given the current values of the remaining variables. If $\set{I}$ is an index set over the individual variables in the vector target state $\rvct{x}$, then for each $i \in \set{I}$ we partition the state $\rvct{x}$ into the $i^{\rm th}$ variable $\rvar{x}_i$ and a vector containing all the remaining variable values $\rvct{x}_{\backslash i}$. For each $i \in \set{I}$ the target density can be factorised in to the marginal density $\tgtdens_{\backslash i}$ on $\rvct{x}_{\backslash i}$ and conditional density $\tgtdens_i$ on $\rvar{x}_i$ given $\rvct{x}_{\backslash i}$, i.e.
+\begin{equation}\label{eq:gibbs-sampling-complete-conditional-factorisation}
+  \tgtdens(\vct{x}) = \tgtdens_{i}(x_i \gvn \vct{x}_{\backslash i}) \, \tgtdens_{\backslash i}(\vct{x}_{\backslash i}),
+\end{equation}
+with the conditional densities $\lbrace \tgtdens_i \rbrace_{i \in \set{I}}$ termed the \emph{complete conditionals} of the target density. If each of these complete conditionals corresponds to a distribution we can generate samples from (for example using a transform method or rejection sampling) then we can apply the sequential Gibbs sampling transition operator defined in Algorithm \ref{alg:gibbs-sampling} and visualised for a bivariate example in Figure \ref{fig:gibbs-sampling}.
+
+The sequential Gibbs transition is irreducible and aperiodic under mild conditions \citep{roberts1994simple,chan1993asymptotic}. Rather than using a deterministic sequential scan through the variables, a variant is to randomly sample without replacement the variable to update on each iteration; unlike the sequential scan version this defines a reversible transition operator. This random update variant is somewhat more amenable to theoretical analysis and comes with some stronger guarantees, however in practice the ease of implementation of the sequential scan variant and computational benefits in terms of memory access locality mean it is more often used in practice \citep{he2016scan}. A compromise between the completely random updates and a sequential scan is to randomly permute the update order have each complete scan.
+
+A apparent advantage of Gibbs sampling over Metropolis--Hastings is the lack of a proposal density which needs to be tuned. This is has helped popularise `black-box' implementations of Gibbs sampling such as the probabilistic modelling packages BUGS \citep{gilks1994language} and JAGS \citep{plummer2003jags}. A well-known issue with Gibbs sampling however is that its performance is highly dependent on the parameterisation used for the target density \citep{raftery1991many}, with strong correlations between variables leading to large dependencies between successive states and slow convergence to stationarity. This can be alleviated in some cases by using a suitable reparameterisation to reduce dependencies between variables, however this restores the difficulty of tuning free parameters.
+
+The updates do not necessarily need to be performed by sampling from complete conditions of single variables - in some cases the complete conditional of a vector variables has a tractable form which can be sampled from as a `block'; this motivates the name \emph{block Gibbs samling} for such variants. By accounting for the dependencies between the variables in a block this can help alleviate some of the issues with highly correlated targets where applicable.
+
+Compound constructions such as \emph{Metropolis(--Hastings)-within-Gibbs} are sometimes used to refer to methods which sequentially apply \emph{Metropolis--Hastings} transition operators which each update only a subset of variables in the target distribution. We will prefer to however consider the defining feature of Gibbs sampling as being exact sampling from one or more conditionals rather than sequentially applying transition operators which update only subsets of variables and so will only refer to `Gibbs sampling' in that context.
+
+\subsubsection{Slice sampling}
+
+\begin{algorithm}[!t]
+\caption{Linear slice sampling transition.}
+\label{alg:linear-slice-sampling}
+\begin{algorithmic}
+\small
+    \Require
+    $\vct{x}_n$ : current chain state,~
+    $\utgtdens$ : unnormalised target density,\\
+    $q$ : slice vector density.
+    \Ensure\raggedright
+    $\vct{x}_{n+1}$ : next chain state with $\vct{x}_n \sim \tgtdens \implies \vct{x}_{n+1} \sim \tgtdens$.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $h \sim \mathcal{U}\lpa 0,\utgtdens(\vct{x}_n)\rpa$
+  \State $b_u \sim \mathcal{U}(0,1)$
+  \State $b_l \gets b_u - 1$
+  \State $b \sim \mathcal{U}(b_l, b_u)$
+  \State $\vct{v} \sim q$
+%  \While{$\utgtdens(\vct{x}_n + b_l \vct{v}) > h$}
+%    \State $b_l \gets b_l - 1$
+%  \EndWhile
+%  \While{$\utgtdens(\vct{x}_n + b_u \vct{v}) > h$}
+%    \State $b_u \gets b_u - 1$
+%  \EndWhile
+  \While{\textsc{True}}
+    \State $\vct{x}^* \gets \vct{x}_n + b \vct{v}$
+    \If{$\utgtdens(\vct{x}^*) \leq h$}
+      \IfThenElse{$b < 0$}{$b_l \gets b$}{$b_u \gets b$}
+      \State $b \sim \mathcal{U}(b_l, b_u)$
+    \Else
+      \State \Return $\vct{x}^*$
+    \EndIf
+  \EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[!t]
+\caption{Elliptical slice sampling transition.}
+\label{alg:elliptical-slice-sampling}
+\begin{algorithmic}
+\small
+    \Require
+    $\vct{x}_n$ : current chain state,~
+    $\utgtdens$ : unnormalised target density,\\
+    $\mtx{\Sigma}$ : covariance of normal approximation to target.
+    \Ensure\raggedright
+    $\vct{x}_{n+1}$ : next chain state with $\vct{x}_n \sim \tgtdens \implies \vct{x}_{n+1} \sim \tgtdens$.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $h \sim \mathcal{U}\lpa 0,\utgtdens(\vct{x}_n) / \nrm{\vct{x}_n \gvn \vct{0}, \mtx{\Sigma}}\rpa$
+  \State $\theta_u \sim \mathcal{U}(0,2\uppi)$
+  \State $\theta_l \gets \theta_u - 2\uppi$
+  \State $\theta \gets \theta_u$
+  \State $\vct{v} \sim \nrm{\vct{0}, \mtx{\Sigma}}$
+  \While{\textsc{True}}
+    \State $\vct{x}^* \gets \vct{x}_n \cos\theta + \vct{v} \sin\theta$
+    \If{$\utgtdens(\vct{x}^*) / \nrm{\vct{x}^* \gvn \vct{0}, \mtx{\Sigma}} \leq h$}
+      \IfThenElse{$\theta < 0$}{$\theta_l \gets \theta$}{$\theta_u \gets \theta$}
+      \State $\theta \sim \mathcal{U}(\theta_l, \theta_u)$
+    \Else
+      \State \Return $\vct{x}^*$
+    \EndIf
+  \EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+The final general class of \ac{MCMC} methods we will consider is \emph{slice sampling}.
+
+
+%Although in our discussion so far we have assumed the transition operator (or proposal operator for Metropolis--Hastings) potentially peturbs all of the variables the target distribution is defined on simultaneously, in practice it can sometimes be helpful to use transition operators which only update a subset of the variables. Although if used in isolation a transition operator which only updates some components of the state will not give an ergodic chain, as discussed previously multiple transition operators can be combined together to achieve ergodicity.
+
+
+% reverse operators
+% detailed balance
+% composition of transitions
+% typical set / distributions in high dimensions
+
+%\begin{algorithm}[!t]
+%\caption{Markov chain Monte Carlo.}
+%\label{alg:markov-chain-monte-carlo}
+%\begin{algorithmic}
+%\small
+%    \Require
+%    $\fwdtrans$ : transition operator which leaves target density $\tgtdens$ invariant,~
+%    $q$ : initialisation density,~
+%    $N$ : number of samples to return,~
+%    $M$ : number of warm-up iterations.
+%    \Ensure\raggedright
+%    $N$ Markov chain state samples.
+%\end{algorithmic}
+%\hrule
+%\small
+%\begin{algorithmic}[1]
+%  \State $\vct{x}^{(0)} \sim q$
+%  \For{$n \in \fset{1 \dots N + M}$}\vspace{1mm}
+%    \State $\vct{x}_n \sim \fwdtrans\lpa\vct{x}_{n-1}\rpa$
+%  \EndFor
+%  \State \Return $\lbrace\vct{x}_n\rbrace_{n=M+1}^{N+M}$
+%\end{algorithmic}
+%\end{algorithm}
 
 \newpage
 
@@ -229,41 +1151,41 @@ Although the inverse \ac{CDF} transform method gives a general recipe for sampli
 
 %A key observation in the previous chapter was that inference at both the level of computing conditional expectations of latent variables in a model and in evaluating evidence terms to allow model comparison, will for most models of interest correspond to being able to integrate (potentially constant) functions against a probability density defined with respect to a base measure\footnote{There are models for which the corresponding probability measure is not absolutely continuous with respect to another measure and so cannot be represented by a density, however we will concentrate on the common case were a density exists.}. In particular we wish to be able to compute integrals of the form
 %\begin{equation}\label{eq:integral-against-density}
-%  \int_{\set{X}} f(\vct{x}) \, \rho(\vct{x}) \,\dr\mu(\vct{x})
+%  \int_{\set{X}} f(\vct{x}) \, \tgtdens(\vct{x}) \,\dr\mu(\vct{x})
 %\end{equation}
-%where $\rho$ is the density on a space $\set{X}$ of a probability measure with respect to a base measure $\mu$ and $f$ is a measurable function. For instance in the case of computing the \emph{posterior mean} in a Bayesian inference problem with observed variables $\rvct{y}$ and latent variables $\rvct{x}$ where the posterior density $\pden{\rvct{x}|\rvct{y}}$ is defined with respect to the $D$-dimensional Lebesgue measure, we would have  $\rho(\vct{x}) = \pden{\rvct{x}|\rvct{y}}(\vct{x}\gvn\vct{y})$ for an observed $\vct{y}$, $\mu(\vct{x}) = \lebm{D}(\vct{x})$ and $f(\rvct{x}) = \vct{x}$. Often we will only be able to evaluate $\rho$ up to an unknown unnormalising constant i.e. $\rho(\vct{x}) = \frac{1}{Z}\pi(\vct{x})$ with we able to evaluate $\pi$ pointwise but $Z$ intractable to compute. For example in a Bayesian inference setting $\pi(\vct{x})$ would be the joint density $\pden{\rvct{x},\rvct{y}}(\vct{x},\vct{y})$ and $Z$ the model evidence $\pden{\rvct{y}}(\vct{y})$. When peforming inference in undirected graphical models, we would instead have that $\pi$ is the product of clique potentials and $Z$ the corresponding normaliser.
+%where $\tgtdens$ is the density on a space $\set{X}$ of a probability measure with respect to a base measure $\mu$ and $f$ is a measurable function. For instance in the case of computing the \emph{posterior mean} in a Bayesian inference problem with observed variables $\rvct{y}$ and latent variables $\rvct{x}$ where the posterior density $\pden{\rvct{x}|\rvct{y}}$ is defined with respect to the $D$-dimensional Lebesgue measure, we would have  $\tgtdens(\vct{x}) = \pden{\rvct{x}|\rvct{y}}(\vct{x}\gvn\vct{y})$ for an observed $\vct{y}$, $\mu(\vct{x}) = \lebm{D}(\vct{x})$ and $f(\rvct{x}) = \vct{x}$. Often we will only be able to evaluate $\tgtdens$ up to an unknown unnormalising constant i.e. $\tgtdens(\vct{x}) = \frac{1}{Z}\utgtdens(\vct{x})$ with we able to evaluate $\utgtdens$ pointwise but $Z$ intractable to compute. For example in a Bayesian inference setting $\utgtdens(\vct{x})$ would be the joint density $\pden{\rvct{x},\rvct{y}}(\vct{x},\vct{y})$ and $Z$ the model evidence $\pden{\rvct{y}}(\vct{y})$. When peforming inference in undirected graphical models, we would instead have that $\utgtdens$ is the product of clique potentials and $Z$ the corresponding normaliser.
 
-The central idea of the methods we will review in this section is to try to find a normalised probability density $q(\vct{x})$ from a `simple' family that in some sense approximates the target density, i.e. $\rho(\vct{x}) \approx q(\vct{x})$. Depending on the family chosen for $q$, integrals of some functions $f$ against the target density $\rho$, can be approximated by analytic solutions to integrals of $f$ against $q$ e.g. if $q(\vct{x}) = \nrm{\vct{x} \gvn \vct{\mu},\mtx{\Sigma}}$ then we can approximate the mean of the target density as $\vct{\mu}$ and the covariance as $\mtx{\Sigma}$. To compute integrals of more general functions $f$ we will generally need to resort to using one of the sampling approaches we will review in the next section; generally it will be possible to directly generate independent samples from $q$ while often this will not be the case for $\rho$ hence this two-step approach still offers (computational) advantages over directly applying a sampling approach. Often the approaches we will discuss also allow estimation of the normalising constant $Z$ which may be needed for model comparison.
+The central idea of the methods we will review in this section is to try to find a normalised probability density $q(\vct{x})$ from a `simple' family that in some sense approximates the target density, i.e. $\tgtdens(\vct{x}) \approx q(\vct{x})$. Depending on the family chosen for $q$, integrals of some functions $f$ against the target density $\tgtdens$, can be approximated by analytic solutions to integrals of $f$ against $q$ e.g. if $q(\vct{x}) = \nrm{\vct{x} \gvn \vct{\mu},\mtx{\Sigma}}$ then we can approximate the mean of the target density as $\vct{\mu}$ and the covariance as $\mtx{\Sigma}$. To compute integrals of more general functions $f$ we will generally need to resort to using one of the sampling approaches we will review in the next section; generally it will be possible to directly generate independent samples from $q$ while often this will not be the case for $\tgtdens$ hence this two-step approach still offers (computational) advantages over directly applying a sampling approach. Often the approaches we will discuss also allow estimation of the normalising constant $Z$ which may be needed for model comparison.
 
 \subsection{Laplace's method}
 
-For target densities $\rho$ defined with respect to a $D$-dimensional Lebesgue measure $\lebm{D}$, a simple approach for computing a multivariate normal approximate density $q$ to $\rho$ is \emph{Laplace's method}. Although not always strictly required, in general the method will work better for target densities with unbounded support, and more generally for targets which are as `close to normal' as possible. Therefore a useful initial step will often be to apply a change of variables to the target density, such that the density on the transformed space has unbounded support, for example working with the density on the logarithm of a random variable with support only on positive values.
+For target densities $\tgtdens$ defined with respect to a $D$-dimensional Lebesgue measure $\lebm{D}$, a simple approach for computing a multivariate normal approximate density $q$ to $\tgtdens$ is \emph{Laplace's method}. Although not always strictly required, in general the method will work better for target densities with unbounded support, and more generally for targets which are as `close to normal' as possible. Therefore a useful initial step will often be to apply a change of variables to the target density, such that the density on the transformed space has unbounded support, for example working with the density on the logarithm of a random variable with support only on positive values.
 
 The key idea in Laplace's method is to form a truncated Taylor series approximation to the logarithm of the unnormalised target density
 \begin{equation}\label{eq:log-target-taylor-expansion}
 \begin{split}
-  \log\pi(\vct{x}) \approx 
-  \log\pi(\vct{x}^*) 
+  \log\utgtdens(\vct{x}) \approx 
+  \log\utgtdens(\vct{x}^*) 
   &+ \vct{g}(\vct{x}^*)\tr(\vct{x}-\vct{x}^*) \\
   &+ \frac{1}{2} (\vct{x}-\vct{x}^*)\tr \mtx{H}(\vct{x}^*)(\vct{x}-\vct{x}^*),\\
 \end{split}
 \end{equation}
-where the \emph{gradient} and \emph{Hessian} of $\log\pi$ are defined respectively as
+where the \emph{gradient} and \emph{Hessian} of $\log\utgtdens$ are defined respectively as
 \begin{equation}
-  \vct{g}(\vct{x}) = \pd{\log\pi(\vct{x})}{\vct{x}}\tr
+  \vct{g}(\vct{x}) = \pd{\log\utgtdens(\vct{x})}{\vct{x}}\tr
   \quad\textrm{and}\quad
-  \mtx{H}(\vct{x}) = \pdd{\log\pi(\vct{x})}{\vct{x}}{\vct{x}\tr}.
+  \mtx{H}(\vct{x}) = \pdd{\log\utgtdens(\vct{x})}{\vct{x}}{\vct{x}\tr}.
 \end{equation}
 \marginpar{A matrix $\mtx{M} \in \reals^{D\times D}$ is \emph{positive semi definite}, denoted $\mtx{M} \succeq 0$, \acs{iff} $\vct{x}\tr\mtx{M}\vct{x} \geq 0$ $\forall \vct{x} \in \reals^D$ and \emph{positive definite}, denoted $\mtx{M} \succ 0$, if the inequality is made strict. Corresponding definitions for a \emph{negative semi definite} matrices, $\mtx{M} \preceq 0$, and negative definite matrices, $\mtx{M} \prec 0$, are formed by reversing the sign of the inequality.}
-If the point $\vct{x}^*$ the expansion is formed around is chosen to be a (loca) maxima of $\log\pi$, which necessarily means that the gradient is zero, $\vct{g}(\vct{x}^*) = \vct{0}$, and the Hessian negative definite, $\mtx{H}(\vct{x}^*) \prec 0$, then
+If the point $\vct{x}^*$ the expansion is formed around is chosen to be a (loca) maxima of $\log\utgtdens$, which necessarily means that the gradient is zero, $\vct{g}(\vct{x}^*) = \vct{0}$, and the Hessian negative definite, $\mtx{H}(\vct{x}^*) \prec 0$, then
 \begin{equation}\label{eq:laplace-approximation-log}
-  \log\pi(\vct{x}) \approx
-  \log\pi(\vct{x}^*) + \frac{1}{2} (\vct{x}-\vct{x}^*)\tr \mtx{H}(\vct{x}^*)(\vct{x}-\vct{x}^*).
+  \log\utgtdens(\vct{x}) \approx
+  \log\utgtdens(\vct{x}^*) + \frac{1}{2} (\vct{x}-\vct{x}^*)\tr \mtx{H}(\vct{x}^*)(\vct{x}-\vct{x}^*).
 \end{equation}
 Taking the exponential of both sides we therefore have that
 \begin{equation}\label{eq:laplace-approximation-exp}
-  \pi(\vct{x}) \approx
-  \pi(\vct{x}^*) \exp\lpa-\frac{1}{2} (\vct{x}-\vct{x}^*)\tr \lpa -\mtx{H}(\vct{x}^*)\rpa(\vct{x}-\vct{x}^*)\rpa.
+  \utgtdens(\vct{x}) \approx
+  \utgtdens(\vct{x}^*) \exp\lpa-\frac{1}{2} (\vct{x}-\vct{x}^*)\tr \lpa -\mtx{H}(\vct{x}^*)\rpa(\vct{x}-\vct{x}^*)\rpa.
 \end{equation}
 This has the form of an unnormalised multivariate normal density with mean $\vct{x}^*$ and inverse covariance (precision) $-\mtx{H}(\vct{x}^*)$.
 
@@ -302,12 +1224,12 @@ This has the form of an unnormalised multivariate normal density with mean $\vct
     \addplot+[mark=none, thick] {
       -\aParam * x - (1 + \aParam) * ln(1 + exp(-x)) + ln(\aParam)
     };
-    \addlegendentry{$\log\pi(x)$};
+    \addlegendentry{$\log\utgtdens(x)$};
     \addplot+[mark=none, densely dashed, thick] {
       -0.5 * \aParam * (x + ln(\aParam))^2 / (\aParam + 1) +
      (\aParam + 1)* (ln(\aParam) - ln(\aParam + 1))
     };
-    \addlegendentry{$\log\pi(x^*) + \frac{h}{2}(x-x^*)^2$};
+    \addlegendentry{$\log\utgtdens(x^*) + \frac{h}{2}(x-x^*)^2$};
   \end{axis}
   \begin{axis}[
     name=logdens,
@@ -339,7 +1261,7 @@ This has the form of an unnormalised multivariate normal density with mean $\vct
     }
   ]
     \addplot+[mark=none, solid, thick] {\aParam * exp(-\aParam * x) / ((1 + exp(-x))^(\aParam + 1))};
-    \addlegendentry{$\rho(x)$};
+    \addlegendentry{$\tgtdens(x)$};
     \addplot+[mark=none, densely dashed, thick] 
       {exp(-0.5 * \aParam * (x + ln(\aParam))^2 / (\aParam + 1)) / (2 * pi * (\aParam + 1) / \aParam)^0.5};
     \addlegendentry{$q(x) = \nrm{x \gvn x^*, -h^{-1}}$};
@@ -347,7 +1269,7 @@ This has the form of an unnormalised multivariate normal density with mean $\vct
   %\node[anchor=north] at ($(dens.south east) + (2mm,-3mm)$) {\ref*{grouplegend}}; 
 \end{tikzpicture}
 \vspace{-3mm}
-\caption[Univariate example of Laplace's method.]{Univariate example of Laplace's method. Left axis shows the logarithm of the unnormalised target density $\log\pi(x)$ (green curve) and the corresponding quadratic Taylor series approximation $\log\pi(x^*) + \frac{h}{2}(x-x^*)^2$ (dashed orange curve) around the maxima $x^*$ with $h = (\nicefrac{\partial^2\log\pi}{\partial x^2})|_{x^*}$. The right axis shows the corresponding normalised target density $\rho(x)$ (green curve) and approximate density $q(x) = \nrm{x \gvn x^*, -h^{-1}}$ (dashed orange curve).}
+\caption[Univariate example of Laplace's method.]{Univariate example of Laplace's method. Left axis shows the logarithm of the unnormalised target density $\log\utgtdens(x)$ (green curve) and the corresponding quadratic Taylor series approximation $\log\utgtdens(x^*) + \frac{h}{2}(x-x^*)^2$ (dashed orange curve) around the maxima $x^*$ with $h = (\nicefrac{\partial^2\log\utgtdens}{\partial x^2})|_{x^*}$. The right axis shows the corresponding normalised target density $\tgtdens(x)$ (green curve) and approximate density $q(x) = \nrm{x \gvn x^*, -h^{-1}}$ (dashed orange curve).}
 \label{fig:laplace-approximation-example}
 \end{figure}
 
@@ -359,11 +1281,11 @@ This suggests setting the approximate density $q$ to a multivariate normal densi
 \end{equation}
 An example of applying Laplace's method to fit a normal approximation to a univariate generalised logistic target is shown in Figure \ref{fig:laplace-approximation-example}.
 
-As $q(\vct{x}^*) \approx \rho(\vct{x}^*) = \pi(\vct{x}^*) / Z$ we can also form an approximation $\tilde{Z}$ to the normalising constant $Z$ for the target density
+As $q(\vct{x}^*) \approx \tgtdens(\vct{x}^*) = \utgtdens(\vct{x}^*) / Z$ we can also form an approximation $\tilde{Z}$ to the normalising constant $Z$ for the target density
 \begin{equation}\label{eq:laplace-approximation-normalising-const}
-  Z \approx \tilde{Z} = (2\uppi)^{\frac{D}{2}} |\mtx{C}|^{\frac{1}{2}}\pi(\vct{x}^*).
+  Z \approx \tilde{Z} = (2\uppi)^{\frac{D}{2}} |\mtx{C}|^{\frac{1}{2}}\utgtdens(\vct{x}^*).
 \end{equation}
-To use Laplace's method we need to be able to find a maxima of $\log\pi$ and evaluate the Hessian at this point. For simple unimodal target densities it may be possible to find the maxima and corresponding Hessian analytically. More generally if the gradient of $\log\pi$ can be calculated (using for example reverse-mode automatic differentation), then a maxima can be found by performing iterative gradient ascent. The Hessian can then be evaluated at this point using analytic expressions for the second partial derivatives or again by using automatic differentiation (by computing the Jacobian of the gradient of $\log\pi$).
+To use Laplace's method we need to be able to find a maxima of $\log\utgtdens$ and evaluate the Hessian at this point. For simple unimodal target densities it may be possible to find the maxima and corresponding Hessian analytically. More generally if the gradient of $\log\utgtdens$ can be calculated (using for example reverse-mode automatic differentation), then a maxima can be found by performing iterative gradient ascent. The Hessian can then be evaluated at this point using analytic expressions for the second partial derivatives or again by using automatic differentiation (by computing the Jacobian of the gradient of $\log\utgtdens$).
 
 Though relatively simple to calculate, Laplace's method will often resulting in an approximate density which fits poorly to the target. As it only uses local information about the curvature of the (log) target density at the mode, away from the mode the approximate density can behave very differently from the target density, for instance observe the poor fit to the tails of the target of the example shown in Figure \ref{fig:laplace-approximation-example}. For multimodal densities, several different Laplace approximations can be calculated, each likely to at best capture a single mode well. For target densities which are well approximated by a normal distribution, for instance due to asymptotic convergence to normality of a posterior for \ac{iid} data, Laplace's method can give reasonable results however. 
 
@@ -387,18 +1309,18 @@ Generally we will work with probability densities rather than underlying probabi
 \end{equation}
 with absolute continuity of $P$ with respect to $Q$ corresponding to a requirement that $p(x) = 0 ~\forall x \in \set{X} : q(x) = 0$. Somewhat loosely, we will refer to $\kldiv[\mu]{p}{q}$ as the \ac{KL} divergence from the (density) $p$ to the (density) $q$ rather than refering to the underlying measures.
 
-When used without further qualification, variational inference is generally intended to mean inference performed by minimising a variational objective corresponding to the \ac{KL} divergence from an approximate density $q$ to the target density $\rho$. More specifically using the decomposition of the target density into an unnormalised density $\pi$ and normalising constant $Z$ we have that
+When used without further qualification, variational inference is generally intended to mean inference performed by minimising a variational objective corresponding to the \ac{KL} divergence from an approximate density $q$ to the target density $\tgtdens$. More specifically using the decomposition of the target density into an unnormalised density $\utgtdens$ and normalising constant $Z$ we have that
 \begin{equation}\label{eq:kullback-leibler-var-obj}
-  \varobj\lsb q \rsb = \log Z - \kldiv[\mu]{q}{\rho} =
-  \int_{\set{X}} q(\vct{x})\,\log \frac{\pi(\vct{x})}{q(\vct{x})} \,\dr\mu(\vct{x}),
+  \varobj\lsb q \rsb = \log Z - \kldiv[\mu]{q}{\tgtdens} =
+  \int_{\set{X}} q(\vct{x})\,\log \frac{\utgtdens(\vct{x})}{q(\vct{x})} \,\dr\mu(\vct{x}),
 \end{equation}
-with $\varobj\lsb q \rsb$ the specific objective usually maximised in variational inference problems, with all terms in the integrand being evaluable pointwise. As $\log Z$ is constant with respect to the approximate density, maximising $\varobj$ with respect to $q$ is directly equivalent to minimising $\kldiv[\mu]{q}{\rho}$. Due to the non-negativity of the \ac{KL} divergence we have that the following inequality holds
+with $\varobj\lsb q \rsb$ the specific objective usually maximised in variational inference problems, with all terms in the integrand being evaluable pointwise. As $\log Z$ is constant with respect to the approximate density, maximising $\varobj$ with respect to $q$ is directly equivalent to minimising $\kldiv[\mu]{q}{\tgtdens}$. Due to the non-negativity of the \ac{KL} divergence we have that the following inequality holds
 \begin{equation}\label{eq:evidence-lower-bound}
   \varobj\lsb q \rsb \leq \log Z.
 \end{equation}
-When the target density $\rho$ corresponds to a posterior $\pden{\rvct{x}|\rvct{y}}$ on latent variables $\rvct{x}$ given observed variables $\rvct{y}$ and $\pi$ the corresponding joint density $\pden{\rvct{x},\rvct{y}}$, the normalising constant $Z$ is equal to the model evidence term $\pden{\rvct{x}}$ in Bayes' theorem. As $\varobj$ is a lower bound on $\log Z$ and so the (log) model evidence, the variational objective $\varobj$ is therefore sometimes termed the \ac{ELBO} in this context.
+When the target density $\tgtdens$ corresponds to a posterior $\pden{\rvct{x}|\rvct{y}}$ on latent variables $\rvct{x}$ given observed variables $\rvct{y}$ and $\utgtdens$ the corresponding joint density $\pden{\rvct{x},\rvct{y}}$, the normalising constant $Z$ is equal to the model evidence term $\pden{\rvct{x}}$ in Bayes' theorem. As $\varobj$ is a lower bound on $\log Z$ and so the (log) model evidence, the variational objective $\varobj$ is therefore sometimes termed the \ac{ELBO} in this context.
 
-Using the \ac{KL} divergence from the approximate to target density as the variational objective is not the only choice avaialable. One obvious alternative is the reversed form of the \ac{KL} divergence, $\kldiv[\mu]{\rho}{q}$ from the target density to the approximate density. In general as this form of the divergence involves evaluating an integral with respect to the target density, precisely the intractable computational task we are hoping to find an approximate solution, direct applications of this approach are limited to toy problems were this integral can be solved exactly or efficiently approximated. An approach called \ac{EP} \citep{minka2001expectation} however locally optimises an objective closely related to $\kldiv[\mu]{\rho}{q}$; we will discuss \ac{EP} further later in the chapter.
+Using the \ac{KL} divergence from the approximate to target density as the variational objective is not the only choice avaialable. One obvious alternative is the reversed form of the \ac{KL} divergence, $\kldiv[\mu]{\tgtdens}{q}$ from the target density to the approximate density. In general as this form of the divergence involves evaluating an integral with respect to the target density, precisely the intractable computational task we are hoping to find an approximate solution, direct applications of this approach are limited to toy problems were this integral can be solved exactly or efficiently approximated. An approach called \ac{EP} \citep{minka2001expectation} however locally optimises an objective closely related to $\kldiv[\mu]{\tgtdens}{q}$. %; we will discuss \ac{EP} further later in the chapter.
 
 The \ac{KL} divergence can be considered as a special case of a broader class of $\alpha$-divergences. In particular the \emph{R\'{e}nyi divergence} \citep{renyi1961measures,van2014renyi} of order $\alpha > 0, \alpha \neq 1$ between two probability measures $P$ and $Q$ with probability densities $p = \td{P}{\mu}$ and $q = \td{Q}{\mu}$ on a space $\set{X}$ is defined as
 \begin{equation}\label{eq:renyi-alpha-divergence}
@@ -408,18 +1330,18 @@ The \ac{KL} divergence can be considered as a special case of a broader class of
 \end{equation}
 For $\alpha > 0$, $\rdiv{\alpha}{P}{Q}$ is a valid divergence, that is $\rdiv{\alpha}{P}{Q} \geq 0$ with equality if and only if $P = Q$ almost everywhere. The definition can also be extended to the cases $\alpha = 1$ and $\alpha=0$ by considering limits of \eqref{eq:renyi-alpha-divergence}. Using L'H\^{o}pital's rule it can be shown that $\lim_{\alpha \to 1} \rdiv{\alpha}{P}{Q} = \kldiv{P}{Q}$. For $\alpha \to 0$, we have that $\rdiv{\alpha}{P}{Q} \to -\log P\lpa\support(Q)\rpa$ where $\support(Q)$ represents the support of the probability measure $Q$; in this case $\rdiv{\alpha}{P}{Q}$ is no longer a valid divergence as it is equal to zero whenever $\support(P) = \support(Q)$. It can also be shown that for $\alpha \not\in \fset{0,1}$ that $\rdiv{\alpha}{P}{Q} = \frac{\alpha}{1-\alpha}\rdiv{1-\alpha}{Q}{P}$. This motivates extending the definition in \eqref{eq:renyi-alpha-divergence} for $\alpha < 0$, in which case we have that $\rdiv{\alpha}{P}{Q} = \frac{\alpha}{1-\alpha}\rdiv{1-\alpha}{Q}{P} \leq 0$ \citep{li2016renyi}.
 
-Analogously to using the decomposition of the target density $\rho$ in to an unnormalised density $\pi$ and unknown normaliser $Z$ when defining the previous variational objective in \eqref{eq:kullback-leibler-var-obj}, it is observed in \citep{li2016renyi} that a \emph{variational R\'{e}nyi bound}, $\varobj_{\alpha}$, can be defined as
+Analogously to using the decomposition of the target density $\tgtdens$ in to an unnormalised density $\utgtdens$ and unknown normaliser $Z$ when defining the previous variational objective in \eqref{eq:kullback-leibler-var-obj}, it is observed in \citep{li2016renyi} that a \emph{variational R\'{e}nyi bound}, $\varobj_{\alpha}$, can be defined as
 \begin{equation}\label{eq:renyi-variational-objective}
 \begin{split}
   \varobj_{\alpha}\lsb q \rsb
   = 
-  \log Z - \rdiv[\mu]{\alpha}{q}{\rho}
+  \log Z - \rdiv[\mu]{\alpha}{q}{\tgtdens}
   =
   \frac{1}{1-\alpha} 
-  \log \int_{\set{X}} q(\vct{x}) \lpa \frac{\pi(\vct{x})}{q(\vct{x})}\rpa^{1-\alpha} \kern-3pt\dr\mu(\vct{x}).
+  \log \int_{\set{X}} q(\vct{x}) \lpa \frac{\utgtdens(\vct{x})}{q(\vct{x})}\rpa^{1-\alpha} \kern-3pt\dr\mu(\vct{x}).
 \end{split}
 \end{equation}
-For $\alpha > 0$, we have that $\rdiv[\mu]{\alpha}{q}{\rho} \geq 0$ and so $\varobj_\alpha$ is a lower bound on the $\log Z$, analogously to the \ac{ELBO}, and we should maximise $\varobj_\alpha$ with respect to $q$ to minimise $\rdiv[\mu]{\alpha}{q}{\rho}$. For $\alpha < 0$ we have instead that $\rdiv[\mu]{\alpha}{q}{\rho} \leq 0$ and so $\varobj_{\alpha}$ is an upper bound on $\log Z$ and that we should minimise $\varobj_\alpha$ to minimise $\rdiv[\mu]{1-\alpha}{\rho}{q}$ (note the swapped order of the density arguments). An equivalent observation of the possibility of upper bounding $\log Z$ is made in \citep{dieng2016chi} with a reparameterised version of \eqref{eq:renyi-variational-objective} in terms of $n=1-\alpha > 1$.
+For $\alpha > 0$, we have that $\rdiv[\mu]{\alpha}{q}{\tgtdens} \geq 0$ and so $\varobj_\alpha$ is a lower bound on the $\log Z$, analogously to the \ac{ELBO}, and we should maximise $\varobj_\alpha$ with respect to $q$ to minimise $\rdiv[\mu]{\alpha}{q}{\tgtdens}$. For $\alpha < 0$ we have instead that $\rdiv[\mu]{\alpha}{q}{\tgtdens} \leq 0$ and so $\varobj_{\alpha}$ is an upper bound on $\log Z$ and that we should minimise $\varobj_\alpha$ to minimise $\rdiv[\mu]{1-\alpha}{\tgtdens}{q}$ (note the swapped order of the density arguments). An equivalent observation of the possibility of upper bounding $\log Z$ is made in \citep{dieng2016chi} with a reparameterised version of \eqref{eq:renyi-variational-objective} in terms of $n=1-\alpha > 1$.
 
 \begin{figure}[t]
 \centering
@@ -449,13 +1371,13 @@ For $\alpha > 0$, we have that $\rdiv[\mu]{\alpha}{q}{\rho} \geq 0$ and so $\var
   ]
     \addplot+[mark=none, thick] table [x=x, y=p, col sep=comma] 
       {data/variational-objective-comparison.csv};
-    \addlegendentry{$\rho(x)$};
+    \addlegendentry{$\tgtdens(x)$};
     \addplot+[mark=none, thick, densely dashed] table [x=x, y=q_kl_pq, col sep=comma] 
       {data/variational-objective-comparison.csv};
     \addlegendentry{$q(x)$};
 \end{axis}
 \end{tikzpicture}
-\caption{$\kldiv[\lambda]{\rho}{q}$}
+\caption{$\kldiv[\lambda]{\tgtdens}{q}$}
 \label{sfig:var-obj-kl-pq}
 \end{subfigure}
 \begin{subfigure}[b]{.32\linewidth}
@@ -484,13 +1406,13 @@ For $\alpha > 0$, we have that $\rdiv[\mu]{\alpha}{q}{\rho} \geq 0$ and so $\var
   ]
     \addplot+[mark=none, thick] table [x=x, y=p, col sep=comma] 
       {data/variational-objective-comparison.csv};
-    \addlegendentry{$\rho(x)$};
+    \addlegendentry{$\tgtdens(x)$};
     \addplot+[mark=none, thick, densely dashed] table [x=x, y=q_renyi, col sep=comma] 
       {data/variational-objective-comparison.csv};
     \addlegendentry{$q(x)$};
 \end{axis}
 \end{tikzpicture}
-\caption{$\rdiv[\lambda]{\alpha}{\rho}{q},~\alpha=\frac{1}{2}$}
+\caption{$\rdiv[\lambda]{\alpha}{\tgtdens}{q},~\alpha=\frac{1}{2}$}
 \label{sfig:var-obj-renyi}
 \end{subfigure}
 \begin{subfigure}[b]{.32\linewidth}
@@ -519,22 +1441,22 @@ For $\alpha > 0$, we have that $\rdiv[\mu]{\alpha}{q}{\rho} \geq 0$ and so $\var
   ]
     \addplot+[mark=none, thick] table [x=x, y=p, col sep=comma] 
       {data/variational-objective-comparison.csv};
-    \addlegendentry{$\rho(x)$};
+    \addlegendentry{$\tgtdens(x)$};
     \addplot+[mark=none, thick, densely dashed] table [x=x, y=q_kl_qp, col sep=comma] 
       {data/variational-objective-comparison.csv};
     \addlegendentry{$q(x)$};
 \end{axis}
 \end{tikzpicture}
-\caption{$\kldiv[\lambda]{q}{\rho}$}
+\caption{$\kldiv[\lambda]{q}{\tgtdens}$}
 \label{sfig:var-obj-kl-qp}
 \end{subfigure}
-\caption[Variational objective comparison.]{Comparison of approximate densities fitted under different variational objectives. Each plot shows a bimodal target density $\rho(x)$ and a normal approximate density $q(x) = \nrm{x \gvn \mu,\sigma^2}$ where $\mu$ and $\sigma$ have been set to values which minimise the variational objective shown in the caption.}
+\caption[Variational objective comparison.]{Comparison of approximate densities fitted under different variational objectives. Each plot shows a bimodal target density $\tgtdens(x)$ and a normal approximate density $q(x) = \nrm{x \gvn \mu,\sigma^2}$ where $\mu$ and $\sigma$ have been set to values which minimise the variational objective shown in the caption.}
 \label{fig:variational-objective-comparison}
 \end{figure}
 
-As generally the family chosen for the approximate density $q$ will not include the target density as a member, the choice of variational objective is important in determining the properties of how $q$ approximates the target density \citep{bishop2006pattern}. The standard variational objective corresponding to $\kldiv[\mu]{q}{\rho}$ strongly penalises regions in $\set{X}$ where $\frac{\rho(\vct{x})}{q(\vct{x})} \ll  1$, therefore the approximate densities fitted using this objective tend to be undispersed compared to the target density, and in the case of target densities with multiple separated modes fitted with a unimodal approximate density, the approximate density will tend to fit only one mode well (with fits to the different modes corresponding to different local optima in the objective). Conversely using the reversed \ac{KL} divergence $\kldiv[\mu]{\rho}{q}$ as the variational objective penalises approximate densities where $\frac{q(\vct{x})}{\rho(\vct{x})} \ll 1$ in regions with significant mass under the target density, therefore the approximate densities fitted using this objective tend to be overdispersed compared to the target density, and in the case of multimodal target densities, the approximate densities will tend to `cover' multiple modes. Using a variational objective corresponding to a R\'{e}nyi divergence with $0 < \alpha < 1$, allows interpolating between these two behaviours (with $\alpha$ close to one favouring undispersed approximate densities similar to $\kldiv[\mu]{q}{\rho}$, with the solutions becoming increasingly dispersed as $\alpha$ becomes lower). 
+As generally the family chosen for the approximate density $q$ will not include the target density as a member, the choice of variational objective is important in determining the properties of how $q$ approximates the target density \citep{bishop2006pattern}. The standard variational objective corresponding to $\kldiv[\mu]{q}{\tgtdens}$ strongly penalises regions in $\set{X}$ where $\frac{\tgtdens(\vct{x})}{q(\vct{x})} \ll  1$, therefore the approximate densities fitted using this objective tend to be undispersed compared to the target density, and in the case of target densities with multiple separated modes fitted with a unimodal approximate density, the approximate density will tend to fit only one mode well (with fits to the different modes corresponding to different local optima in the objective). Conversely using the reversed \ac{KL} divergence $\kldiv[\mu]{\tgtdens}{q}$ as the variational objective penalises approximate densities where $\frac{q(\vct{x})}{\tgtdens(\vct{x})} \ll 1$ in regions with significant mass under the target density, therefore the approximate densities fitted using this objective tend to be overdispersed compared to the target density, and in the case of multimodal target densities, the approximate densities will tend to `cover' multiple modes. Using a variational objective corresponding to a R\'{e}nyi divergence with $0 < \alpha < 1$, allows interpolating between these two behaviours (with $\alpha$ close to one favouring undispersed approximate densities similar to $\kldiv[\mu]{q}{\tgtdens}$, with the solutions becoming increasingly dispersed as $\alpha$ becomes lower). 
 
-Figure \ref{fig:variational-objective-comparison} gives examples of normal approximate densities fitted to a bimodal target with three variational objectives to illustrate the effect of the different objectives on the fitted approximation. In Figure \ref{sfig:var-obj-kl-pq} the approximate density $q$ was fitted by minimising $\kldiv[\lambda]{\rho}{q}$, the resulting $q$ putting mass on both modes in the target (and significant mass on the region of low density between the two target modes). The approximate density $q$ in Figure \ref{sfig:var-obj-kl-qp} was instead fitted by minimising $\kldiv[\lambda]{q}{\rho}$, with the result that $q$ concentrates its mass around one of the modes. Finally Figure \ref{sfig:var-obj-renyi} shows an approximate density fitted by minimising the R\'{e}nyi divergence \eqref{eq:renyi-alpha-divergence} with $\alpha = \frac{1}{2}$ for which $\rdiv[\lambda]{\alpha}{\rho}{q} = \rdiv[\lambda]{\alpha}{q}{\rho}$ and which interpolates between the behaviours of the two objectives used in Figures \ref{sfig:var-obj-kl-pq} and \ref{sfig:var-obj-kl-qp}. The approximate density here is less dispersed than in the $\kldiv[\lambda]{\rho}{q}$ case, but still places more mass on the minor mode than the $\kldiv[\lambda]{q}{\rho}$ case.
+Figure \ref{fig:variational-objective-comparison} gives examples of normal approximate densities fitted to a bimodal target with three variational objectives to illustrate the effect of the different objectives on the fitted approximation. In Figure \ref{sfig:var-obj-kl-pq} the approximate density $q$ was fitted by minimising $\kldiv[\lambda]{\tgtdens}{q}$, the resulting $q$ putting mass on both modes in the target (and significant mass on the region of low density between the two target modes). The approximate density $q$ in Figure \ref{sfig:var-obj-kl-qp} was instead fitted by minimising $\kldiv[\lambda]{q}{\tgtdens}$, with the result that $q$ concentrates its mass around one of the modes. Finally Figure \ref{sfig:var-obj-renyi} shows an approximate density fitted by minimising the R\'{e}nyi divergence \eqref{eq:renyi-alpha-divergence} with $\alpha = \frac{1}{2}$ for which $\rdiv[\lambda]{\alpha}{\tgtdens}{q} = \rdiv[\lambda]{\alpha}{q}{\tgtdens}$ and which interpolates between the behaviours of the two objectives used in Figures \ref{sfig:var-obj-kl-pq} and \ref{sfig:var-obj-kl-qp}. The approximate density here is less dispersed than in the $\kldiv[\lambda]{\tgtdens}{q}$ case, but still places more mass on the minor mode than the $\kldiv[\lambda]{q}{\tgtdens}$ case.
 
 Once the variational objective has been defined, it still remains to choose the family of the approximate density $q$ and optimisation scheme. 
 %We will deal with the former of these two issues first.
@@ -548,7 +1470,7 @@ This assumption can signficantly reduce the computational demands of variational
 The mean-field family supports a particularly simple algorithm for optimising the standard variational objective \eqref{eq:kullback-leibler-var-obj}, \ac{CAVI} \citep{bishop2006pattern,blei2017variational}. If we define for each variable group vector $\vct{x}_i$ a corresponding vector $\vct{x}_{\setminus i} = [\vct{x}_j]_{j\in\set{I}\setminus i}$ concatenating all the remaining variables, then it can be shown that the optimal factors of a mean-field family approximate density satisfy
 \begin{equation}\label{eq:optimal-mean-field-factor}
   q_i(\vct{x}_i) \propto \exp\lpa
-    \int \prod_{j\in\set{I}\setminus i} \lpa q_j(\vct{x}_j) \rpa \log\pi(\vct{x}_i, \vct{x}_{\setminus i})
+    \int \prod_{j\in\set{I}\setminus i} \lpa q_j(\vct{x}_j) \rpa \log\utgtdens(\vct{x}_i, \vct{x}_{\setminus i})
     \,\dr\vct{x}_{\setminus i}
   \rpa.
 \end{equation}
@@ -575,7 +1497,7 @@ A more recent alternative to \ac{CAVI} for mean-field variational inference is \
   \factor[below=of g] {g-zi_yi} {} {g} {zi,yi} ; %
   \plate {data} {(zi)(yi)(g-zi_yi)} {$i \in \fset{1 \,...\, N}$} ; %
 \end{tikzpicture}
-\caption{Target $\rho$}
+\caption{Target $\tgtdens$}
 \label{sfig:global-local-latent-model-factor-graph}
 \end{subfigure}
 \begin{subfigure}[b]{.32\linewidth}
@@ -657,7 +1579,7 @@ Under this parametric assumption, rather than a variational optimisation problem
 Under this parametric assumption, rather than a variational optimisation problem we can now consider the variational objective functional $\varobj[q]$ as instead a function of the parameters $\ell(\vct{\theta}) = \varobj[f_{\vct{\theta}}]$. For the standard variational objective \eqref{eq:kullback-leibler-var-obj} we have that
 \begin{equation}\label{eq:kl-var-obj-parameteric}
   \ell(\vct{\theta}) = 
-  \int_{\set{X}} f_{\vct{\theta}}(\vct{x}) \log\pi(\vct{x}) \,\dr\vct{x} -
+  \int_{\set{X}} f_{\vct{\theta}}(\vct{x}) \log\utgtdens(\vct{x}) \,\dr\vct{x} -
   \int_{\set{X}}  f_{\vct{\theta}}(\vct{x}) \log f_{\vct{\theta}}(\vct{x})  \,\dr\vct{x}
   \,\dr\vct{x}.
 \end{equation}
@@ -669,10 +1591,9 @@ By differentiating with respect to $\vct{\theta}$ and using the identity that fo
 we have that
 \begin{equation}\label{eq:kl-var-obj-parameteric-gradient}
   \pd{\ell}{\vct{\theta}} = 
-  \int_{\set{X}} f_{\vct{\theta}}(\vct{x}) \pd{\log f_{\vct{\theta}}(\vct{x})}{\vct{\theta}} \lpa \log\lpa \frac{\pi(\vct{x})}{f_{\vct{\theta}}(\vct{x})}\rpa -1 \rpa \,\dr\vct{x}.
+  \int_{\set{X}} f_{\vct{\theta}}(\vct{x}) \pd{\log f_{\vct{\theta}}(\vct{x})}{\vct{\theta}} \lpa \log\lpa \frac{\utgtdens(\vct{x})}{f_{\vct{\theta}}(\vct{x})}\rpa -1 \rpa \,\dr\vct{x}.
 \end{equation}
 In \cite{salimans2013fixed} $f_{\vct{\theta}}$ is chosen as an exponential family distribution and $\vct{\theta}$ specified to be the natural parameters of the density. A linear-regression inspired algorithm w
-
 
 For instance for the \emph{Observing Dark Worlds} hierarchical model (Figure \ref{fig:odw-hierarchical-factor-graph}) discussed in the previous chapter, we have that the local latent variables corresponding to the halo masses $\rvct{m}^{(i)}$, core radii $\rvct{t}^{(i)}$ and centre coordinates $\rvct{x}^{(i)}, \rvct{y}^{(i)}$ (for the test set data) for a particular cluster are conditionally independent of the variables for all other clusters given the global variables $\upsigma,\upmu_{\rvar{m}},\upsigma_{\rvar{m}},\upmu_{\rvar{t}}$ and $\upsigma_{\rvar{t}}$. A natural structured factorisation for an approximate density in this case would therefore be that indicated by the factor graph in Figure \ref{fig:odw-structured-variational-density}.
 %\begin{equation}\label{eq:odw-structured-variational-family-example}
@@ -695,11 +1616,10 @@ For instance for the \emph{Observing Dark Worlds} hierarchical model (Figure \re
 Even with a factorisation chosen for the approximate density, it remains to define the parametric form for each of the approximate factors. In general there is a tradeoff in the choice of approximate density parameterisation between representational power of the resulting approximate density and corresponding ability to represent the target density well, and the tractability of optimising the variational objective.
 
  
-
 % co-ordinate ascent VI
 % stochastic variational inference
 
-\subsection{Expectation propagation}
+%\subsection{Expectation propagation}
 
 
 \section{Hybrid approaches}

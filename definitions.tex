@@ -25,7 +25,7 @@
 \newcommand{\prob}[1]{\probability_{#1}}   
 \newcommand{\kldiv}[3][]{\vvmathbb{D}_{\scriptscriptstyle\mathrm{KL}}^{#1}\lsb #2 \,\Vert\, #3 \rsb}
 \newcommand{\rdiv}[4][]{\vvmathbb{D}_{#2}^{#1}\lsb #3 \,\Vert\, #4 \rsb}
-\newcommand{\varobj}{\mathcal{L}}
+\newcommand{\varobj}{\vvmathbb{L}}
 
 \newcommand{\lebesgue}{\lambda}
 \newcommand{\hausdorff}{\mathcal{H}}
@@ -96,7 +96,38 @@
 \newcommand{\extended}[1]{\skew{2}{\tilde}{#1}}
 \newcommand{\normconst}{Z}
 \newcommand{\partfunc}{z}
-\newcommand{\transition}{\mathbb{T}}
+\newcommand{\trans}{\mathsf{t}}
+\newcommand{\transop}{\mathsf{T}}
+\newcommand{\hatf}{\skew{2}{\hat}{\rvar{f}}}
+\newcommand{\tgtdens}{p}
+\newcommand{\tgtprob}{P}
+\newcommand{\utgtdens}{\tilde{p}}
+
+
+\newcommand{\rharp}[1]{\mathpalette\rharpoonvec{#1}}
+\newcommand{\rharpvecsign}{\scriptscriptstyle\rightharpoonup}
+\newcommand{\rharpoonvec}[2]{%
+  \ifx\displaystyle#1\doalign{$\rharpvecsign$}{#1#2}\fi
+  \ifx\textstyle#1\doalign{$\rharpvecsign$}{#1#2}\fi
+  \ifx\scriptstyle#1\doalign{\scalebox{.6}[.9]{$\rharpvecsign$}}{#1#2}\fi
+  \ifx\scriptscriptstyle#1\doalign{\scalebox{.5}[.8]{$\rharpvecsign$}}{#1#2}\fi
+}
+\newcommand{\lharp}[1]{\mathpalette\lharpoonvec{#1}}
+\newcommand{\lharpvecsign}{\scriptscriptstyle\leftharpoonup}
+\newcommand{\lharpoonvec}[2]{%
+  \ifx\displaystyle#1\doalign{$\lharpvecsign$}{#1#2}\fi
+  \ifx\textstyle#1\doalign{$\lharpvecsign$}{#1#2}\fi
+  \ifx\scriptstyle#1\doalign{\scalebox{.6}[.9]{$\lharpvecsign$}}{#1#2}\fi
+  \ifx\scriptscriptstyle#1\doalign{\scalebox{.5}[.8]{$\lharpvecsign$}}{#1#2}\fi
+}
+\newcommand{\doalign}[2]{%
+ {\vbox{\offinterlineskip\ialign{\hfil##\hfil\cr#1\cr$#2$\cr}}}%
+}
+
+\newcommand{\fwdtrans}{\rharp{\trans}}
+\newcommand{\bwdtrans}{\lharp{\trans}}
+\newcommand{\fwdtransop}{\rharp{\transop}}
+\newcommand{\bwdtransop}{\lharp{\transop}}
 
 \newcommand{\func}[1]{\mathrm{#1}}
 \newcommand{\vctfunc}[1]{{\mathbf{#1}}}
