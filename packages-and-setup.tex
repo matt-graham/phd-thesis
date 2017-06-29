@@ -15,7 +15,8 @@
     %backref=true,%
     natbib=true % natbib compatibility mode (\citep and \citet still work)
 ]{biblatex}
-\usepackage{amsmath}   
+\usepackage{amsmath}
+\usepackage{amsthm}
 \usepackage{textcomp} % fix warning with missing font shapes
 \usepackage{scrhack} % fix warnings when using KOMA with listings package          
 \usepackage{xspace} % to get the spacing after macros right  
@@ -39,6 +40,7 @@
 
 \newcommand*{\noaddvspace}{\renewcommand*{\addvspace}[1]{}}
 
+\usepackage{multicol}
 \usepackage[noend]{algpseudocode}
 \usepackage{algorithm}
 % smaller line numbers in algorithms
@@ -48,6 +50,8 @@
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
 \algnewcommand{\IfThenElse}[3]{% \IfThenElse{<if>}{<then>}{<else>}
   \State \algorithmicif\ #1\ \algorithmicthen\ #2\ \algorithmicelse\ #3}
+\algnewcommand{\And}{\textbf{and}\xspace}
+\algnewcommand{\Or}{\textbf{or}\xspace}  
 
 \usepackage[%
   %drafting, % prints the date and time at the bottom of each page
@@ -150,6 +154,7 @@
 \usepackage{filecontents}
 \usepackage{pgfplotstable}
 %\usepackage[table]{xcolor}
+\usepgfplotslibrary{groupplots}
 
 \definecolor{edblue}{RGB}{0, 50, 95}
 \definecolor{edred}{RGB}{193, 0, 67}
@@ -160,8 +165,26 @@
 \definecolor{s4}{RGB}{152, 78, 163}
 \definecolor{s5}{RGB}{255, 127, 0}
 
+\newtheoremstyle{thmstyle}
+  {4pt} % Space above
+  {4pt} % Space below
+  {} % Body font
+  {} % Indent amount
+  {\bfseries} % Theorem head font
+  {:} % Punctuation after theorem head
+  {.5em} % Space after theorem head
+  {} % Theorem head spec (can be left empty, meaning `normal')
+
+\theoremstyle{thmstyle} 
+\newtheorem*{theorem}{Theorem}
+\newtheorem*{corollary}{Corollary}
+\newtheorem*{proposition}{Proposition}
+
 \usepackage{tikz}
 \usetikzlibrary{bayesnet,arrows,arrows.meta,calc,positioning}
+
+%\usetikzlibrary{external} 
+%\tikzexternalize[prefix=tikz-figures/]
 
 % Necessary for correct hyperlinks (to index, bib, etc.)                                  
 \newcounter{dummy} 
@@ -176,6 +199,13 @@
   \refstepcounter{dummy}
   \section*{#1}
   \addcontentsline{toc}{section}{#1}
+}
+
+\renewcommand\formatchapter[1]{%
+    \setbox0=\hbox{\chapterNumber\thechapter\hspace{10pt}\vline\ }%
+    \begin{minipage}[t]{\dimexpr\linewidth-\wd0\relax}%
+    \raggedright\spacedallcaps{#1}%
+    \end{minipage}%
 }
 
 % draw binary grid https://tex.stackexchange.com/a/123728
