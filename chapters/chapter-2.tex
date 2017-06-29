@@ -257,7 +257,7 @@ Although the inverse \ac{CDF} transform method gives a general recipe for sampli
     \pgfmathsetmacro{\xr}{-0.25}
     \pgfmathsetmacro{\ur}{0.6}
     \pgfmathsetmacro{\yr}{1.9 * exp(-0.5 * ((\xr-0.1)/0.6)^2) / sqrt(2 * pi * 0.6^2)} ; %
-    \node[inner sep=0, outer sep=0, label={[label distance=-1mm]30:\tiny $\lpa x^*\kern-2pt, u^* Mq(x^*)\rpa$}] (rej) at (axis cs:\xr, \ur * \yr) [anchor=center] {$*$} ; %
+    \node[inner sep=0, outer sep=0, label={[label distance=-1mm]30:\tiny $\lpa x^*\kern-2pt, h^*\rpa$}] (rej) at (axis cs:\xr, \ur * \yr) [anchor=center] {$*$} ; %
     \draw[densely dotted] (axis cs: \xr, 0.) -- (axis cs: \xr, \yr); %
     \draw[densely dotted] (axis cs: \xr-0.55, \yr) -- (axis cs: \xr, \yr); %
     \draw[->] (axis cs: \xr-0.5, 0.) -- 
@@ -266,7 +266,7 @@ Although the inverse \ac{CDF} transform method gives a general recipe for sampli
     \pgfmathsetmacro{\xa}{0.9}
     \pgfmathsetmacro{\ua}{0.3}
     \pgfmathsetmacro{\ya}{1.9 * exp(-0.5 * ((\xa-0.1)/0.6)^2) / sqrt(2 * pi * 0.6^2)} ; %
-    \node[inner sep=0, outer sep=0, label={[label distance=-1mm]180:\tiny $\lpa x^\diamond\kern-2pt, u^\diamond Mq(x^\diamond)\rpa$}] (rej) at (axis cs:\xa, \ua * \ya) [anchor=center] {$\diamond$} ; %
+    \node[inner sep=0, outer sep=0, label={[label distance=-1mm]180:\tiny $\lpa x^\diamond\kern-2pt, h^\diamond\rpa$}] (rej) at (axis cs:\xa, \ua * \ya) [anchor=center] {$\diamond$} ; %
     \draw[densely dotted] (axis cs: \xa, 0.) -- (axis cs: \xa, \ya); %
     \draw[densely dotted] (axis cs: \xa+0.55, \ya) -- (axis cs: \xa, \ya); %
     \draw[->] (axis cs: \xa+0.5, 0.) -- 
@@ -298,9 +298,9 @@ The key requirement in rejection sampling is to identify a \emph{proposal densit
 \small
 \begin{algorithmic}[1]
   \Repeat
-    \State $\vct{x} \sim q$
-    \State $u \sim \mathcal{U}(0,1)$
-  \Until{ $u Mq(\vct{x}) \leq \utgtdens(\vct{x})$ }
+    \State $\vct{x} \sim q$ 
+    \State $h \sim \mathcal{U}(0,Mq(\vct{x}))$
+  \Until{ $h \leq \utgtdens(\vct{x})$ }
   \State \Return $\vct{x}$
 \end{algorithmic}
 \end{algorithm}
@@ -739,14 +739,14 @@ Having now introduced the key theoretical concepts underlying \ac{MCMC} methods,
 \hrule
 \small
 \begin{algorithmic}[1]
-  \State $\vct{x}^* \sim q(\vct{x}_{n})$
+  \State $\vct{x}^* \sim q(\vct{x}_{n})$ \Comment{Generate proposed new state}
   \State $u \sim \mathcal{U}(0,1)$
   \vspace{0.2mm}
   \If{$u < \frac{\utgtdens(\vct{x}^*) \, q(\vct{x} \gvn \vct{x}^*)}{\utgtdens(\vct{x}) \, q(\vct{x}^* \gvn \vct{x})}$}
     \vspace{0.1mm}
-    \State $\vct{x}_{n+1} \gets \vct{x}^*$
+    \State $\vct{x}_{n+1} \gets \vct{x}^*$ \Comment{Proposed move accepted}
   \Else
-    \State $\vct{x}_{n+1} \gets \vct{x}_{n}$
+    \State $\vct{x}_{n+1} \gets \vct{x}_{n}$ \Comment{Propsed move rejected}
   \EndIf
   \State \Return $\vct{x}_{n+1}$
 \end{algorithmic}
@@ -993,19 +993,20 @@ To tackle this issue methods have been proposed which exploit more information a
   ]
     \addplot[domain=-3:3, samples=100, thick, draw=cbgreen] {normpdf(x,0,1)};
   \end{axis}
+  \node[fit=(current bounding box),inner sep=1.2mm]{};
 \end{tikzpicture}
 \caption[Gibbs sampling schematic.]{Schematic of Gibbs sampling transition in a bivariate normal target distribution (ellipses indicate constant density contours). Given an initial state $\rvct{x} = (x_1,x_2)$, the $\rvar{x}_1$ (horizontal) co-ordinate is first updated by independently sampling from the normal conditional $\pden{\rvar{x}_1|\rvar{x}_2}(\cdot\gvn x_2)$, represented by the orange curve. The new partially updated state is then $\rvct{x} = (x_1^*, x_2)$. The second $\rvar{x}_2$ (vertical) co-ordinate is then independently resampled from the normal conditional $\pden{\rvar{x}_2|\rvar{x}_1}(\cdot\gvn x_1^*)$, shown by the green curve. The final updated state is then $\rvct{x} = (x_1^*, x_2^*)$.}
 \label{fig:gibbs-sampling}
 \end{figure}
 
 \begin{algorithm}[!t]
-\caption{Sequential Gibbs transition.}
+\caption{Sequential scan Gibbs transition.}
 \label{alg:gibbs-sampling}
 \begin{algorithmic}
 \small
     \Require
     $\vct{x}_n$ : current chain state,~
-    $\set{I}$ : ordered index set over individual variables in chain state,~
+    $\set{I}$ : ordered set of indices of all individual variables in chain state,~
     $\lbrace \tgtdens_{i} \rbrace_{i\in\set{I}}$ : set of complete conditionals of target density $\tgtdens$ which can all be sampled from.
     \Ensure\raggedright
     $\vct{x}_{n+1}$ : next chain state with $\vct{x}_n \sim \tgtdens \implies \vct{x}_{n+1} \sim \tgtdens$.
@@ -1015,7 +1016,7 @@ To tackle this issue methods have been proposed which exploit more information a
 \begin{algorithmic}[1]
   \State $\vct{x} \gets \vct{x}_n$
   \For{$i \in \set{I}$}
-    \State $x_i \sim \tgtdens_{i}(\vct{x}_{\backslash i})$
+    \State $x_i \sim \tgtdens_{i}(\vct{x}_{\backslash i})$ \Comment{Resample $x_i$ from $\tgtdens_i$ given \emph{current} $\vct{x}_{\backslash i}$.}
   \EndFor
   \State $\vct{x}_{n+1} \gets \vct{x}$
   \State \Return $\vct{x}_{n+1}$
@@ -1030,15 +1031,104 @@ More specifically the original formulation of Gibbs sampling defines a Markov ch
 \end{equation}
 with the conditional densities $\lbrace \tgtdens_i \rbrace_{i \in \set{I}}$ termed the \emph{complete conditionals} of the target density. If each of these complete conditionals corresponds to a distribution we can generate samples from (for example using a transform method or rejection sampling) then we can apply the sequential Gibbs sampling transition operator defined in Algorithm \ref{alg:gibbs-sampling} and visualised for a bivariate example in Figure \ref{fig:gibbs-sampling}.
 
-The sequential Gibbs transition is irreducible and aperiodic under mild conditions \citep{roberts1994simple,chan1993asymptotic}. Rather than using a deterministic sequential scan through the variables, a variant is to randomly sample without replacement the variable to update on each iteration; unlike the sequential scan version this defines a reversible transition operator. This random update variant is somewhat more amenable to theoretical analysis and comes with some stronger guarantees, however in practice the ease of implementation of the sequential scan variant and computational benefits in terms of memory access locality mean it is more often used in practice \citep{he2016scan}. A compromise between the completely random updates and a sequential scan is to randomly permute the update order have each complete scan.
+The sequential Gibbs transition is irreducible and aperiodic under mild conditions \citep{roberts1994simple,chan1993asymptotic}. Rather than using a deterministic sequential scan through the variables, an alternative is to randomly sample without replacement the variable to update on each iteration; unlike the sequential scan version this defines a reversible transition operator and is in fact a valid way to construct a reversible transition from any set of individually reversible transition operators with a common invariant distribution. The random update variant is more amenable to theoretical analysis and comes with some stronger guarantees, however in practice the ease of implementation of the sequential scan variant and computational benefits in terms of memory access locality mean it seems to be more often used in practice \citep{he2016scan}. A compromise between the completely random updates and a sequential scan is to randomly permute the update order have each complete scan.
 
 A apparent advantage of Gibbs sampling over Metropolis--Hastings is the lack of a proposal density which needs to be tuned. This is has helped popularise `black-box' implementations of Gibbs sampling such as the probabilistic modelling packages BUGS \citep{gilks1994language} and JAGS \citep{plummer2003jags}. A well-known issue with Gibbs sampling however is that its performance is highly dependent on the parameterisation used for the target density \citep{raftery1991many}, with strong correlations between variables leading to large dependencies between successive states and slow convergence to stationarity. This can be alleviated in some cases by using a suitable reparameterisation to reduce dependencies between variables, however this restores the difficulty of tuning free parameters.
 
-The updates do not necessarily need to be performed by sampling from complete conditions of single variables - in some cases the complete conditional of a vector variables has a tractable form which can be sampled from as a `block'; this motivates the name \emph{block Gibbs samling} for such variants. By accounting for the dependencies between the variables in a block this can help alleviate some of the issues with highly correlated targets where applicable.
+The updates do not necessarily need to be performed by sampling from complete conditionals of single variables - in some cases the complete conditional of a vector variables has a tractable form which can be sampled from as a `block'; this motivates the name \emph{block Gibbs samling} for such variants. By accounting for the dependencies between the variables in a block this can help alleviate some of the issues with highly correlated targets where applicable.
 
-Compound constructions such as \emph{Metropolis(--Hastings)-within-Gibbs} are sometimes used to refer to methods which sequentially apply \emph{Metropolis--Hastings} transition operators which each update only a subset of variables in the target distribution. We will prefer to however consider the defining feature of Gibbs sampling as being exact sampling from one or more conditionals rather than sequentially applying transition operators which update only subsets of variables and so will only refer to `Gibbs sampling' in that context.
+Compound constructions such as \emph{Metropolis-within-Gibbs} are sometimes used to refer to methods which sequentially apply \emph{Metropolis--Hastings} transition operators which each update only a subset of variables in the target distribution. We will prefer to however consider the defining feature of Gibbs sampling as being exact sampling from one or more conditionals rather than sequentially applying transition operators which update only subsets of variables and so will only refer to `Gibbs sampling' in that context.
 
 \subsubsection{Slice sampling}
+
+\begin{figure}[t]
+\centering
+\pgfplotsset{cycle list/Dark2-3}
+\begin{subfigure}[b]{.46\linewidth}
+\centering
+\begin{tikzpicture}[rotate=30, scale=1.5]
+    \pgfmathsetmacro{\xr}{-0.25}; %
+    \pgfmathsetmacro{\yr}{1} ; %
+    \pgfmathsetmacro{\bl}{-1.3} ; %
+    \pgfmathsetmacro{\bu}{1.8} ; %
+    \pgfmathsetmacro{\sl}{-0.84} ; %
+    \pgfmathsetmacro{\su}{0.955} ; %
+    \draw [cborange, thick] plot [smooth cycle, tension=0.7] coordinates 
+      {(\sl,\yr) (\sl+0.23,\yr+0.39) (\sl+0.8, \yr+0.31) (\sl+1.45,\yr+0.51) (\su,\yr) (\sl+1.32,\yr-0.46) (\sl+0.82,\yr-0.27) (\sl+0.22,\yr-0.3)};
+    \draw[densely dashed] (\bl, \yr) -- (\bu, \yr) ; %
+    \draw[->] (\xr, \yr) -- node[pos=0.5, anchor=center, above] {\small $\vct{v}$}  (\xr+0.5, \yr) ; %
+    \node[draw=black, fill=black, inner sep=1pt, outer sep=0, label={[label distance=-1mm]120: \small $\vct{x}$}]
+      (xn) at (\xr, \yr) [anchor=center] {} ; %
+    \node[draw=Maroon, fill=Maroon, circle, inner sep=1pt, outer sep=0, circle] 
+      (xr) at (1.3, \yr) [anchor=center] {} ; %
+    \node[draw=cbviolet, fill=cbviolet, circle, inner sep=1pt, outer sep=0, circle] 
+      (xa) at (0.5, \yr) [anchor=center] {} ; %
+\end{tikzpicture}
+\vspace{3mm}
+\end{subfigure}
+\begin{subfigure}[b]{.46\linewidth}
+\centering
+\begin{tikzpicture}[
+    declare function={
+      tgtdens(\x)=
+      0.6 * exp(-0.5 * ((\x - 0.5) / 0.5)^2) / sqrt(2 * pi * 0.5^2) +
+      0.4 * exp(-0.5 * ((\x + 0.5) / 0.25)^2) / sqrt(2 * pi * 0.25^2);
+    },
+  ]
+  \begin{axis}[
+    axis on top=true,
+    cycle list name={Dark2-3},
+    xmin=-1.5, xmax=2.5,
+    domain=-1.5:2.5,
+    samples=200,
+    width=65mm,
+    height=40mm,
+    xlabel={\small $\lambda$},
+    clip=false,
+    hide y axis,
+    axis x line=middle,
+    ticks=none,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.5,0.9)},
+      fill=none,
+      anchor=north west,
+      draw=none, 
+      font=\scriptsize,
+    }
+  ]
+    \addplot+[mark=none, thick, draw=cbgreen, fill=cbgreen!20] {tgtdens(x)};
+    \addlegendentry{$\utgtdens(\vct{x} + \lambda\vct{v})$};
+    \pgfmathsetmacro{\xr}{-0.25}; %
+    \pgfmathsetmacro{\ur}{0.6}; %
+    \pgfmathsetmacro{\yr}{tgtdens(\xr)} ; %
+    \pgfmathsetmacro{\hr}{tgtdens(\xr) * \ur} ; %
+    \pgfmathsetmacro{\bl}{-1.3} ; %
+    \pgfmathsetmacro{\bu}{1.8} ;%
+    \draw[densely dotted] (axis cs: \xr, 0.) -- (axis cs: \xr, \hr); %
+    \draw[->] (axis cs: \xr+0.4, 0.) -- 
+      node[pos=0.5, anchor=center, right] {\small $h$} 
+      (axis cs: \xr+0.4, \hr); %
+    \draw[densely dotted] (axis cs: \bl, 0.) -- (axis cs: \bl, \hr); %
+    \draw[densely dotted] (axis cs: \bu, 0.) -- (axis cs: \bu, \hr); %
+    \draw[very thick, cborange] (axis cs: -0.84, \hr) -- (axis cs: 0.955, \hr) ; %
+    \draw[densely dashed] (axis cs: \bl, \hr) -- (axis cs: \bu, \hr) ; %
+    \node[draw=black, fill=black, inner sep=1pt, outer sep=0] 
+      (xn) at (axis cs:\xr, \hr) [anchor=center] {} ; %
+    \node[draw=Maroon, fill=Maroon, circle, inner sep=1pt, outer sep=0, circle] 
+      (xr) at (axis cs:1.3, \hr) [anchor=center] {} ; %
+    \node[draw=cbviolet, fill=cbviolet, circle, inner sep=1pt, outer sep=0, circle] 
+      (xa) at (axis cs:0.5, \hr) [anchor=center] {} ; %
+    \node at (axis cs: \xr, -0.1) {0};
+    \node at (axis cs: \bl, -0.1) {$b_l$};
+    \node at (axis cs: \bu, -0.1) {$b_u$};
+\end{axis}
+\end{tikzpicture}
+\end{subfigure}
+\caption[Schematic of linear slice sampling.]{Schematic of linear slice sampling, showing `plan' (left) and `cross-sectional' (right) views of a bivariate target density. Orange curve (left) and line (right) indicates a constant density slice $\set{S}_h$. Black square indicates current target state value $\vct{x}$ and the dashed line is the one-dimensional linear sub-space ligned with the vector $\vct{v}$ which a new value from the state will be sampled on. The extents of the dashed line segment represent the initial bracket new proposed states will be drawn from. Points are proposed on the line by drawing a value uniformly from the current bracket. The red circle represents an initial proposed point which is not in the slice and so the right bracket edge is shrunk to this point. The violet circle shows a second sampled point from the new reduced bracket, this point within the slice and so returned as the updated target state.}
+\label{fig:slice-sampling}
+\end{figure}
+
 
 \begin{algorithm}[!t]
 \caption{Linear slice sampling transition.}
@@ -1048,35 +1138,101 @@ Compound constructions such as \emph{Metropolis(--Hastings)-within-Gibbs} are so
     \Require
     $\vct{x}_n$ : current chain state,~
     $\utgtdens$ : unnormalised target density,\\
-    $q$ : slice vector density.
+    $q$ : slice vector density,~
+    $M$ : maximum number of step out iterations.
     \Ensure\raggedright
     $\vct{x}_{n+1}$ : next chain state with $\vct{x}_n \sim \tgtdens \implies \vct{x}_{n+1} \sim \tgtdens$.
 \end{algorithmic}
 \hrule
 \small
 \begin{algorithmic}[1]
-  \State $h \sim \mathcal{U}\lpa 0,\utgtdens(\vct{x}_n)\rpa$
-  \State $b_u \sim \mathcal{U}(0,1)$
+  \State $h \sim \mathcal{U}\lpa 0,\utgtdens(\vct{x}_n)\rpa$ \Comment{Sample slice height}
+  \State $\vct{v} \sim q$ \Comment{Sample vector setting slice line and initial bracket width}\label{algline:slice-sample-direction}
+  \State $b_u \sim \mathcal{U}(0,1)$  \Comment{Uniformly sample bracket around current state}
   \State $b_l \gets b_u - 1$
-  \State $b \sim \mathcal{U}(b_l, b_u)$
-  \State $\vct{v} \sim q$
-%  \While{$\utgtdens(\vct{x}_n + b_l \vct{v}) > h$}
-%    \State $b_l \gets b_l - 1$
-%  \EndWhile
-%  \While{$\utgtdens(\vct{x}_n + b_u \vct{v}) > h$}
-%    \State $b_u \gets b_u - 1$
-%  \EndWhile
+  \If{$M > 0$} $(b_l,\,b_u) \gets $ \Call{LinearStepOut}{$\vct{x}_n$, $b_l$, $b_u$, $M$}\EndIf
+  \State $\lambda \sim \mathcal{U}(b_l, b_u)$
   \While{\textsc{True}}
-    \State $\vct{x}^* \gets \vct{x}_n + b \vct{v}$
-    \If{$\utgtdens(\vct{x}^*) \leq h$}
-      \IfThenElse{$b < 0$}{$b_l \gets b$}{$b_u \gets b$}
-      \State $b \sim \mathcal{U}(b_l, b_u)$
-    \Else
+    \State $\vct{x}^* \gets \vct{x}_n + \lambda \vct{v}$  
+    \Comment{Update proposed state}
+    \If{$\utgtdens(\vct{x}^*) \leq h$} 
+    \Comment{Proposed point not on slice}
+      \IfThenElse{$\lambda < 0$}{$b_l \gets \lambda$}{$b_u \gets \lambda$} 
+      \Comment{Shrink slice bracket}
+      \State $\lambda \sim \mathcal{U}(b_l, b_u)$  
+      \Comment{Sample uniformly from new bracket}
+    \Else \Comment{Proposed state on slice}
       \State \Return $\vct{x}^*$
     \EndIf
   \EndWhile
+  \Function{LinearStepOut}{$\vct{x}_n,\,b_l,\,b_u,\,M$}
+    \State $L \sim \textrm{UniInt}(0, M)$ \Comment{Sample integer uniformly from $[0, M]$}
+    \State $U \gets M - L$
+    \While{$L > 0$ \textbf{and}\xspace $\utgtdens(\vct{x}_n + b_l \vct{v}) > h$} \Comment{Step out lower bracket edge}
+      \State $b_l \gets b_l - 1$
+      \State $L \gets L - 1$
+    \EndWhile
+    \While{$U > 0$ \textbf{and}\xspace$\utgtdens(\vct{x}_n + b_u \vct{v}) > h$} \Comment{Step out upper bracket edge}
+      \State $b_u \gets b_u + 1$
+      \State $U \gets U - 1$
+    \EndWhile
+    \State\Return $b_l$, $b_u$
+  \EndFunction
 \end{algorithmic}
 \end{algorithm}
+
+The final general class of \ac{MCMC} methods we will consider is \emph{slice sampling}. Slice sampling is a family of auxiliary variable methods which exploit the same observation as used to motivate rejection sampling - to sample from a target distribution, it is sufficient to uniformly sample from the volume beneath a graph of the target density function. Rather than attempt to generate independent points from this volume as in rejection sampling, slice sampling instead constructs a transition operator which leaves the uniform distribution on this volume invariant.
+
+The method we will concentrate on here was proposed by Neal \citep{neal1997markov,neal2003slice} with a related algorithm which uses per data-point auxiliary variables in Bayesian inference problems developed concurrently by Damien, Wakefield and Walker \citep{damien1999gibbs}. Murray, Adams and Mackay later proposed \emph{elliptical slice sampling} \citep{murray2010elliptical}, a variant on the original linear slice sampling construct which leverages the ellipsoidal geometry of the typical set of multivariate normal distributions to construct a slice sampling transition operator which is particularly effective for target distributions which are well approximated by a multivariate normal.
+
+Slice sampling defines a Markov chain on an augmented state space by introducing an auxiliary \emph{height} variable $\rvar{h} \in [0, \infty)$ in addition to the original target state $\rvct{x} \in \set{X}$. The conditional density on the height variable is $\pden{\rvar{h}|\rvct{x}}(h\gvn\rvct{x}) = \frac{1}{\utgtdens(\vct{x})} \ind{[0,\utgtdens(\vct{x}))}(h) $, i.e. uniform over the interval between zero and the unnormalised target density value. The joint density on the augmented space is then
+\begin{equation}\label{eq:slice-sampling-augmented-target}
+  \pden{\rvct{x},\rvar{h}}(\vct{x},h) = 
+  \frac{1}{\utgtdens(\vct{x})} \ind{[0,\utgtdens(\vct{x}))}(h)\, \frac{\utgtdens(\vct{x})}{Z} =
+  \frac{1}{Z} \ind{[0,\utgtdens(\vct{x}))}(h).
+\end{equation}
+Marginalising this joint density over $\rvct{x}$ recovers the original target density i.e. $\pden{\rvct{x}} = \tgtdens$. Therefore if we can construct a Markov chain with \eqref{eq:slice-sampling-augmented-target} as its unique invariant distribution, the $\rvct{x}$ components of the chain state will be dependent samples from the target distribution for a chain at stationarity and so can be used to compute \ac{MCMC} estimates. Several of the methods we will introduce later in this thesis will also exploit this idea of defining a Markov chain on an augmented state space by introducing auxiliary variables.
+
+The overall slice sampling transition is then formed of the sequential composition of a transition operator which updates $\rvar{h}$ given $\rvct{x}$ and a second operator which updates $\rvct{x}$ given $\rvar{h}$, each leaving the distributions corresponding to the conditional densities $\pden{\rvar{h}|\rvct{x}}$ and $\pden{\rvct{x}|\rvar{h}}$ respectively invariant, and so by the same argument as for Gibbs sampling the overall transition leaving the target distribution invariant. By construction the conditional density $\pden{\rvar{h}|\rvct{x}}$ is a simple uniform density and so the first transition operator is a Gibbs sampling type update in which the height variable is independently resampled from $\mathcal{U}\lpa 0, \utgtdens(\vct{x})\rpa$, where $\vct{x}$ is the current value of the target state $\rvct{x}$.
+
+The conditional density $\pden{\rvct{x}|\rvar{h}}(\vct{x}\gvn h)$ is also locally uniform, equal to a positive constant whenever $\utgtdens(\vct{x}) > h$ and zero elsewhere. However we can only evaluate the density up to an unknown constant as we cannot compute the Lebesgue measure of the set $\set{S}_h = \fset{\vct{x} \in \set{X} : \utgtdens(\vct{x}) > h}$ that the density is non-zero over. In general $\set{S}_h$, which is the eponymous \emph{slice} of slice sampling (so called as it represents a slice through the volume under the density curve at a fixed height $h$), will have a complex geometry including potentially consisting of several disconnected components in the case of multimodal densities. The complexity of the slices generally prevents us therefore from independently sampling a new value for $\rvct{x}$ uniformly from $\set{S}_h$ and so we cannot use a full Gibbs sampling scheme corresponding to sequentially independently sampling from $\pden{\rvar{h}|\rvct{x}}$ and $\pden{\rvct{x}|\rvar{h}}$.
+
+A key contribution of \citep{neal2003slice} was to introduce an elegant method for constructing a transition operator which leaves $\pden{\rvct{x}|\rvar{h}}$ invariant. In particular the method proposed has few free parameters to tune, has an efficiency which is relatively robust to the choices of the couple of free choices that are introduced, and will for non-degenerate target densities always move the target state by some amount (in contrast to the potential for rejected updates in Metropolis--Hastings methods). This method is summarised in Algorithm \ref{alg:linear-slice-sampling} and a schematic visualisation of the process shown in Figure \ref{fig:slice-sampling}.
+
+An important first step in the algorithm is reducing the problem of generating a point uniformly on the multidimensional slice $\set{S}_h$ to making a move on a one-dimensional linear subspace of this slice  (motivating our naming of this algorithm \emph{linear slice sampling}) which includes the current $\rvct{x}$ state. In the original description of the algorithm in \citep{neal2003slice} the one-dimensional subspace is chosen to be axis-aligned, correponding to updating a single component of the target state. 
+
+In this case the restriction of the slice on to the one-dimensional subspace is entirely specified by the conditional density on the chosen variable component given the current values of the remaining components in the state. Slice sampling transitions for each variable in the target state can then be applied sequentially akin to Gibb sampling, but with the advantage over Gibbs of not requiring the complete conditionals to be of a tractable form we can generate exact samples from. If conditional independency structure in the target density means the complete conditionals depend only on local subsets of variables in the target state using updates of this form has the advantage of exploiting this locality. As with Gibbs sampling however applying slice sampling in this manner makes performance strongly dependent on the parameterisation of the target density, with large correlations likely to lead to slow exploration of the space. 
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{.46\linewidth}
+\centering
+  \input{data/axis-aligned-slice-sampler-bivariate-normal.tikz}
+  \vspace{-6mm}
+  \caption{Axis-aligned updates}
+  \label{sfig:axis-aligned-linear-slice-sampler}
+\end{subfigure}
+~~
+\begin{subfigure}[b]{.46\linewidth}
+\centering
+  \input{data/random-direction-slice-sampler-bivariate-normal.tikz}
+  \vspace{-6mm}
+  \caption{Random direction updates}
+  \label{sfig:random-direction-linear-slice-sampler}
+\end{subfigure}
+  \caption[Linear slice sampler comparison.]{Samples generated using \subref{sfig:axis-aligned-linear-slice-sampler} axis-aligned versus \subref{sfig:random-direction-linear-slice-sampler} random-direction  linear slice sampling in a correlated bivariate normal distribution. In both cases 1000 transitions where performed (with random selection of axis to update on each iteration in \subref{sfig:axis-aligned-linear-slice-sampler}) with every second sampled state shown.  the maximum number of step out iterations is $M=4$ and the initial bracket width is fixed at $w=1$. The dotted ellipse shows the contour of the target density which contains 0.99 of the mass. The random direction chain is able to explore the typical set of the target distribution more effectively in this case with the axis-aligned updates leading to slower diffusion along the major axis of the elliptical contour.}
+  \label{fig:linear-slice-sampler-comparison}
+\end{figure}
+
+In \citep{neal2003slice} various specifically multivariate extensions of the algorithm are suggested which could help counter this issue, however they add significant implementation complexity compared to the original algorithm. A simple alternative is to define the one-dimensional subspace as being the line defined by a randomly chosen vector and passing through the current value of $\rvct{x}$. If this vector is generated independently of the current state this is sufficient to ensure the overall transition retains the correct invariant distribution. 
+
+If little is known about the target distribution a reasonable default choice is to sample a unit vector of the required dimensionality by generating a random zero-mean isotropic covariance multivariate normal vector and then scaling it to unit norm; if an approximate covariance matrix $\hat{\mtx{\Sigma}}$ is known for the target density then instead generating the vector from $\nrm{\vct{0},\mtx{\Sigma}}$ prior to normalising might be a better choice (as it favours moves aligned with the principle eigenvectors of $\mtx{\Sigma}$) however in this case elliptical slice sampling will often be a better choice. 
+
+This random-direction slice sampling variant is discussed in comparison to elliptical slice sampling in \citep{murray2010elliptical}. It is also bears resemblance to the scheme proposed in \citep{chen1998toward} which uses the same auxiliary variable formulation as slice sampling, but there the random direction is chosen in $\set{X}\times[0,\infty)$ i.e. to update both $\rvct{x}$ and $\rvar{h}$ and not used with the remainder of Neal's slice sampling algorithm. An example comparison of appying axis-aligned and random-direction linear slice sampling updates to a strongly positively correlated bivariate normal target distribution is shown in Figure \ref{fig:linear-slice-sampler-comparison}. In this toy example the random-direction updates are able to more effectively explore the target distribution.
+
+The generation of the vector $\vct{v}$ determining the one-dimensional sub-space of the slice the update is performed on is represented in Algorithm \ref{alg:linear-slice-sampling} by Line \ref{algline:slice-sample-direction} by $\vct{v}$ being generated from a density $q$. As well as specifying the \emph{direction} of the slice line, the vector $\vct{v}$ also specifies a scale along this line. In Neal's description of the algorithm this is represented by the explicit \emph{bracket width} parameter $w$. Here instead we assume this parameter is implicitly defined by the Euclidean norm of the vector $\vct{v}$, through suitable choice of $q$ this allowing for direction dependent scales and also the possibility of randomisation of the scale; as we will see shortly however compared to for example random-walk Metropolis updates with a normal proposal, linear slice sampling is much less sensitive to the choice of scale parameters, therefore a single fixed scale will often be sufficient.
+
+Once the slice line direction and scale has been chosen, the remainder of the algorithm can be roughly split into two stages: selection of an initial \emph{bracket} on the slice line and including the point corresponding to the current state; iteratively uniformly sampling points within the current bracket, accepting the point if it is within the slice $\set{S}_h$ otherwise shrinking the bracket and repeating. The algorithm proposed by Neal ensures both these stages are performed reversibly such that there is an equal probability of choosing
 
 \begin{algorithm}[!t]
 \caption{Elliptical slice sampling transition.}
@@ -1093,16 +1249,16 @@ Compound constructions such as \emph{Metropolis(--Hastings)-within-Gibbs} are so
 \hrule
 \small
 \begin{algorithmic}[1]
-  \State $h \sim \mathcal{U}\lpa 0,\utgtdens(\vct{x}_n) / \nrm{\vct{x}_n \gvn \vct{0}, \mtx{\Sigma}}\rpa$
-  \State $\theta_u \sim \mathcal{U}(0,2\uppi)$
+  \State $h \sim \mathcal{U}\lpa 0,\utgtdens(\vct{x}_n) / \nrm{\vct{x}_n \gvn \vct{0}, \mtx{\Sigma}}\rpa$ \Comment{Sample slice height}
+  \State $\vct{v} \sim \nrm{\vct{0}, \mtx{\Sigma}}$ \Comment{Sample vector setting slice ellipse}
+  \State $\theta_u \sim \mathcal{U}(0,2\uppi)$ \Comment{Uniformly sample bracket around current state}
   \State $\theta_l \gets \theta_u - 2\uppi$
   \State $\theta \gets \theta_u$
-  \State $\vct{v} \sim \nrm{\vct{0}, \mtx{\Sigma}}$
   \While{\textsc{True}}
-    \State $\vct{x}^* \gets \vct{x}_n \cos\theta + \vct{v} \sin\theta$
-    \If{$\utgtdens(\vct{x}^*) / \nrm{\vct{x}^* \gvn \vct{0}, \mtx{\Sigma}} \leq h$}
-      \IfThenElse{$\theta < 0$}{$\theta_l \gets \theta$}{$\theta_u \gets \theta$}
-      \State $\theta \sim \mathcal{U}(\theta_l, \theta_u)$
+    \State $\vct{x}^* \gets \vct{x}_n \cos\theta + \vct{v} \sin\theta$  \Comment{Update proposed state}
+    \If{$\utgtdens(\vct{x}^*) / \nrm{\vct{x}^* \gvn \vct{0}, \mtx{\Sigma}} \leq h$} \Comment{Proposed point not on slice}
+      \IfThenElse{$\theta < 0$}{$\theta_l \gets \theta$}{$\theta_u \gets \theta$} \Comment{Shrink slice bracket}
+      \State $\theta \sim \mathcal{U}(\theta_l, \theta_u)$ \Comment{Sample uniformly from new bracket}
     \Else
       \State \Return $\vct{x}^*$
     \EndIf
@@ -1110,7 +1266,6 @@ Compound constructions such as \emph{Metropolis(--Hastings)-within-Gibbs} are so
 \end{algorithmic}
 \end{algorithm}
 
-The final general class of \ac{MCMC} methods we will consider is \emph{slice sampling}.
 
 
 %Although in our discussion so far we have assumed the transition operator (or proposal operator for Metropolis--Hastings) potentially peturbs all of the variables the target distribution is defined on simultaneously, in practice it can sometimes be helpful to use transition operators which only update a subset of the variables. Although if used in isolation a transition operator which only updates some components of the state will not give an ergodic chain, as discussed previously multiple transition operators can be combined together to achieve ergodicity.

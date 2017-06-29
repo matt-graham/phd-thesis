@@ -1106,7 +1106,7 @@ Depending on how the computation graph is traversed to accumulate the derivative
   
   \draw[-{latex[length=1.5mm]}, shorten >=5pt, shorten <=5pt, gray] ($(a_b-c)+(0.6,-1)$) -- ($(b)+(0.6,-1)$) ; %
   \draw[-{latex[length=1.5mm]}, shorten >=5pt, shorten <=5pt, gray] (db) -- (du) ; %
-  \draw[-{latex[length=1.5mm]}, shorten >=12pt, shorten <=2pt, gray] ($(s-u)+(0.3,-1)$) -- ($(s)+(0.3,-1)$) ; %
+  \draw[-{latex[length=1.5mm]}, shorten >=12pt, shorten <=2pt, gray] ($(u-s)+(0.3,-1)$) -- ($(s)+(0.3,-1)$) ; %
   
 \end{tikzpicture}
 \vskip 0pt
@@ -1150,21 +1150,23 @@ Figure \ref{fig:gaussian-density-gradient-computation-graph} shows a visualisati
     $\textrm{Pa}$ : indices of parent variables to an operation given its index,\\
     $\textrm{Ch}$ : indices to child operations of a variable given its index,\\
     $\lbrace f_i \rbrace_{i=M+1}^N$ : computation graph operations in topological order,\\% $\textrm{Pa}(i) < i \forall i \in \fset{M+1 \dots N}$,~
-    $\lbrace \lbrace \partial_j f_i\rbrace_{j \in \textrm{Pa}(i)}\rbrace_{i=M+1}^N$ : operation partial derivatives \acs{wrt} parent variables.
+    $\big\lbrace \lbrace \partial_j f_i\rbrace_{j \in \textrm{Pa}(i)}\big\rbrace_{i=M+1}^N$ : operation partial derivatives \acs{wrt} parent variables.\vspace{0.5mm}
     \Ensure\raggedright
     $x_{N}$ : function output,\\
-    $\lbrace \bar{x}_i \rbrace_{i=1}^{N-1}$ : partial derivatives of output \acs{wrt} intermediate and input variables.
+    $\lbrace \bar{x}_i \rbrace_{i=1}^{M}$ : partial derivatives of function output \acs{wrt} input variables.
 \end{algorithmic}
 \hrule
 \small
 \begin{algorithmic}[1]
-  \For{$i \in \fset{M+1 \dots N}$}
+  \For{$i \in \fset{M+1 \dots N}$} \Comment{Forward pass}
+    \vspace{0.5mm}
     \State $x_i \gets f_i\lpa \lbrace x_j \rbrace_{j \in \textrm{Pa}(i)}\rpa$
   \EndFor
-  \State $\bar{x}_N \gets 1$
+  \State $\bar{x}_N \gets 1$  \Comment{Reverse pass}
   \For{$i \in \fset{N-1 \dots 1}$}
     \State $\bar{x}_i \gets \sum_{j \in \textrm{Ch}(i)} \bar{x}_j \partial_i{f_j}(x_i)$
   \EndFor
+  \State \Return $x_N,~ \lbrace \bar{x}_i \rbrace_{i=1}^{M}$
 \end{algorithmic}
 \end{algorithm}
 
