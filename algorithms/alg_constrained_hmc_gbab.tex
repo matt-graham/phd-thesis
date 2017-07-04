@@ -2,7 +2,7 @@
 \small
     \Require\\
     $\genfunc_{\rvct{x}}$ : observed variable generator function; \\
-    $\phi$ : potential energy function $\phi(\vct{u}) = -\log\rho(\vct{u}) + \frac{1}{2}\log|\jacob{\genfunc_{\vct{x}}}{\vct{u}}\jacob{\genfunc_{\vct{x}}}{\vct{u}}|$;\\
+    $\phi$ : potential energy function $\phi(\vct{u}) = -\log\rho(\vct{u}) + \frac{1}{2}\log|\jacob{\genfunc_{\rvct{x}}}{\vct{u}}\jacob{\genfunc_{\rvct{x}}}{\vct{u}}|$;\\
     $\vct{x}$ : observed data values being conditioned on; \\
     $\vct{u}$ : current chain state (model inputs) with $\Vert\genfunc_{\rvct{x}}(\vct{u}) - \vct{x}\Vert_\infty < \epsilon$;\\% and $\jacob{\genfunc_{\rvct{x}}}{\vct{u}}\vct{p} = \vct{0}$; \\
     %$\varphi$ : cached value of potential energy $\phi$ evaluated at $\vct{u}$ in previous transition;\\

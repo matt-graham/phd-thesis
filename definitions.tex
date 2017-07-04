@@ -17,6 +17,7 @@
 \renewcommand{\left}{\mathopen{}\mathclose\bgroup\originalleft}
 \renewcommand{\right}{\aftergroup\egroup\originalright}
 
+\newcommand{\jacobproddet}[2]{J_{#1}\lpa #2 \rpa}
 \newcommand{\probdens}{\mathsf{p}}
 \newcommand{\probability}{\mathsf{P}}
 %\newcommand{\probdens}{\vvmathbb{p}}
@@ -38,12 +39,12 @@
 \newcommand{\lebm}[1]{
   \ifthenelse { \equal {#1} {1} }
     { \lebesgue }   % if #1 == blank
-    { \lebesgue^{#1} }   % else (not blank)
+    { \lebesgue^{\scriptscriptstyle #1} }   % else (not blank)
 }
 \newcommand{\haum}[1]{
   \ifthenelse { \equal {#1} {} }
     { \hausdorff }   % if #1 == blank
-    { \hausdorff^{#1} }   % else (not blank)
+    { \hausdorff^{\scriptscriptstyle #1} }   % else (not blank)
 }
 \newcommand{\countm}{\#}
 
@@ -52,6 +53,7 @@
 
 \newcommand{\vct}[1]{\boldsymbol{#1}}
 \newcommand{\mtx}[1]{\boldsymbol{#1}}
+\newcommand{\idmtx}{\mathbf{I}}
 %\newcommand{\set}[1]{\mathcal{#1}}
 %\newcommand{\sset}[1]{\mathscr{#1}}
 \newcommand{\set}[1]{\mathit{#1}}
@@ -86,6 +88,7 @@
 %\newcommand{\rvar}[1]{\mathrm{#1}}
 \newcommand{\rvct}[1]{\boldsymbol{\rvar{#1}}}
 \newcommand{\nrm}[1]{\mathcal{N}\lpa #1 \rpa}
+\newcommand{\unif}[1]{\mathcal{U}\lpa #1 \rpa}
 \newcommand{\rng}[2]{\lbr #1 \dots #2 \rbr}
 \newcommand{\expc}[1]{\vvmathbb{E}\lsb #1 \rsb}
 \newcommand{\var}[1]{\vvmathbb{V}\lsb #1 \rsb}

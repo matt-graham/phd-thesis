@@ -875,14 +875,14 @@ As well as allowing representations of mixed graphs with both directed and undir
   \factor[left=of sa] {pr-sa} {\tiny $\mathcal{C}_{\geq 0}(2.5)$} {} {sa} ; %
   \factor[left=of ma] {pr-ma} {\tiny $\nrm{0,1}$} {} {ma} ; %
   \factor[left=of a, xshift=-1mm] {sa_ma-a} 
-    {$\nrm{\rvar{m}_{\rvar{a}}\vct{1},\rvar{s}_{\rvar{a}}^2\mathbf{I}}$} {sa,ma} {a} ; %
+    {$\nrm{\rvar{m}_{\rvar{a}}\vct{1},\rvar{s}_{\rvar{a}}^2\idmtx}$} {sa,ma} {a} ; %
 
   \node[latent, left=of b, xshift=-5mm, yshift=5mm] (sb) {$\rvar{s}_\rvar{b}$} ; %
   \node[latent, left=of b, xshift=-5mm, yshift=-5mm] (mb) {$\rvar{m}_\rvar{b}$} ; %
   \factor[left=of sb] {pr-sb} {\tiny $\mathcal{C}_{\geq 0}(2.5)$} {} {sb} ; %
   \factor[left=of mb] {pr-mb} {\tiny $\nrm{0,1}$} {} {mb} ; %
   \factor[left=of b, xshift=-1mm] {sb_mb-b} 
-    {$\nrm{\rvar{m}_{\rvar{b}}\vct{1},\rvar{s}_{\rvar{b}}^2\mathbf{I}}$} {sb,mb} {b} ; %
+    {$\nrm{\rvar{m}_{\rvar{b}}\vct{1},\rvar{s}_{\rvar{b}}^2\idmtx}$} {sb,mb} {b} ; %
 
 \end{tikzpicture}
 %\vskip 5pt
@@ -908,8 +908,8 @@ A final additional notation used in Figure \ref{fig:hier-lin-regression-factor-g
 %\begin{split}
 %  \pden{\rvct{y},\rvct{a},\rvct{b},\rvar{s},\rvar{s}_{\rvar{a}},\rvar{m}_{\rvar{a}},\rvar{s}_{\rvar{b}},\rvar{m}_{\rvar{b}}}(\vct{y},\vct{a},\vct{b},s,s_a,m_a,s_b,m_b) =\\
 %  \prod_{i=1}^N \lsb \nrm{y_i\gvn \vct{a}[c_i] + \vct{b}\tr\vct{x}_i,s^2} \rsb
-%  \nrm{\vct{a} \gvn m_a\mathbf{1}, s_a^2 \mathbf{I}}
-%  \nrm{\vct{b} \gvn m_b\mathbf{1}, s_b^2 \mathbf{I}}\\
+%  \nrm{\vct{a} \gvn m_a\mathbf{1}, s_a^2 \idmtx}
+%  \nrm{\vct{b} \gvn m_b\mathbf{1}, s_b^2 \idmtx}\\
 %  \mathcal{C}_{\geq 0}\lpa s \gvn 2.5\rpa
 %  \mathcal{C}_{\geq 0}\lpa s_a \gvn 2.5\rpa\nrm{m_a \gvn 0, 1}
 %  \mathcal{C}_{\geq 0}\lpa s_b \gvn 2.5\rpa\nrm{m_b \gvn 0, 1}
@@ -947,7 +947,7 @@ A final additional notation used in Figure \ref{fig:hier-lin-regression-factor-g
 %	\node[latent, left=of a, xshift=-10mm, yshift=-8mm] (na) {$\rvct{n}_\rvar{a}$} ; %
 %    \factor[left=of sa] {pr-sa} {$\mathcal{C}_{\geq 0}(2.5)$} {} {sa} ; %
 %    \factor[left=of ma] {pr-ma} {$\nrm{0,1}$} {} {ma} ; %
-%    \factor[left=of na] {pr-na} {$\nrm{\vct{0},\mtx{I}}$} {} {na} ; %
+%    \factor[left=of na] {pr-na} {$\nrm{\vct{0},\idmtx}$} {} {na} ; %
 %	\op[left=of a, xshift=-2mm] {sa_ma_na-a} 
 %	  {$\rvar{m}_{\rvar{a}} + \rvar{s}_{\rvar{a}} \rvct{n}_{\rvar{a}}$} {sa,ma,na} {a} ; %
 %
@@ -956,7 +956,7 @@ A final additional notation used in Figure \ref{fig:hier-lin-regression-factor-g
 %	\node[latent, left=of b, xshift=-10mm, yshift=-8mm] (nb) {$\rvct{n}_\rvar{b}$} ; %
 %    \factor[left=of sb] {pr-sb} {$\mathcal{C}_{\geq 0}(2.5)$} {} {sb} ; %
 %    \factor[left=of mb] {pr-mb} {$\nrm{0,1}$} {} {mb} ; %
-%    \factor[left=of nb] {pr-nb} {$\nrm{\vct{0},\mtx{I}}$} {} {nb} ; %
+%    \factor[left=of nb] {pr-nb} {$\nrm{\vct{0},\idmtx}$} {} {nb} ; %
 %	\op[left=of b, xshift=-2mm] {sb_mb_nb-b} 
 %	  {\tiny $\rvar{m}_{\rvar{b}} + \rvar{s}_{\rvar{b}}\rvct{n}_{\rvar{b}}$} {sb,mb,nb} {b} ; %
 %\end{tikzpicture}
@@ -1209,7 +1209,7 @@ Like directed graphical models, a directed factor graph naturally specifies a ge
 \State $\rvct{y}_0 \sim \nrm{\vct{\nu},\mtx{\Psi}}$
 \State $\rvct{z} \sim \nrm{\vct{\mu},\mtx{\Sigma}}$
 \For {$t \in \lbr 1 \dots T\rbr$}
-  \State $\rvct{n}_{t-1} \sim \nrm{\vct{0},\mathbf{I}}$
+  \State $\rvct{n}_{t-1} \sim \nrm{\vct{0},\idmtx}$
   \State $\rvct{y}_{t} \gets \rvct{y}_{t-1} + h \, \vct{m}(\rvct{y}_{t-1},\rvct{z}) + \sqrt{h} \, \mtx{S}(\rvct{y}_{t-1},\rvct{z})\rvct{n}_{t-1}$
 \EndFor
 \end{algorithmic}
@@ -1235,7 +1235,7 @@ Like directed graphical models, a directed factor graph naturally specifies a ge
     \op[left=of y\t] {y\s-y\t} 
       {below left:$\begin{aligned}\rvct{y}_{\s} + h \vct{m}(\rvct{y}_{\s},\rvct{z})\\ + \sqrt{h} \mtx{S}(\rvct{y}_{\s},\rvct{z}) \vct{n}_{\s} \end{aligned}$} {y\s} {y\t} ; %
     \node[latent, below=of y\s-y\t, yshift=2mm] (n\s) {$\rvct{n}_{\s}$} ; %
-    \factor[left=of n\s] {pr-n\s} {left:$\nrm{\vct{0},\mathbf{I}}$} {} {n\s} ; %
+    \factor[left=of n\s] {pr-n\s} {left:$\nrm{\vct{0},\idmtx}$} {} {n\s} ; %
     \draw[-] (n\s) -- (y\s-y\t) ; %
   }
   \node[latent, above=of y1-y2, yshift=-2mm] (z) {$\rvct{z}$} ; %
@@ -1562,19 +1562,19 @@ The integration with respect to $\vct{e}_1^\star$ and $\vct{e}_2^\star$ can be p
     \delta\lpa
      \vct{e}_1 - \vct{e}^\star_1 - \vct{d}_1(\vct{x},\vct{y},\vct{m},\vct{t})
     \rpa\,
-    \nrm{\vct{e}^\star_1 \gvn \vct{0},\sigma^2\mathbf{I}}
+    \nrm{\vct{e}^\star_1 \gvn \vct{0},\sigma^2\idmtx}
   \,\dr\vct{e}^\star_1\\
   &\qquad=
-  \nrm{\vct{e}_1 \gvn \vct{d}_1(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\mathbf{I}},
+  \nrm{\vct{e}_1 \gvn \vct{d}_1(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\idmtx},
 \end{split}
 \end{equation}
 and likewise for $\pden{\rvct{e}_2 | \rvct{x},\rvct{y},\rvct{m},\rvct{t}}$
 \begin{equation}\label{eq:odw-e2-gvn-xymt}
   \pden{\rvct{e}_2 | \rvct{x},\rvct{y},\rvct{m},\rvct{t}}(\vct{e}_2\gvn\vct{x},\vct{y},\vct{m},\vct{t})
   =
-  \nrm{\vct{e}_2 \gvn \vct{d}_2(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\mathbf{I}}.
+  \nrm{\vct{e}_2 \gvn \vct{d}_2(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\idmtx}.
 \end{equation}
-%If we define $\rvct{n} = \log \rvct{m}$ and $\rvct{u} = \log \rvct{t}$ then as $\lbrace \rvar{m}_h \rbrace_{h=1}^H$ and $\lbrace \rvar{t}_h \rbrace_{h=1}^H$ have log-normal marginal densities, then $\rvct{n}$ and $\rvct{u}$ will have multivariate normal densities, $\pden{\rvct{n}}(\vct{n}) = \nrm{\vct{n} \gvn \mu_m\vct{1}, \sigma_m^2\mathbf{I}}$ and $\pden{\rvct{u}}(\vct{u}) = \nrm{\vct{u} \gvn \mu_t\vct{1}, \sigma_t^2\mathbf{I}}$.
+%If we define $\rvct{n} = \log \rvct{m}$ and $\rvct{u} = \log \rvct{t}$ then as $\lbrace \rvar{m}_h \rbrace_{h=1}^H$ and $\lbrace \rvar{t}_h \rbrace_{h=1}^H$ have log-normal marginal densities, then $\rvct{n}$ and $\rvct{u}$ will have multivariate normal densities, $\pden{\rvct{n}}(\vct{n}) = \nrm{\vct{n} \gvn \mu_m\vct{1}, \sigma_m^2\idmtx}$ and $\pden{\rvct{u}}(\vct{u}) = \nrm{\vct{u} \gvn \mu_t\vct{1}, \sigma_t^2\idmtx}$.
 %\begin{equation}
 %\begin{split}
 %  &\pden{\rvct{x},\rvct{y},\rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y},\vct{e}_1,\vct{e}_2) = \\
@@ -1587,14 +1587,14 @@ and likewise for $\pden{\rvct{e}_2 | \rvct{x},\rvct{y},\rvct{m},\rvct{t}}$
 %  \\
 %  &\qquad
 %  \iint
-%    \nrm{\vct{n} \gvn \mu_m\vct{1}, \sigma_m^2\mathbf{I}} \, 
-%    \nrm{\vct{u} \gvn \mu_m\vct{1}, \sigma_m^2\mathbf{I}}
+%    \nrm{\vct{n} \gvn \mu_m\vct{1}, \sigma_m^2\idmtx} \, 
+%    \nrm{\vct{u} \gvn \mu_m\vct{1}, \sigma_m^2\idmtx}
 %  \\[-1.5mm]
 %  &\qquad\phantom{\iint}\,
-%    \nrm{\vct{e}_1 \gvn -\vct{d}_1(\vct{x},\vct{y},\exp\vct{n},\exp\vct{u}),\sigma^2\mathbf{I}}\,
+%    \nrm{\vct{e}_1 \gvn -\vct{d}_1(\vct{x},\vct{y},\exp\vct{n},\exp\vct{u}),\sigma^2\idmtx}\,
 %  \\
 %  &\qquad\phantom{\iint}\,
-%    \nrm{\vct{e}_2 \gvn -\vct{d}_2(\vct{x},\vct{y},\exp\vct{n},\exp\vct{u}),\sigma^2\mathbf{I}}
+%    \nrm{\vct{e}_2 \gvn -\vct{d}_2(\vct{x},\vct{y},\exp\vct{n},\exp\vct{u}),\sigma^2\idmtx}
 %  \,\dr\vct{u}\,\dr\vct{n}
 %\end{split}
 %\end{equation}
@@ -1617,12 +1617,12 @@ Rewriting \eqref{eq:odw-e1-e2-x-y-joint-1} in terms of \eqref{eq:odw-e1-gvn-xymt
   \\
   &
   \phantom{~=\iint}~
-    \nrm{\vct{e}_1 \gvn \vct{d}_1(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\mathbf{I}}\,
-    \nrm{\vct{e}_2 \gvn \vct{d}_2(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\mathbf{I}}
+    \nrm{\vct{e}_1 \gvn \vct{d}_1(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\idmtx}\,
+    \nrm{\vct{e}_2 \gvn \vct{d}_2(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\idmtx}
   \\
   &\phantom{~=\iint}~
-    \textrm{LogNorm}\lpa \vct{m} \gvn \mu_m\vct{1}, \sigma_m^2\mathbf{I} \rpa \, 
-    \textrm{LogNorm}\lpa \vct{t} \gvn \mu_m\vct{1}, \sigma_m^2\mathbf{I} \rpa
+    \textrm{LogNorm}\lpa \vct{m} \gvn \mu_m\vct{1}, \sigma_m^2\idmtx \rpa \, 
+    \textrm{LogNorm}\lpa \vct{t} \gvn \mu_m\vct{1}, \sigma_m^2\idmtx \rpa
   \,\dr\vct{t}\,\dr\vct{m}.
 \end{split}
 \end{equation}
@@ -1981,10 +1981,10 @@ Parameters and latent variables are sometimes used distinctly, in particular def
   \node[obs, right=2.5 of d2i] (e2i) {$\rvct{e}_2^{(i)}$} ; %
   \node[factor, left=of e1i, xshift=-7mm] (d1i_sigma-e1i) {} ; %
   \node[align=left, anchor=south west, xshift=-2mm, yshift=-1mm] (lab-d1i_sigma-e1i) 
-    at (d1i_sigma-e1i.north) {\tiny $\nrm{\rvct{d}_1^{(i)}\kern-2pt,\upsigma^2\mathbf{I}}$}; %
+    at (d1i_sigma-e1i.north) {\tiny $\nrm{\rvct{d}_1^{(i)}\kern-2pt,\upsigma^2\idmtx}$}; %
   \node[factor, left=of e2i, xshift=-7mm] (d2i_sigma-e2i) {} ; %
   \node[align=left, anchor=south west, xshift=-2mm, yshift=-1mm] (lab-d2i_sigma-e2i) 
-    at (d2i_sigma-e2i.north) {\tiny $\nrm{\rvct{d}_2^{(i)}\kern-2pt,\upsigma^2\mathbf{I}}$}; %
+    at (d2i_sigma-e2i.north) {\tiny $\nrm{\rvct{d}_2^{(i)}\kern-2pt,\upsigma^2\idmtx}$}; %
   \node[const, above=0 of yi, yshift=-2mm] (dummyyi) {} ; %
   \plate {training} {(mi)(ti)(mum_sigmam-mi)(mut_sigmat-ti)(xi)(dummyyi)(d1i)(d2i)(e1i)(e2i)} {$i \in \fset{1 \,...\, N_{\textrm{train}}}$} ; %
   
@@ -2014,10 +2014,10 @@ Parameters and latent variables are sometimes used distinctly, in particular def
   \node[obs, right=2.5 of d2j] (e2j) {$\rvct{e}_2^{(j)}$} ; %
   \node[factor, left=of e1j, xshift=-7mm] (d1j_sigma-e1j) {} ; %
   \node[align=left, anchor=north west, xshift=-2mm, yshift=1mm] (lab-d1j_sigma-e1j) 
-    at (d1j_sigma-e1j.south) {\tiny $\nrm{\rvct{d}_1^{(j)}\kern-2pt,\upsigma^2\mathbf{I}}$}; %
+    at (d1j_sigma-e1j.south) {\tiny $\nrm{\rvct{d}_1^{(j)}\kern-2pt,\upsigma^2\idmtx}$}; %
   \node[factor, left=of e2j, xshift=-7mm] (d2j_sigma-e2j) {} ; %
   \node[align=left, anchor=north west, xshift=-2mm, yshift=1mm] (lab-d2j_sigma-e2j) 
-    at (d2j_sigma-e2j.south) {\tiny $\nrm{\rvct{d}_2^{(j)}\kern-2pt,\upsigma^2\mathbf{I}}$}; %
+    at (d2j_sigma-e2j.south) {\tiny $\nrm{\rvct{d}_2^{(j)}\kern-2pt,\upsigma^2\idmtx}$}; %
   \node[const, above=0 of yj, yshift=-4mm] (dummyyj) {} ; %
   \plate {training} {(mj)(tj)(mum_sigmam-mj)(mut_sigmat-tj)(dummyyj)(d1j)(d2j)(e1j)(e2j)(lab-xj-yj_mj_tj-d2j)(lab-d2j_sigma-e2j)} {$j \in \fset{N_{\textrm{train}} + 1 \,...\, N_{\textrm{train}} + N_{\textrm{test}}}$} ; %
   

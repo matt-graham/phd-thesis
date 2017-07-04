@@ -165,20 +165,59 @@
 \definecolor{s4}{RGB}{152, 78, 163}
 \definecolor{s5}{RGB}{255, 127, 0}
 
+%\newtheoremstyle{thmstyle}
+%  {\topsep} % Space above
+%  {\topsep} % Space below
+%  {} % Body font
+%  {} % Indent amount
+%  {\bfseries} % Theorem head font
+%  {:} % Punctuation after theorem head
+%  {.5em} % Space after theorem head
+%  {} % Theorem head spec (can be left empty, meaning `normal')
+  
 \newtheoremstyle{thmstyle}
-  {4pt} % Space above
-  {4pt} % Space below
-  {} % Body font
+  {\parskip} % Space above
+  {\parskip} % Space below
+  {\itshape} % Body font
   {} % Indent amount
-  {\bfseries} % Theorem head font
+  {} % Theorem head font
   {:} % Punctuation after theorem head
   {.5em} % Space after theorem head
-  {} % Theorem head spec (can be left empty, meaning `normal')
+  {\spacedlowsmallcaps{#1}~{\libertinePOsF\textsc{\MakeTextLowercase{#2}}}\thmnote{~(#3)}} % Theorem head spec (can be left empty, meaning `normal')
 
 \theoremstyle{thmstyle} 
-\newtheorem*{theorem}{Theorem}
-\newtheorem*{corollary}{Corollary}
-\newtheorem*{proposition}{Proposition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{proposition}{Proposition}
+\numberwithin{theorem}{chapter}
+\numberwithin{corollary}{chapter}
+\numberwithin{proposition}{chapter}
+
+\newtheoremstyle{defstyle}
+  {\parskip} % Space above
+  {} % Space below
+  {\itshape} % Body font
+  {} % Indent amount
+  {} % Theorem head font
+  {:} % Punctuation after theorem head
+  {.5em} % Space after theorem head
+  {\spacedlowsmallcaps{#1}~{\libertinePOsF\textsc{\MakeTextLowercase{#2}}}\thmnote{~(#3)}} % Theorem head spec (can be left empty, meaning `normal')
+
+%\newtheoremstyle{defstyle}
+%{\topsep}{\topsep}%
+%{}{}%
+%{\bfseries}{}
+%{\newline}
+%{%
+%  \rule{\textwidth}{0.4pt}\\*%
+%  \thmname{#1}~\thmnumber{#2}\thmnote{\ -\ #3}.\\*[-1.5ex]%
+%  \rule{\textwidth}{0.4pt}
+%}%
+
+\theoremstyle{defstyle}
+
+\newtheorem{definition}{Definition}
+\numberwithin{definition}{chapter}
 
 \usepackage{tikz}
 \usetikzlibrary{bayesnet,arrows,arrows.meta,calc,positioning}

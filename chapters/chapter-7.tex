@@ -1,79 +1,343 @@
-\chapter{Differentiable generative models}\label{ch:differentiable-generative-models}
+\chapter{\mbox{Implicit generative models}}\label{ch:differentiable-generative-models}
 
-There has been a long and growing interest in probabilistic models which are defined \emph{implicitly} \citep{beaumont2002approximate,gourieroux1993indirect,diggle1984monte} - that is where we can generate random values for the latent and observed variables in the model, but we cannot tractably evaluate the probability distribution of those variables and more specifically its density with respect to an appropriate base measure. This is in contrast to the more typical case where the probabilistic model of interest is defined by specifying an explicit (potentially unnormalised) probability density across latent and observed variables, often via a graphical model such as a Bayesian network \citep{pearl1988probabilistic}, Markov random field \citep{kindermann1980markov} or factor graph \citep{frey2002extending}. 
+In the approximate inference methods considered in Chapters \ref{ch:approximate-inference} and \ref{ch:hamiltonian-monte-carlo} a unifying element was the requirement to be able to evaluate an explicit probability density function $\tgtdens$ for the target distribution of interest $\tgtprob$. In many inference problems $\tgtdens$ is only evaluable up to to an unknown normalising constant $Z$ however both sampling and optimisation based inference approaches are generally able to cope with this ambiguity, and in some cases such as importance sampling are able to estimate $Z$ itself. There are however many probabilistic models specified by a generative process in which the density of the model variables is defined only \emph{implicitly} \citep{beaumont2002approximate,gourieroux1993indirect,diggle1984monte} - that is we can generate sample values for the variables in the model, but we cannot tractably evaluate the probability distribution of those variables or more specifically its density with respect to an appropriate base measure. 
 
-%The lack of an explicit probability density function over the variables of interest in these models makes application of traditional approximate inference approaches such as Markov chain Monte Carlo and variational inference methods challenging.
+Although models without an explicit density function are challenging to work with from an inferential perspective, they are ubiquitous in science and engineering in the form of probabilistic models defined by the computational simulation of a physical system. Typically simulator models are specified procedurally in code with any stochasticity introduced by drawing values from a pseudo-random number generator. %We previously briefly discussed an example of a simulator model based on the approximate integration of a set of \acp{SDE} when considering graphical models in Section \ref{subsec:simulators} of Chapter \ref{ch:probabilistic-modelling}. 
+The complexity of the function mapping from random inputs to simulated outputs typically makes calculating an explicity density on the outputs at best non-trivial. In the common case where the simulator outputs cannot be expressed as an injective function of (potentially a subset of) the random inputs the density on the model variables will usually not have a closed form expression.
+%Often the function mapping from random inputs to outputs in a simulator model will be non-injective. This means that analytically computing a probability density on the simulator outputs is usually intractable as it involves the generalised change of variables formula \eqref{eq:change-of-variables-vector} introduced in in Chapter \ref{ch:probabilistic-modelling} \S \ref{subsec:change-of-variables} which requires finding the pre-image of an output point in the input space and integrating across this set, which will typically be a complex implicitly defined non-linear manifold.
 
-Although implicit models are challenging to work with from an inferential perspective, they are ubiquitous in science and engineering in the form of probabilistic models defined by the computational simulation of a physical system. Typically simulator models are specified procedurally in code with any stochasticity introduced by drawing values from the pseudo-random number generator of a numerical computing library. The complexity of the function mapping from random inputs to simulated outputs means that computing a probability density on the outputs is typically intractable.
+There has also been a long history in statistics of using distributions defined by their \emph{quantile function} (i.e. the inverse of their \ac{CDF}) \citep{hastings1947low,tukey1960practical} from which we can easily generate independent samples using the inverse transform sampling method discussed in Chapter \ref{ch:approximate-inference}. Although these \emph{quantile distributions} are often able to offer very flexible descriptions of shape of a distribution \citep{gilchrist2000statistical} 
+often the quantile functions will not have an analytic inverse meaning their \ac{CDF} and so density function cannot be evaluated analytically. Generative models in which the density of the model variables is only defined implicitly have also been the subject of substantial recent interest in the machine learning community due to the development of effective training approaches which do not require evaluation of a density on the model variables \citep{li2015generative,dziugaite2015training,goodfellow2014generative}, with there being significant gains in modelling flexibility by dropping the requirement to be able to compute an explicit density function \citep{mohamed2016learning,tran2017deep}.
 
-Recently implicit generative models have also been the subject of much interest in the machine learning community due to the significant gains in modelling flexibility offered by dropping the requirement to be able to compute an explicit density function on model outputs \citep{mohamed2016learning,tran2017deep}. For instance \acp{GAN} \citep{goodfellow2014generative} have become a popular approach in unsupervised machine learning for training models which can generate plausible simulated data points, typically images, given a large collection of data points to learn from. The \emph{generator} of a \ac{GAN} takes the form of differentiable network which receives as input a vector of values drawn from a simple distribution such as the standard normal and outputs for example a generated image. The generator function will typically be non-injective however, meaning that we cannot tractably evaluate the probability density of the generated outputs as this requires integrating over the (unknown) set of input points consistent with a particular output. %This makes it difficult to for example to directly use such models to make inferences about plausible in-paintings for missing regions of an image given observed values of surrounding pixels.
+%, with a second \emph{encoder} model used as an inference network which given an observed data point outputs the parameters of a variational approximation to the corresponding posterior density under the decoder model $\pden{\rvct{h}|\rvct{y}}$. The encoder and decoder network 
 
-In this article we will consider methods for using a generative model to make inferences about unobserved variables given known values for a set of observed variables the model. For example given a generative model of images we may wish to infer plausible in-paintings of an image region given knowledge of the surrounding pixel values. Similarly given a simulator model of a physical process and generator of model parameters which we believe are reasonable a priori, we may wish to infer our posterior beliefs about the parameters given the model and observations of the process.
-
-A lack of an explicit density on the variables in a generative model makes it non-trivial to apply approximate inference approaches such as \ac{MCMC}. This has spurred the development of inference approaches specifically targeted at implicit generative models such as indirect inference \citep{gourieroux1993indirect} and \ac{ABC} \citep{beaumont2002approximate}, with their use particularly prevalent in respectively econometrics and computational biology.
+%The focus of this chapter will therefore be methods for using generative models where we do not necessarily have access to an explicit density on the model variables, to make inferences about unobserved variables given known values for a set of observed variables. 
+The focus of this chapter will therefore be methods for performing approximate inference in generative models where we do not necessarily have access to an explicit density on the model variables. 
+For example given a generative model of images we may wish to infer plausible in-paintings of an image region given knowledge of the surrounding pixel values. Similarly given a simulator model of a physical process and generator of model parameters which we believe are reasonable a priori, we may wish to infer our posterior beliefs about the parameters given the model and observations of the process. A lack of an explicit density function makes it non-trivial to directly apply the approximate inference approaches that have been discussed so far in this thesis. This has spurred the development of inference approaches specifically targeted at implicit generative models such as indirect inference \citep{gourieroux1993indirect} and \ac{ABC} \citep{beaumont2002approximate}.%, with their use particularly prevalent in respectively econometrics and computational biology.
  %Both \ac{ABC} and indirect inference methods have been successfully applied to perform inference in a range of complex probabilistic models, with their use particularly prevalent in respectively population genetics and econometrics.
+ 
+%This approximation that the simulated observations are only close but not equal to the observed data makes the inference problem more tractable, but also changes the effective model inference is being performed on and so.
+ 
+In both indirect inference and \ac{ABC}, inferences about plausible values of the unobserved variables are made by computing distances between simulated observed variables and observed data. At a qualitative level, values of the unobserved variables associated with simulated observations that are `near' to the data are viewed to be more plausible. This approximation that the simulated observations are only close but not equal to the observed data makes the inference problem more tractable, but also biases the inference output. Further simple distance measures tend to become increasingly less informative as the dimensionality of a space increases, making it challenging to use these approaches perform inference in models with large numbers of unobserved variables. This motivates the use of dimensionality reduction techniques to project the observations to a set of lower-dimensional summary statistics. Although through careful choice of summaries this approach can yield good results, identifying informative summaries is challenging and except for rare cases where sufficient statistics are available any reduction to summary statistics will entail a loss of information about the unobserved variables compared to conditioning on all observations.
 
-In both indirect inference and \ac{ABC}, inferences about plausible values of the unobserved variables are made by computing distances between simulated observed variables and data. At a qualitative level, values of the unobserved variables associated with simulated observations that are `near' to the data are viewed to be more plausible. This approximation that the simulated observations are only close but not equal to the observed data makes the inference problem more tractable, but also biases the inference output. Further distance measures tend to become increasingly less informative as the dimensionality of a space increases, making it difficult to use these approaches perform inference in models with large numbers of unobserved variables \citep{marin2012approximate}.
+We make two main contributions in this chapter. First we show that by reparameterising the approximate conditional expectations estimated in \ac{ABC} approaches to inference in generative models it is possible to express them in the form of an expectation of a function of a random vector variable distributed according to a density which we can evaluate up to a normalising constant. This makes it possible to apply efficient general purpose approximate inference methods such as slice sampling and Hamiltonian Monte Carlo to implicit generative models without the need to develop dedicated \ac{ABC} variants. It is often feasible to apply these methods when conditioning on all observations without the need to reduce dimensionality using summary statistics.
 
-In this article we will describe a \ac{HMC} \citep{duane1987hybrid,mackay2003information} method for performing inference in important sub-class of implicitly-defined generative models where the mapping from random inputs to the model to simulated observed and latent variables is differentiable. Unlike existing approaches, this method allows inference to be performed by conditioning the observed variables in the model to be exactly equal to data values. This means that subject to the usual conditions on the Markov chain being irreducible and aperiodic, asymptotically exact inference can be performed: conditional expectation estimates computed using the method will converge in the asymptotic limit to their true values. Further by exploiting gradient information the approach is able to perform efficient inference in models with large numbers of unobserved variables and conditioning on all observed data rather than low-dimensional summaries.
+Secondly for a restricted class of generative models we term differentiable generative models and which we define in a following section, we show that it is possible to express exact conditional expectations under the model as integrals against a density we can evaluate pointwise across an implicitly defined manifold. We use this to propose a novel constrained \ac{HMC} method for performing inference in differentiable generative models. Unlike \ac{ABC} approaches, this method allows inference to be performed by conditioning the observed variables in the model to be within arbitary small distances of the data values while remaining computationally tractable.
+
+%across an implicitly defined manifold gainst a density we can evaluate pointwise with respect to the Hausdorff measure for an implicitly defined manifold
+
+%We will describe a novel \ac{HMC} method for performing inference in important sub-class of implicitly-defined generative models where the mapping from random inputs to the model to simulated observed and latent variables is differentiable. Unlike existing approaches, this method allows inference to be performed by conditioning the observed variables in the model to be within arbitary small distances of the data values while remaining computationally tractable. Further by exploiting gradient information the approach is able to perform efficient inference in models with large numbers of unobserved variables and conditioning on all observed data rather than low-dimensional summaries as is common in \ac{ABC} approaches.
 
 
-\section{Problem definition}\label{sec:problem-definition}
+% This means that subject to the conditions of the Markov chain being irreducible and aperiodic as discussed in Chapter \ref{ch:approximate-inference} Section \ref{subsec:markov-chain-monte-carlo}, asymptotically exact inference can be performed: conditional expectation estimates computed using the method will converge in the asymptotic limit to their true values.
 
-Let $(\set{S}, \sset{E}, \probability)$ be a probability space, and $(\set{X}, \sset{G})$, $(\set{Z}, \sset{H})$ be two measurable spaces. We denote the vector of observed random variables in the model of interest as $\rvct{x} : \set{S} \to \set{X}$ and the vector of unobserved random variables that we wish to infer $\rvct{z} : \set{S} \to \set{Z}$. Our objective is to be able to compute conditional expectations of measurable functions $f : \set{Z} \to \set{F}$ of the unobserved variables given known values for the observed variables $\rvct{x}$, where the conditional expectation $\expc{f(\rvct{z}) \gvn \rvct{x}\,} : \set{X} \to \set{F}$ is defined as a measurable function satisfying
-\begin{equation}\label{eq:conditional-expectation-definition}
-  \int_{\set{A}}
-    \expc{f(\rvct{z}) \gvn \rvct{x} = \vct{x}} 
-  \,\dr\prob{\rvct{x}}(\vct{x}) =
-  \int_{\set{A} \times \set{Z}}
-    f(\vct{z}) 
-  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z})
-  \qquad\forall\set{A} \in \sset{G},
+\section{Differentiable generator networks}
+
+\begin{figure}[!t]
+\centering
+\begin{subfigure}[t]{.35\linewidth}
+\centering
+\begin{tikzpicture}
+  \node[latent] (h) {$\rvct{h}$} ; %
+  \factor[left=of h] {pr-h} {$\nrm{\vct{0},\idmtx}$} {} {h} ; %
+  \node[latent, right=1 of h] (y) {$\rvct{y}$} ; %
+  \op[right=of h] {h-y} {$\vctfunc{g}_{\vct{\theta}}$} {h} {y} ; %
+\end{tikzpicture}
+\caption{\acs{GAN} generator}\label{sfig:gan-generator}
+\end{subfigure}%
+\begin{subfigure}[t]{.55\linewidth}
+\centering
+\begin{tikzpicture}
+  \node[latent] (h) {$\rvct{h}$} ; %
+  \factor[left=of h] {pr-n} {$\nrm{\vct{0},\idmtx}$} {} {h} ; %
+  \node[latent, right=2.5 of h] (y) {$\rvct{y}$} ; %
+  \factor[left=of y, xshift=-7mm] {h-y} {$\nrm{\vctfunc{m}_{\vct{\theta}}(\rvct{h}), \diag\vctfunc{s}_{\vct{\theta}}(\rvct{h})^2}$} {h} {y} ; %
+\end{tikzpicture}
+\caption{Gaussian \acs{VAE} decoder}\label{sfig:vae-decoder-marginalised}
+\end{subfigure}%
+\\[3mm]
+\begin{subfigure}[t]{.8\linewidth}
+\centering
+\begin{tikzpicture}
+  \node[latent] (h) {$\rvct{h}$} ; %
+  \factor[left=of h] {pr-h} {$\nrm{\vct{0},\idmtx}$} {} {h} ; %
+  \node[latent, right=1.5 of h, yshift=8mm] (m) {$\rvct{m}$} ; %
+  \node[latent, right=1.5 of h] (s) {$\rvct{s}$} ; %
+  \op[left=of s] {h-s} {$\vctfunc{s}_{\vct{\theta}}(\rvct{h})$} {h} {s} ; %
+  \op[left=of m] {h-m} {$\vctfunc{m}_{\vct{\theta}}(\rvct{h})$} {h} {m} ; %
+  \node[latent, right=1.5 of h, yshift=-8mm] (n) {$\rvct{n}$} ; %
+  \factor[left=of n] {pr-n} {$\nrm{\vct{0},\idmtx}$} {} {n} ; %
+  \node[latent, right=1.5 of s] (y) {$\rvct{y}$} ; %
+  \op[left=of y] {n_m_s-y} {$~~~\rvct{m} + \rvct{s}\odot\rvct{n}$} {n,m,s} {y} ; %
+\end{tikzpicture}
+\caption{Reparameterised Gaussian \acs{VAE} decoder}\label{sfig:vae-decoder}
+\end{subfigure}%
+\caption[Differentiable generator network factor graphs.]{Example factor graphs for the generator of a \ac{GAN} and decoder of a \ac{VAE}. \subref{sfig:gan-generator} The generator for a \ac{GAN} with a standard normal distribution on the hidden code $\rvct{h}$, this mapped through a differentiable network $\vctfunc{g}_{\vct{\theta}}$, to generate the simulated output vector $\rvct{y}$. \subref{sfig:vae-decoder-marginalised} The decoder of a Gaussian \ac{VAE}. Again a hidden code vector $\rvct{h}$ with a standard normal distribution is used, differentiable network functions $\vctfunc{m}_{\vct{\theta}}$ and $\vctfunc{s}_{\vct{\theta}}$ then mapping from this code vector to mean and diagonal covariance parameters of a multivariate normal distribution on the output vector $\rvct{y}$. \subref{sfig:vae-decoder} The same \ac{VAE} decoder model as \subref{sfig:vae-decoder-marginalised}, with in this case the conditional factor on the outputs $\rvct{y}$ given hidden code $\rvct{h}$ reparameterised in terms of a deterministic transformation of a standard normal vector $\rvct{n}$.}
+\label{fig:gan-and-vae-factor-graphs}
+\end{figure}
+
+We will first briefly review two common approaches to specifying generative models using differentiable networks\footnote{We will follow the suggestion of \citep{zadeh2016twitter} and refer to what is typically termed a neural network as a differentiable network- i.e. a differentiable parametric function formed by interleaving `layers' of affine transformations and elementwise non-linearities. This highlights the key property of differentiability and avoids conflation with biological neural networks.}, \acfp{GAN} \citep{goodfellow2014generative} and \acfp{VAE} \citep{kingma2013auto,rezende2014stochastic}. Although the methods using for training these models differ significantly, their generative component have the same form of a function, specified by a differentiable network, which takes as input a vector of random variables from a known distribution and outputs a generated sample from an implicitly defined distribution. The overarching term \emph{differentiable generator networks} has been suggested for generative models with this form \citep{goodfellow2016deep}. We will use \ac{VAE} models in some of the later experiments in this chapter so this material is partly to provide the necessary background for our description of the models used in those experiments, however more broadly the structure of the generative models described here was a key inspiration for the ideas described in this chapter.
+
+%\marginpar{The training procedure for \acp{GAN} is a minimax game between the generator and a discriminator which predicts whether a vector is a data point or a generator output. The generator objective is to maximise discriminator uncertainty while the discriminator is trained to minimises its uncertainty.}
+\acp{GAN} have become a popular approach in unsupervised machine learning for training models which can generate plausible simulated data points, typically images, given a large collection of data to learn from. The training procedure for \acp{GAN} is posed as a minimax game between a \emph{generator function}, a differentiable network $\vctfunc{g}_{\vct{\theta}}$ which receives as input a vector of values $\rvct{h}$ drawn from a simple known distribution such as the standard normal and outputs a simulated data point $\rvct{y} = \vctfunc{g}_{\vct{\theta}}(\rvct{h})$, and an adversarial \emph{discriminator function} $\vctfunc{d}_{\vct{\phi}}$, which predicts whether a presented vector input is a simulated or real data point drawn from the training data.  Training proceeds by updating the generator parameters $\vct{\theta}$ to maximise the expected discriminator uncertainty, while the discriminator parameters $\vct{\phi}$ are updated to minimise the expected discriminator uncertainty.
+
+Although there have been many variants proposed to this outlined training procedure, most \ac{GAN} models retain the same basic structure for the generator, which is visualised as a factor graph in Figure \ref{sfig:gan-generator}. While $\pden{\rvct{h}}$ is known, as $\rvct{y}$ is a deterministic transformation of $\rvct{h}$ there is not a well-defined joint density on $\rvct{h}$ and $\rvct{y}$. If the Jacobian $\pd{\vctfunc{g}_{\vct{\theta}}}{\vct{h}}$ is full row-rank $\prob{\rvct{h}}$-almost everywhere we can in theory apply the change of variable formulae discussed in Chapter \ref{ch:probabilistic-modelling} to express a density $\pden{\rvct{y}}$ for the generated outputs in terms of $\pden{\rvct{h}}$ and $\pd{\vctfunc{g}_{\vct{\theta}}}{\vct{h}}$. The generator function will typically be non-injective however and so the generalised change of variables formula \eqref{eq:change-of-variables-vector} is required which involves finding the pre-image of an output point in the input space and integrating across this set, which will typically be a complex implicitly-defined non-linear manifold. This means even if it exists, analytically computing $\pden{\rvct{y}}$ is usually intractable and often in practice the requirement on the rank of $\pd{\vctfunc{g}_{\vct{\theta}}}{\vct{h}}$ is not be met as typically the dimension of $\rvct{h}$ is less than that of $\rvct{y}$.
+
+%, meaning that we cannot tractably evaluate the probability density $\pden{\rvct{y}}$ of the generated outputs.
+
+%and a discriminator which predicts whether a vector is a data point or a generator output. The generator objective is to maximise discriminator uncertainty while the discriminator is trained to minimises its uncertainty.
+
+%The \emph{generator} of a \ac{GAN} takes the form of differentiable network $\vctfunc{g}_{\vct{\theta}}$  which receives as input a vector of values $\rvct{h}$ drawn from a simple distribution such as the standard normal and outputs $\rvct{y} = \vctfunc{g}_{\vct{\theta}}(\rvct{h})$ corresponding to for example a generated image. This structure is shown as a factor graph in Figure \ref{sfig:gan-generator}. Although $\pden{\rvct{h}}$ is known, the generator function $\vctfunc{g}_{\vct{\theta}}$ will typically be non-injective. This means that analytically computing a probability density $\pden{\rvct{y}}$ on the generator outputs is usually intractable as it involves the generalised change of variables formula \eqref{eq:change-of-variables-vector} introduced in in Chapter \ref{ch:probabilistic-modelling} \S \ref{subsec:change-of-variables} which requires finding the pre-image of an output point in the input space and integrating across this set, which will typically be a complex implicitly-defined non-linear manifold.
+
+%A \ac{GAN} generates simulated data points by mapping vectors of variables drawn from a simple known distribution such as the standard normal through a differentiable network\footnote{We will follow the suggestion of \citep{zadeh2016twitter} and refer to what is typically termed a neural network as a differentiable network- i.e. a differentiable parametric function formed by interleaving affine transformation and elementwise non-linearities. This highlights the key property of differentiability and avoids conflation with biological neural networks.}. Typically mapping is non-injective meaning that again we are unable to compute an explicit density on the simulated outputs.
+
+An alternative generative modelling approach using differentiable networks is the Gaussian \ac{VAE}  or \emph{deep latent Gaussian model} \citep{rezende2014stochastic}. In a Gaussian \ac{VAE} differentiable networks $\vctfunc{m}_{\vct{\theta}}$ and $\vctfunc{s}_{\vct{\theta}}$ are used to generate respectively the mean and per-dimension standard deviations, corresponding to a diagonal covariance matrix, of a conditional normal distribution on the outputs given a hidden code vector $\rvct{h}$ drawn from a known distribution. The simulated output $\rvct{y}$ can then be generated by sampling from the conditional distribution $\nrm{\vctfunc{m}_{\vct{\theta}}(\rvct{h}), \diag\vctfunc{s}_{\vct{\theta}}(\rvct{h})^2}$ given a sampled code vector $\rvct{h}$. Unlike a \ac{GAN} in a Gaussian \ac{VAE} the joint density on $\rvct{y}$ and $\rvct{h}$ is tractable to evaluate, for the case of a normally distributed code vector $\rvct{h}$ corresponding to
+\begin{equation}\label{eq:gaussian-vae-joint-density}
+  \pden{\rvct{y},\rvct{h}}(\vct{y},\vct{h}) = 
+  \nrm{\vct{y} \gvn \vctfunc{m}_{\vct{\theta}}(\vct{h}),\, \diag\vctfunc{s}_{\vct{\theta}}(\vct{h})^2}\,
+  \nrm{\vct{h} \gvn \vct{0},\,\idmtx}.
 \end{equation}
-with this identity uniquely defining $\expc{f(\rvct{z}) \gvn \rvct{x}\,}$ up to $\prob{\rvar{x}}$-null sets.
+Although typically we cannot marginalise out the hidden code vector $\rvct{h}$ to get the marginal density on the generated outputs $\rvct{y}$, having access to the joint density allows the use of standard approximate inference methods when training the model. In particular as suggested by their name \aclp{VAE} are trained using a parametric variational inference approach which uses a second `encoder' differentiable network to encode the parameters of a variational approximation to the posterior density $\pden{\rvct{h}|\rvct{y}}$, with a lower bound on the log joint density of the data points then maximised with respect to the encoder and decoder network parameters. Once a \ac{VAE} model is trained, the joint density \eqref{eq:gaussian-vae-joint-density} also allows direct application of approximate inference methods such as \acs{MCMC} to infer plausible values for a subset $\rvct{y}_1$ of the decoder generated outputs $\rvct{y}$ given observations of the remaining values $\rvct{y}_2$ by jointly inferring $\rvct{y}_1$ and $\rvct{h}$ given $\rvct{y}_2$.
 
-In models where the joint distribution $\prob{\rvct{x},\rvct{z}}$ is specified by an explicit density $\pden{\rvct{x},\rvct{z}}$ with respect to a product measure $\mu_{\rvct{x}} \times \mu_{\rvct{z}}$, then we have the standard result that the conditional expectation can be expressed as
+By reparameterising the normal conditional factor $\pden{\rvct{y}|\rvct{h}}$ in \eqref{eq:gaussian-vae-joint-density} as a deterministic transformation $\rvct{y} = \vctfunc{m}_{\vct{\theta}}(\rvct{h}) + \vctfunc{s}_{\vct{\theta}}(\rvct{h}) \odot \rvct{n}$ where $\rvct{n}$ is a vector of standard normal variables we can express the generative process specified by the decoder of a \ac{VAE} similarly to that of a \ac{GAN} by considering the generator to be $\vctfunc{g}_{\vct{\theta}}(\rvct{h},\rvct{n}) = \vctfunc{m}_{\vct{\theta}}(\rvct{h}) + \vctfunc{s}_{\vct{\theta}}(\rvct{h}) \odot \rvct{n}$ with both $\rvct{h}$ and $\rvct{n}$ as inputs. These two parameterisations of a \ac{VAE} decoder are shown as factor graphs in Figures \ref{sfig:vae-decoder-marginalised} and \ref{sfig:vae-decoder}. 
+
+This definition of the `generator' corresponding to a \ac{VAE} decoder is helpful when using it as a building block in a larger generative model where it is composed with other functions. When composing together several generator `modules' like this, even if we are able to evaluate a density on the variables in an individual module it may not be possible to evaluate a density on the variables of interest in the overall model. However by defining each module in the standard form of a differentiable function from input variables to generated outputs, the overall model retains the same form allowing us to build up more complex models and still be able to apply the same inference methods. We will see an application of this idea in an experiment later in this chapter on inferring three-dimensional poses from two-dimensional projections.
+
+%Although the methods using for training these models differ significantly, the generative component of the trained models have similar forms. The overarching term \emph{differentiable generator networks} has been suggested for model \citep{goodfellow2016deep}
+
+%\section{Problem definition}\label{sec:problem-definition}
+\section{Generative models as transformations}\label{sec:generative-models-as-transformations}
+
+
+In the preceding section we saw that the generative process of both \ac{GAN} and \ac{VAE} models can be described as a transformation of a vector of random variables drawn from a known distribution. This formulation of a generative model in fact extends beyond these machine learning examples. Any probabilistic model that we can programmatically generate values from can be expressed in the form of a deterministic function which takes as input a (possibly variable length) vector of random inputs sampled from a known distribution. This observation just corresponds to stating that we can track all of the calls to a pseudo-random number generator in a program, and that given the values sampled from the random number generator all of the operations then performed by the program are deterministic\footnote{For the purposes of clarity of exposition we consider the outputs of the pseudo-random number generator as truly random, even though in reality as we saw in Chapter \ref{ch:approximate-inference} they are deterministically computed.}.
+
+To formalise this intuition we first introduce some notation. Let $(\set{S}, \sset{E}, \probability)$ be a probability space, and $(\set{X}, \sset{G})$, $(\set{Z}, \sset{H})$ be two measurable spaces. We denote the vector of observed random variables in the model of interest as $\rvct{x} : \set{S} \to \set{X}$ and the vector of unobserved random variables that we wish to infer $\rvct{z} : \set{S} \to \set{Z}$. Our objective is to be able to compute conditional expectations $\expc{f(\rvct{z}) \gvn \rvct{x}\,} : \set{X} \to \set{F}$ of arbitrary measurable functions $f : \set{Z} \to \set{F}$ of the unobserved variables given known values for the observed variables $\rvct{x}$. %We assume that we cannot necessarily evaluate a density $\pden{\rvct{x},\rvct{z}}$ on the model variables but that we can generate $(\rvct{x},\rvct{z})$ pairs. 
+We now give a concrete definition for what we will consider as constituting a generative model for $\rvct{x}$ and $\rvct{z}$.
+
+\begin{definition}[Generative model]\label{def:generative-model}
+Let $(\set{U},\sset{F})$ be a measurable space and $\rvct{u}: \set{S} \to \set{U}$ a random vector taking on values in this space. We require that $\prob{\rvct{u}}$ has a density $\rho$ that we can evaluate with respect to a base measure $\mu$ and that we can generate independent samples from $\prob{\rvct{u}}$. Then if $\genfunc_{\rvct{x}} : \set{U} \to \set{X}$ and $\genfunc_{\rvct{z}} : \set{U} \to \set{Z}$ are measurable functions such that
 \begin{equation}
-  \expc{f(\rvct{z}) \gvn \rvct{x} = \vct{x}} =
-  \frac{1}{\pden{\rvct{x}}(\vct{x})} 
-  \int_{\set{Z}} f(\vct{z}) \,\pden{\rvct{x},\rvct{z}}(\vct{x},\vct{z}) 
-  \,\dr\mu_{\rvct{z}}(\vct{z})
-  \qquad \forall \vct{x} \in \set{X} : \pden{\rvct{x}}(\vct{x}) > 0.
+  \rvct{x}(s) = \genfunc_{\rvct{x}}\circ\rvct{u}(s)
+  \quad\textrm{and}\quad
+  \rvct{z}(s) = \genfunc_{\rvct{z}}\circ\rvct{u}(s)
+  \quad \forall s \in \set{S}.
 \end{equation}
-Although we typically cannot analytically evaluate this integral or the marginal density $\pden{\rvct{x}}(\vct{x})$, having access to the joint density $\pden{\rvct{x},\rvct{z}}$ is sufficient to allow us to apply approximate methods such as \ac{MCMC} and variational inference to estimate  conditional expectations. In this article we will consider the problem of computing conditional expectations in models where we can generate samples from the joint distribution $\prob{\rvct{x},\rvct{z}}$ but we cannot evaluate the joint density $\pden{\rvct{x},\rvct{z}}$.% and so cannot directly apply standard approximate inference methods. 
+we define $(\set{U},\sset{F}\kern-2pt,\rho,\mu,\genfunc_{\rvct{x}},\genfunc_{\rvct{z}})$ as a generative model for $\rvct{x}$ and $\rvct{z}$. We call $(\set{U},\sset{F})$ the \emph{input space} of the generative model, $(\set{X},\sset{G})$ the \emph{observed output space} and $(\set{Z},\sset{G})$ the \emph{unobserved output space}. Further we will refer to $\genfunc_{\rvct{x}}$ as the \emph{generator of $\rvct{x}$} and likewise $\genfunc_{\rvct{z}}$ the \emph{generator of $\rvct{z}$}. The random vector $\rvct{u}$ is the \emph{random inputs} and the density $\rho$ the \emph{input density}.
+\end{definition}
 
-\section[Differentiable generative models]{Differentiable generative models}\label{sec:differentiable-generative-models}
+Intuitively we can consider the input vector $\rvct{u}$ as the representing all of the values drawn from a random number generator in the code of a generative model and the generator functions $\genfunc_{\rvct{x}}$ and $\genfunc_{\rvct{z}}$ as representing all of the operations used to generate values for $\rvct{x}$ and $\rvct{z}$ respectively given values for the random inputs $\rvct{u}$. In some cases the number of random inputs used in the generators will depend on the values of the random inputs themselves, for example if there is a branching statement which depends on a random input and the operations in each branch use different random inputs. Although implementationally more challenging, we can still consider this case within the above framework by uniquely enumerating the random inputs which occur in all possible control flow paths through the generator code and mapping each to a different element in $\rvct{u}$. In interpreted languages, this can be done lazily by detecting if a call to a random number generator object has occured at the same point in a execution trace previously and if so matching to same element in $\rvct{u}$ as used previously otherwise matching to a new `slot' in $\rvct{u}$, which is dynamically extended as needed.
 
-Any probabilistic model that we can programmatically generate values from can be expressed in the form of a deterministic function which takes as input a (possibly infinite length) vector of random inputs sampled from a known distribution. This observation just corresponds to stating that we can track all of the calls to a random number generator in a program, and that given the values sampled from the random number generator all of the operations then performed by the program are deterministic\footnote{For the purposes of clarity of exposition we consider the outputs of the pseudo-random number generator as truly random, even though in reality they are deterministically computed.}.
+%The requirement that we can generate independent samples from $\prob{\rvct{u}}$ will generally mean $\rvct{u}$ will be composed of variables from distributions we can tractably sample using the transformation and rejection sampling approaches discussed in Chapter \ref{ch:approximate-inference}.
 
-To formalise this intuition we introduce some further notation. We define a measurable space $(\set{U},\sset{F})$, which we term the \emph{input space} and an associated vector of input random variables $\rvct{u} : \set{S} \to \set{U}$ which takes on values in this space, with $\rvct{u}$ having a known distribution $\prob{\rvct{u}} = P$. We further define a measurable \emph{joint generator function} $\genfunc_{\rvct{x},\rvct{z}} : \set{U} \to \set{X} \times \set{Z}$ which maps values in the input space to generated observed and unobserved variable vector pairs, i.e. $(\rvct{x},\,\rvct{z}) \equiv \genfunc_{\rvct{x},\rvct{z}}(\rvct{u})$. In analogy to our probability notation we also define \emph{marginal generator functions} $\genfunc_{\rvct{x}} : \set{U} \to \set{X}$ and $\genfunc_{\rvct{z}} : \set{U} \to \set{Z}$ such that we have $\rvct{x} \equiv \genfunc_{\rvct{x}}(\rvct{u})$ and $\rvct{z} \equiv \genfunc_{\rvct{z}}(\rvct{u})$ (the marginal generators simply correspond to considering only one of the outputs of the joint generator). A useful intuition is to consider $(\set{U},\sset{F},P)$ as simply a concrete definition of the probability space which we define the random variables of the model of interest on as opposed the abstract $(\set{S}, \sset{E}, \probability)$ space. 
+In this chapter we will particulalry concentrate on a restricted class of generative models in which we term \emph{differentiable generative models} and define as below.
 
-So far the framework we have described includes any probabilistic model we can programmatically generate $(\rvct{x},\rvct{z})$ samples from and so we use it here as a concrete definition of the term \emph{generative model}. We now define a \emph{differentiable generative model} as the restricted case whereby 
+\begin{definition}[Differentiable generative model]\label{def:differentiable-generative-model}
+Let $(\set{U},\sset{F}\kern-2pt,\rho,\mu,\genfunc_{\rvct{x}},\genfunc_{\rvct{z}})$ be a generative model for $\rvct{x}$ and $\rvct{z}$ as specified in Definition \ref{def:generative-model}. Then if the following conditions are satisfied
 \begin{enumerate}
 \item
 $\set{U} \subseteq \reals^M$, $\sset{F} = \borel(\set{U})$ and $\set{X} \subseteq \reals^{N_{\rvct{x}}}$, $\sset{G} = \borel(\set{X})$, %$\set{Z} \subseteq \reals^{N_{\rvct{z}}}$
 \item
-$P$ has density $\rho : \set{U} \to [0,\infty)$ with respect to $\lebm{M}$, 
+$\prob{\rvct{u}}$ has density $\rho$ with respect to $\mu = \lebm{M}$, 
 \item
-the gradient $\nabla\rho$ exists $P$-almost everywhere, 
+the gradient $\pd{\rho}{\vct{u}}$ exists $\prob{\rvct{u}}$-almost everywhere, 
 \item
-the Jacobian $\jacobian{\genfunc_{\rvct{x}}}$ exists $P$-almost everywhere.
+the Jacobian $\pd{\genfunc_{\rvct{x}}}{\vct{u}}$ exists $\prob{\rvct{u}}$-almost everywhere.
 \end{enumerate}
-The objective of this article is to propose a \ac{MCMC} method for estimating conditional expectations in models meeting these conditions.
+we describe $(\set{U},\sset{F}\kern-2pt,\rho,\mu,\genfunc_{\rvct{x}},\genfunc_{\rvct{z}})$ as a differentiable generative model.
+\end{definition}
 
-These requirements are quite severe: for example they exclude any models with discrete random inputs and those in which branch statements in the generator code introduce discontinuities. This means the proposed method will not for instance be applicable to population genetics models with discrete latent states which are commonly studied with existing \ac{ABC} approaches. However there are still a large class of interesting models which do meet these conditions: for example simulator models based on approximate integration of partial or ordinary differential equations (combined with a stochastic observation model) or \ac{SDE} models without a jump-process component. As differentiability is usually a requirement for training the generative models used in machine learning, many such models will also be contained in this class.
+%So far the framework we have described includes any probabilistic model we can programmatically generate $(\rvct{x},\rvct{z})$ samples from and so we use it here as a concrete definition of the term \emph{generative model}. We now define \emph{differentiable generative models} as the restricted case whereby 
+%\begin{enumerate}
+%\item
+%$\set{U} \subseteq \reals^M$, $\sset{F} = \borel(\set{U})$ and $\set{X} \subseteq \reals^{N_{\rvct{x}}}$, $\sset{G} = \borel(\set{X})$, %$\set{Z} \subseteq \reals^{N_{\rvct{z}}}$
+%\item
+%$P$ has density $\rho : \set{U} \to [0,\infty)$ with respect to $\lebm{M}$, 
+%\item
+%the gradient $\pd{\rho}{\vct{u}}$ exists $P$-almost everywhere, 
+%\item
+%the Jacobian $\pd{\genfunc_{\rvct{x}}}{\vct{u}}$ exists $P$-almost everywhere.
+%\end{enumerate}
 
-A further restriction we will assume in practice is that the Jacobian $\jacobian{\genfunc_{\rvct{x}}}$ is full row-rank $P$-almost everywhere, which also necessarily means that $M \geq N_{\rvct{x}}$ i.e the number of random inputs is at least as many as the number of observed variables that will be conditioned on. In cases where this does not hold the implicitly defined probability distribution $\prob{\rvct{x}}$ will not be absolutely continuous with respect to the Lebesgue measure. Instead $\prob{\rvct{x}}$ will only have support on a sub-manifold of dimension locally equal to the rank of $\jacobian{\genfunc_{\rvct{x}}}$ and conditioning on arbitrary $\vct{x} \in \set{X}$ is not a well-defined operation.
+These requirements are quite severe: for example they exclude any models with discrete random inputs and those in which branch statements in the generator code introduce discontinuities. However there are still a large class of interesting generative models which do meet these conditions: for example models based on approximate integration of partial or ordinary differential equations (combined with a stochastic observation model) or \ac{SDE} models without a jump-process component. As differentiability with respect to model parameters is a requirement for training parametric generative models such as \acp{GAN} and \acp{VAE} using (stochastic) gradient descent, the corresponding generator functions will also usually be differentiable with respect to the random inputs and so fall in to this class.
 
-Although we only required the existence of the input density gradient $\nabla\rho$ and marginal generator Jacobian $\jacobian{\genfunc_{\rvct{x}}}$ above, unsurprisingly this is motivated by the need to evaluate these terms in the proposed method. Although this may seem a limiting requirement for complex models, the availability of efficient general-purpose \ac{AD} libraries \citep{baydin2015automatic} means it is possible to automatically calculate the necessary derivatives given just the code defining the forward functions $\rho$ and $\genfunc_{\rvct{x}}$. For generative models implemented in existing code this will often require re-coding using an appropriate \ac{AD} framework. In some cases however it is possible to use \ac{AD} tools which automatically transform existing source code --- for example given C or Fortran code for a function \emph{Tapenade} \citep{hascoet2013tapenade} can generate code for computing the function's derivatives.
+A further restriction we will require in some cases is that the Jacobian $\pd{\genfunc_{\rvct{x}}}{\vct{u}}$ is full row-rank $P$-almost everywhere, which also necessarily means that $M \geq N_{\rvct{x}}$ i.e the number of random inputs is at least as many as the number of observed variables that will be conditioned on. In cases where this does not hold the implicitly defined probability distribution $\prob{\rvct{x}}$ will not be absolutely continuous with respect to the Lebesgue measure. Instead $\prob{\rvct{x}}$ will only have support on a sub-manifold of dimension locally equal to the rank of $\pd{\genfunc_{\rvct{x}}}{\vct{u}}$ and conditioning on arbitrary $\vct{x} \in \set{X}$ is not a well-defined operation. The \ac{GAN} generator models trained in practice often do not meet this condition as it is typical to use a lower dimensional hidden input than the generated output dimension \citep{arjovsky2017towards}. There is no fundamental requirement in adversarial training to use generators of this form however and theoretical results \citep{arjovsky2017towards} suggest that the lack of absolute continuity of the implicit distribution on the generator outputs with respect to $\lebm{N_{\rvct{x}}}$ may contribute to the often unstable behaviour of \ac{GAN} training.
 
-When applying reverse-mode accumulation \ac{AD} to a function $\vctfunc{h} : \reals^K \to \reals^L$ the Jacobian $\jacobian{\vctfunc{h}}$ can be calculated at an operation-count cost which is at most $c L$ times the corresponding cost of evaluating the function $\vctfunc{h}$ itself. The constant factor $c$ guaranteed to be less than six and more typically around two to three \citep{baydin2015automatic}. The gradient $\nabla\rho$  can therefore be evaluated at a cost comparable to evaluating the density itself and the Jacobian $\jacobian{\genfunc_{\rvct{x}}}$ can be evaluated at a cost which is comparable to $N_{\rvct{x}}$ times the cost of a single evaluation of the generator $\genfunc_{\rvct{x}}$.
+Although we only required the existence of the input density gradient $\pd{\rho}{\vct{u}}$ and generator Jacobian $\pd{\genfunc_{\rvct{x}}}{\vct{u}}$ in Definition \ref{def:differentiable-generative-model}, unsurprisingly this is motivated by the need to evaluate these terms in the proposed inference methods for differentiable generative models. Although this may seem a limiting requirement for complex models, the availability of efficient general-purpose \ac{AD} libraries \citep{baydin2015automatic} means it is possible to automatically calculate the necessary derivatives given just the code defining the forward functions $\rho$ and $\genfunc_{\rvct{x}}$. For generative models implemented in existing code this will often require re-coding using an appropriate \ac{AD} framework. In some cases however it is possible to use \ac{AD} tools which automatically transform existing source code --- for example given C or Fortran code for a function \emph{Tapenade} \citep{hascoet2013tapenade} can generate code for computing the function's derivatives. By applying the reverse-mode accumulation \ac{AD} as outline in Algorithm \ref{alg:reverse-mode-ad} the gradient $\pd{\rho}{\vct{u}}$  can be evaluated at a $\mathcal{O}(1)$ cost relative to evaluating the density itself and the Jacobian $\jacobian{\genfunc_{\rvct{x}}}$ can be evaluated at a $\mathcal{O}(N_{\rvct{x}})$ factor of the cost of a single evaluation of the generator $\genfunc_{\rvct{x}}$.
 
-A given $\genfunc_{\rvct{x},\rvct{z}}$ and $\rho$ pair will not uniquely define the corresponding implicit joint distribution $\prob{\rvct{x},\rvct{z}}$. As a simple example if $\vctfunc{f} : \set{U} \to \set{U}$ is a diffeomorphism, then we can reparameterise the inputs as $\tilde{\rvct{u}} = \vctfunc{f}^{-1}(\rvct{u})$, with a generative model with input distribution with density $\pden{\tilde{\rvct{u}}}(\tilde{\vct{u}}) = \left|\jacob{\vctfunc{f}}{\tilde{\vct{u}}}\right|\, \rho \,\circ \vctfunc{f}(\tilde{\vct{u}})$ and joint generator function $\tilde{\genfunc}_{\rvct{x},\rvct{z}} = {\genfunc}_{\rvct{x},\rvct{z}} \circ \vctfunc{f}$ corresponding to the same implicit joint distribution $\prob{\rvct{x},\rvct{z}}$ as the original parametrisation. We can exploit this to for example reparametrise variables with bounded support to transformed variables with unbounded support, for example reparameterising in terms of the logarithm of a strictly positive variable. In general working with unbounded variables will simplify \ac{MCMC} inference by preventing the need to check transitions respect bounding constraints. Probabilistic programming frameworks such as Stan \citep{gelman2015stan} and PyMC3 make use of a range of such transformations within their \ac{MCMC} implementations \citep{salvatier2016probabilistic}. %We also recommend choosing parameterisations in terms input variables with unit variance distributions as far as possible to normalise the apriori scaling of different dimensions.
+%When applying reverse-mode accumulation \ac{AD} to a function $\vctfunc{h} : \reals^K \to \reals^L$ the Jacobian $\jacobian{\vctfunc{h}}$ can be calculated at an operation-count cost which is at most $c L$ times the corresponding cost of evaluating the function $\vctfunc{h}$ itself. The constant factor $c$ guaranteed to be less than six and more typically around two to three \citep{baydin2015automatic}. The gradient $\nabla\rho$  can therefore be evaluated at a cost comparable to evaluating the density itself and the Jacobian $\jacobian{\genfunc_{\rvct{x}}}$ can be evaluated at a cost which is comparable to $N_{\rvct{x}}$ times the cost of a single evaluation of the generator $\genfunc_{\rvct{x}}$.
 
-Also note that although we motivated our definition of $\rvct{u}$ by saying it could be constructed by tracking all the draws from a random number generator, in general we will not want to parameterise $\rvct{u}$ in terms of low-level uniform draws, but instead use the output of higher-level functions for producing samples from standard densities. This is important as if for example we defined as inputs the uniform draws used in the rejection sampling routines typically used to generate Gamma random variables, the resulting $\genfunc_{\rvct{x}}$ would be non-differentiable. If we instead use the generated Gamma variable itself as the input by including an appropriate Gamma density factor in $\rho$ we side step this issue. 
+\section{Model parameterisation}\label{sec:model-parameterisation}
 
-In some cases using the outputs of higher-level random number generator routines as the input variables will introduce dependencies between the variables in the input density $\rho$. In particular if $\rvar{u}_i$ corresponds to the output of a generator routine which is passed arguments depending on one or more previous random inputs $\lbrace \rvar{u}_j\rbrace_{j\in\set{J}}$, then an appropriate conditional density factor on $\rvar{u}_i$ given $\lbrace \rvar{u}_j\rbrace_{j\in\set{J}}$ will need to be included in $\rho$. By using alternative parameterisations it may be possible to avoid introducing such dependencies; for example a random input $\rvar{v}_i$ generated from a normal distribution with mean $\mu$ and standard deviation $\sigma$ which depend on previous random inputs $\lbrace \rvar{u}_j\rbrace_{j\in\set{J}}$ can instead be parameterised in terms of an independent random variable $\rvar{u}_i$ distributed with a standard normal density $\nrm{0,1}$ and $\rvar{v}_i$ computed as $\sigma \rvar{u}_i + \mu$ in the generator. Such \emph{non-centred parameterisations} \citep{price1958useful,bonnet1964transformations,papaspiliopoulos2007general} (also known by the `reparameterisation trick' in the machine learning literature \citep{kingma2013auto,rezende2014stochastic}) are available for example for all location-scale family distributions. Whether it is necessarily helpful to remove dependencies in $\rho$ like this for the proposed method is an open question and will likely be model specific; it has previously been found that non-centred parameterisations can be beneficial when performing \ac{MCMC} inference in hierarchical models when the unobserved variables are only weakly identified by observations \citep{papaspiliopoulos2003non,papaspiliopoulos2007general,betancourt2015hamiltonian}.  %Whether it is desirable to remove dependencies between variables in $\rho$ will likely be model specific; in our experiments
+\begin{figure}[!t]
+\centering
+\pgfplotsset{cycle list/Dark2-3}
+\begin{tikzpicture}
+  \begin{axis}[
+    name=dens,
+    cycle list name={Dark2-3},
+    domain=-5:5,
+    xmin=-5, xmax=5,
+    ymin=0, ymax=0.7,
+    ytick={0.5},
+    samples=200,
+    width=6.5cm,
+    height=4cm,
+    xlabel={\small $u$},
+    ylabel={\small $\pden{\rvar{u}}$},
+    every tick label/.append style={font=\tiny},
+    axis y line=center,
+    axis x line=middle,
+    legend image post style={scale=0.75},
+    legend style={
+      at={(0.5,-0.2)},
+      anchor=north west,
+      draw=none, 
+      legend columns=-1, 
+      column sep=2ex,
+      /tikz/nodes={anchor=base},
+      /tikz/every odd column/.style={yshift=2pt},
+      font=\scriptsize,
+      legend to name=grouplegend
+    }
+  ]
+    \addplot+[mark=none, thick] {exp(-0.5 * x^2) / sqrt(2 * pi)};
+    \addlegendentry{$\nrm{u \gvn 0,1}$};
+    \addplot+[mark=none, densely dashed, thick] 
+      {pi / (4 * sqrt(3) * cosh(pi * x / (2 * sqrt(3)))^2)};
+    \addlegendentry{$\textrm{Logistic}(u \gvn 0, \sqrt{3}/\uppi)$};
+    \addplot+[mark=none, densely dotted, thick] {0.5 / cosh(pi * x / 2)};
+    \addlegendentry{$\textrm{InvCosh}(u \gvn 0, 1)$};
+  \end{axis}
+  \begin{axis}[
+    name=logdens,
+    cycle list name={Dark2-3},
+    at=(dens.right of south east),
+    xshift=4mm,
+    anchor=left of south west,
+    domain=-5:5,
+    xmin=-5, xmax=5,
+    ymin=0, ymax=8,
+    ytick={2,4,6},
+    samples=200,
+    width=6.5cm,
+    height=4cm,
+    xlabel={\small $u$},
+    ylabel={\small $-\log\pden{\rvar{u}}$},
+    every tick label/.append style={font=\tiny},
+    axis y line=center,
+    axis x line=middle,
+  ]
+    \addplot+[mark=none, solid, thick] {0.5 * x^2 + 0.5 * ln(2 * pi)};
+    \addplot+[mark=none, densely dashed, thick] 
+      {ln(4 * sqrt(3)) - ln(pi) + 2 * ln(cosh(pi * x / (2 * sqrt(3))))};
+    \addplot+[mark=none, densely dotted, thick] {ln(2) + ln(cosh(pi * x / 2))};
+  \end{axis}
+  \node[anchor=north] at ($(dens.south east) + (2mm,-3mm)$) {\ref*{grouplegend}}; 
+\end{tikzpicture}
+\vspace{-1mm}
+\caption[Unbounded unit variance densities.]{Unit variance densities with unbounded support.}
+\label{fig:unit-variance-densities}
+\end{figure}
+
+\begin{table}[!t]
+\centering
+\begin{tabular}{rr}
+  \toprule
+  \textsf{Original factor} & \textsf{Reparametrisation} \\
+  \midrule
+  \tikz{
+    \node[latent] (x) {$\rvar{v}$} ; %
+    \factor[left=of x, xshift=-3mm] {p-x} {$\nrm{\mu,\sigma^2}$} {} {x} ; %
+  } &
+  \tikz{
+    \node[latent] (u) {$\rvar{u}$} ; %
+    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{v}$} ; %
+    \factor[left=of u, xshift=-3mm] {p-u} 
+      {$\nrm{0,1}$} {} {u} ; %
+    \op[left=of x, xshift=-6mm] {u-x} 
+      {$\mu + \sigma \rvar{u}$} {u} {x} ; %
+  } 
+  \\
+  \tikz{
+    \node[latent] (x) {$\rvar{v}$} ; %
+    \factor[left=of x, xshift=-3mm] {p-x} {$\textrm{LogNorm}(\mu,\sigma^2)$} {} {x} ; %
+  } &
+  \tikz{
+    \node[latent] (u) {$\rvar{u}$} ; %
+    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{v}$} ; %
+    \factor[left=of u, xshift=-3mm] {p-u} 
+      {$\nrm{0,1}$} {} {u} ; %
+    \op[left=of x, xshift=-6mm] {u-x} 
+      {$\exp(\mu + \sigma \rvar{u})$} {u} {x} ; %
+  } 
+  \\
+%  \tikz{
+%    \node[latent] (x) {$\rvct{v}$} ; %
+%    \factor[left=of x, xshift=-3mm] {p-x} {$\nrm{\vct{\mu},\mtx{\Sigma}}$} {} {x} ; %
+%  } &
+%  \tikz{
+%    \node[latent] (u) {$\rvct{u}$} ; %
+%    \node[latent, right=of u, xshift=13mm] (x) {$\rvct{v}$} ; %
+%    \factor[left=of u, xshift=-3mm] {p-u} 
+%      {$\nrm{\vct{0},\idmtx}$} {} {u} ; %
+%    \op[left=of x, xshift=-6mm] {u-x} 
+%      {$\vct{\mu} + \chol(\mtx{\Sigma}) \rvct{u}$} {u} {x} ; %
+%  } 
+%  \\
+  \tikz{
+    \node[latent] (x) {$\rvar{v}$} ; %
+    \factor[left=of x, xshift=-3mm] {p-x} {$\mathrm{Exp}(\lambda)$} {} {x} ; %
+  } &
+  \tikz{
+    \node[latent] (u) {$\rvar{u}$} ; %
+    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{v}$} ; %
+    \factor[left=of u, xshift=-3mm] {p-u} 
+      {$\mathrm{Logistic}\lpa 0, \frac{\sqrt{3}}{\uppi}\rpa$} {} {u} ; %
+    \op[left=of x, xshift=-6mm] {u-x} 
+      {$\frac{1}{\lambda}\log\lpa 1 + \exp\lpa\frac{\uppi\rvar{u}}{\sqrt{3}}\rpa\rpa$} {u} {x} ; %
+  } 
+  \\
+  \tikz{
+    \node[latent] (x) {$\rvar{v}$} ; %
+    \factor[left=of x, xshift=-3mm] {p-x} {$\unif{a,b}$} {} {x} ; %
+  } &
+  \tikz{
+    \node[latent] (u) {$\rvar{u}$} ; %
+    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{v}$} ; %
+    \factor[left=of u, xshift=-3mm] {p-u} 
+      {$\mathrm{Logistic}\lpa 0, \frac{\sqrt{3}}{\uppi}\rpa$} {} {u} ; %
+    \op[left=of x, xshift=-6mm] {u-x} 
+      {$a + (b-a)\lpa 1 + \exp\lpa\frac{\uppi\rvar{u}}{\sqrt{3}}\rpa\rpa^{-1}$} {u} {x} ; %
+  } 
+  \\
+  \tikz{
+    \node[latent] (x) {$\rvar{v}$} ; %
+    \factor[left=of x, xshift=-3mm] {p-x} {$\mathcal{C}_{\geq 0}(\gamma)$} {} {x} ; %
+  } &
+  \tikz{
+    \node[latent] (u) {$\rvar{u}$} ; %
+    \node[latent, right=of u, xshift=13mm] (x) {$\rvar{v}$} ; %
+    \factor[left=of u, xshift=-3mm] {p-u} 
+      {$\mathrm{InvCosh}( 0, 1)$} {} {u} ; %
+    \op[left=of x, xshift=-6mm] {u-x} 
+      {$\gamma\exp\lpa \frac{\uppi \rvar{u}}{2} \rpa$} {u} {x} ; %
+  } 
+  \\
+  \bottomrule
+\end{tabular}
+\caption[Standardisation reparametrisations.]{Reparameterisations of random variables with some common parametric distributions as deterministic transformations of unit-variance unbounded support random variables.}
+\label{tab:standardisation-reparametrisations}
+\end{table}
+
+A $\genfunc_{\rvct{x},\rvct{z}}$ and $\rho$ pair will not uniquely define the resulting joint distribution $\prob{\rvct{x},\rvct{z}}$. As a simple example if $\vctfunc{f} : \set{U} \to \set{U}$ is a diffeomorphism, then we can reparameterise the inputs as $\tilde{\rvct{u}} = \vctfunc{f}^{-1}(\rvct{u})$, with a generative model with input distribution with density $\pden{\tilde{\rvct{u}}}(\tilde{\vct{u}}) = \left|\pd{\vctfunc{f}}{\tilde{\vct{u}}}\right|\, \rho \,\circ \vctfunc{f}(\tilde{\vct{u}})$ and joint generator function $\tilde{\genfunc}_{\rvct{x},\rvct{z}} = {\genfunc}_{\rvct{x},\rvct{z}} \circ \vctfunc{f}$ corresponding to the same joint distribution $\prob{\rvct{x},\rvct{z}}$ as the original parametrisation. 
+
+We can exploit this to for example reparametrise variables with bounded support to transformed variables with unbounded support, for example reparameterising in terms of the logarithm of a strictly positive variable. In general working with unbounded variables will simplify \ac{MCMC} inference by preventing the need to check transitions respect bounding constraints. Probabilistic programming frameworks such as Stan \citep{gelman2015stan} and PyMC3 make use of a range of such transformations within their \ac{MCMC} implementations \citep{salvatier2016probabilistic}.
+
+As well as transforming to variables with unbounded support, another useful heuristic is to parameterise to model as far as possible in terms of inputs variables which have unit variance. Three examples of potentially suitable distributions with unit variance and unbounded support to parameterise the model in terms of are the standard normal $\nrm{0,1}$, inverse hyperbolic cosine (or hyperbolic secant) distribution $\textrm{InvCosh}(0,1)$ and the logistic distribution $\textrm{Logistic}(0,\sqrt{3}/\uppi)$. The densities for all three shown for comparison in Figure \ref{fig:unit-variance-densities} and Table \ref{tab:standardisation-reparametrisations} shows transformations to reparameterisations for some common distributions in terms of variables distributed according to these standard densities. Normalising the scale of variables in $\rho$ typically makes it easier to choose an appropriate integrator step size parameter for the \ac{HMC} transitions. The distribution of the input variables $\rvct{u}$ once conditioning on the output of the generator may differ significantly from the prior distribution and so normalising the scale of variables in the prior is no guarantee of similar scaling in the posterior, however it still often a useful heuristic particularly when the inputs are only weakly affected by the observations conditioned on.
+
+Also note that although we motivated our definition of $\rvct{u}$ by saying it could be constructed by tracking all the draws from a random number generator, in general we will not want to parameterise $\rvct{u}$ in terms of low-level uniform draws, but instead use the output of higher-level functions for producing samples from standard densities using the transform and rejection sampling methods discussed in Chapter \ref{ch:approximate-inference}. This is important as if for example we defined as inputs the uniform draws used in the rejection sampling routines typically used to generate Gamma random variables, the resulting $\genfunc_{\rvct{x}}$ would be non-differentiable. If we instead use the generated Gamma variable itself as the input by including an appropriate Gamma density factor in $\rho$ we side step this issue. 
+
+In some cases using the outputs of higher-level random number generator routines as the input variables will introduce dependencies between the variables in the input density $\rho$. In particular if $\rvar{u}_i$ corresponds to the output of a generator routine which is passed arguments depending on one or more previous random inputs $\lbrace \rvar{u}_j\rbrace_{j\in\set{J}}$, then an appropriate conditional density factor on $\rvar{u}_i$ given $\lbrace \rvar{u}_j\rbrace_{j\in\set{J}}$ will need to be included in $\rho$. By using alternative parameterisations it may be possible to avoid introducing such dependencies; for example a random input $\rvar{v}_i$ generated from a normal distribution with mean $\mu$ and standard deviation $\sigma$ which depend on previous random inputs $\lbrace \rvar{u}_j\rbrace_{j\in\set{J}}$ can instead be parameterised in terms of an independent random variable $\rvar{u}_i$ distributed with a standard normal density $\nrm{0,1}$ and $\rvar{v}_i$ computed as $\sigma \rvar{u}_i + \mu$ in the generator. Such \emph{non-centred parameterisations} \citep{price1958useful,bonnet1964transformations,papaspiliopoulos2007general} are available for example for all location-scale family distributions. The reparametrisation of the Gaussian \ac{VAE} decoder discussed above also used this same identity, and the term `reparameterisation trick' is often used in the machine learning literature to describe this idea \citep{kingma2013auto}. Whether it is necessarily helpful to remove dependencies in $\rho$ like this for the methods discussed in this chapter is an open question and will likely be model specific; it has previously been found that non-centred parameterisations can be beneficial when performing \ac{MCMC} inference in hierarchical models when the unobserved variables are only weakly identified by observations \citep{papaspiliopoulos2003non,papaspiliopoulos2007general,betancourt2015hamiltonian}.  %Whether it is desirable to remove dependencies between variables in $\rho$ will likely be model specific; in our experiments
 
 %Even when completely removing dependencies is not possible, decreases in the strength of dependencies can often be achieved using `partial reparameterisations' such as those proposed by \cite{naesseth2017reparameterization} and \citep{ruiz2016generalized} in the context of variational inference.
 
@@ -90,8 +354,10 @@ In some cases using the outputs of higher-level random number generator routines
   \node[latent] (u) {$\rvct{u}$} ; %
   \factor[left=of u] {pr-u} {$\rho$} {} {u} ; %
   \node[latent, right=1 of u, yshift=8mm] (z) {$\rvct{z}$} ; %
-  \node[obs, right=1 of u, yshift=-8mm] (y) {$\rvct{x}$} ; %
-  \op[right=of u] {u-z_y} {$\vctfunc{g}_{\rvct{x},\rvct{z}}$} {u} {y,z} ; %
+  \node[obs, right=1 of u, yshift=-8mm] (x) {$\rvct{x}$} ; %
+%  \op[right=of u] {u-z_y} {$\vctfunc{g}_{\rvct{x},\rvct{z}}$} {u} {y,z} ; %
+  \op[left=of x] {u-x} {above:$\vctfunc{g}_{\rvct{x}}$} {u} {x} ; %
+  \op[left=of z] {u-z} {below:$\vctfunc{g}_{\rvct{z}}$} {u} {z} ; %
 \end{tikzpicture}
 \caption{}\label{sfig:undirected-model-factor-graph}
 \end{subfigure}%
@@ -101,7 +367,7 @@ In some cases using the outputs of higher-level random number generator routines
   \node (dummy) {};%
   \node[latent, right=0.2 of dummy, yshift=8mm] (z) {$\rvct{z}$} ; %
   \node[obs, right=0.2 of dummy, yshift=-8mm] (y) {$\rvct{x}$} ; %
-  \factor[above=of y, yshift=-0.5mm] {z-y} {right:\small $\mathsf{p}_{\rvct{x},\rvct{z}}$} {} {y,z} ; %
+  \factor[above=of y, yshift=-0.5mm] {z-y} {right: $\mathsf{p}_{\rvct{x},\rvct{z}}$} {} {y,z} ; %
 \end{tikzpicture}
 \caption{}\label{sfig:undirected-model-factor-graph-marginalised}
 \end{subfigure}%
@@ -125,30 +391,31 @@ In some cases using the outputs of higher-level random number generator routines
 \begin{tikzpicture}
   \node (dummy) {};%
   \node[latent, right=0.2 of dummy, yshift=8mm] (z) {$\rvct{z}$} ; %
-  \factor[left=of z] {pr-z} {below: \small $\mathsf{p}_{\rvct{z}}$} {} {z} ; %
+  \factor[left=of z] {pr-z} {below:  $\mathsf{p}_{\rvct{z}}$} {} {z} ; %
   \node[obs, right=0.2 of dummy, yshift=-8mm] (y) {$\rvct{x}$} ; %
-  \factor[above=of y] {z-y} {right:\small $\mathsf{p}_{\rvct{x}|\rvct{z}}$} {z} {y} ; %
+  \factor[above=of y] {z-y} {right: $\mathsf{p}_{\rvct{x}|\rvct{z}}$} {z} {y} ; %
 \end{tikzpicture}
 \caption{}\label{sfig:directed-model-factor-graph-marginalised}
 \end{subfigure}%
-\caption[Undirected and directed generative models.]{Factor graphs of undirected and directed generative models. Panel \subref{sfig:undirected-model-factor-graph} shows the more general undirected model case in which observed variables $\rvct{x}$ and latent variables $\rvct{z}$ are jointly generated from random inputs $\rvct{u}$ by mapping through a function $\vctfunc{g}_{\rvct{x},\rvct{z}}$, with \subref{sfig:undirected-model-factor-graph-marginalised} showing equivalent factor graph after marginalising out the random inputs. Panel \subref{sfig:directed-model-factor-graph} shows the directed model case in which we first generate the latent variables $\rvct{z}$ from a subset of the random inputs $\rvct{u}_{1}$ then generate the observed variables $\rvct{x}$ from $\rvct{z}$ and the remaining random inputs $\rvct{u}_{2}$, with \subref{sfig:directed-model-factor-graph-marginalised} showing resulting natural directed factorisation of joint distribution when marginalising out $\rvct{u}_1$ and $\rvct{u}_2$.}
+\caption[Undirected and directed generative models.]{Factor graphs of undirected and directed generative models. Panel \subref{sfig:undirected-model-factor-graph} shows the more general undirected model case in which observed variables $\rvct{x}$ and latent variables $\rvct{z}$ are jointly generated from random inputs $\rvct{u}$, with \subref{sfig:undirected-model-factor-graph-marginalised} showing equivalent factor graph after marginalising out the random inputs. Panel \subref{sfig:directed-model-factor-graph} shows the directed model case in which we first generate the latent variables $\rvct{z}$ from a subset of the random inputs $\rvct{u}_{1}$ then generate the observed variables $\rvct{x}$ from $\rvct{z}$ and the remaining random inputs $\rvct{u}_{2}$, with \subref{sfig:directed-model-factor-graph-marginalised} showing resulting natural directed factorisation of joint distribution when marginalising out $\rvct{u}_1$ and $\rvct{u}_2$.}
 \label{fig:directed-undirected-model-graphs}
 \end{figure}
 
-So far we have considered a general case of both the observed and unobserved variables being jointly generated by a function $\genfunc_{\rvct{x},\rvct{z}}$. This structure is shown as a factor graph in Figure \ref{sfig:undirected-model-factor-graph} and a corresponding factor graph for just $\rvct{x}$ and $\rvct{z}$ with $\rvct{u}$ marginalised out shown in Figure \ref{sfig:undirected-model-factor-graph-marginalised}. A common special case is when the input space is partitioned $\set{U} = \set{U}_1 \times \set{U}_2$ and the unobserved variables $\rvct{z}$ are generated from a subset of the random inputs $\rvct{u}_1 : \set{S} \to \set{U}_1$ (e.g. corresponding to sampling from a prior distribution over the parameters of a simulator model), with the observed variables $\rvct{x}$ then generated from a function $\genfunc_{\rvct{x}|\rvct{z}}$ which takes as input both the remaining random variables $\rvct{u}_2 : \set{S} \to \set{U}_2$ and the generated unobserved variables $\rvct{z}$, i.e. $\rvct{x} = \genfunc_{\rvct{x}|\rvct{z}}(\rvct{z},\rvct{u}_2) = \genfunc_{\rvct{x}|\rvct{z}}\lpa\genfunc_{\rvct{z}}(\rvct{u}_1),\,\rvct{u}_2\rpa$. This is illustrated as a factor graph in Figure \ref{sfig:directed-model-factor-graph}. Again a corresponding factor graph with $\rvct{u}$ marginalised out is shown in Figure \ref{sfig:directed-model-factor-graph-marginalised}, with in this case the structure of the generator making a \emph{directed} factorisation in terms $\pden{\rvct{z}}$ and $\pden{\rvct{x}|\rvct{z}}$ natural. We will therefore term models in this special case as \emph{directed generative models} (with the more general case termed \emph{undirected} for symmetry).
+So far we have considered a general case of both the observed and unobserved variables being jointly generated by a function $\genfunc_{\rvct{x},\rvct{z}}$. This structure is shown as a factor graph in Figure \ref{sfig:undirected-model-factor-graph} and a corresponding factor graph for just $\rvct{x}$ and $\rvct{z}$ with $\rvct{u}$ marginalised out shown in Figure \ref{sfig:undirected-model-factor-graph-marginalised}. A common special case is when the input space is partitioned $\set{U} = \set{U}_1 \times \set{U}_2$ and the unobserved variables $\rvct{z}$ are generated from a subset of the random inputs $\rvct{u}_1 : \set{S} \to \set{U}_1$ (e.g. corresponding to sampling from a prior distribution over the parameters of a simulator model), with the observed variables $\rvct{x}$ then generated from a function $\genfunc_{\rvct{x}|\rvct{z}} : \set{Z} \times \set{U}_2 \to \set{X}$ which takes as input both the generated unobserved variables $\rvct{z}$ and the remaining random variables $\rvct{u}_2 : \set{S} \to \set{U}_2$, i.e. $\rvct{x} = \genfunc_{\rvct{x}|\rvct{z}}(\rvct{z},\rvct{u}_2) = \genfunc_{\rvct{x}|\rvct{z}}\lpa\genfunc_{\rvct{z}}(\rvct{u}_1),\,\rvct{u}_2\rpa$. This is illustrated as a factor graph in Figure \ref{sfig:directed-model-factor-graph}. Again a corresponding factor graph with $\rvct{u}$ marginalised out is shown in Figure \ref{sfig:directed-model-factor-graph-marginalised}, with in this case the structure of the generator making a \emph{directed} factorisation in terms $\pden{\rvct{z}}$ and $\pden{\rvct{x}|\rvct{z}}$ natural. We will therefore term models in this special case as \emph{directed generative models} (with the more general case termed \emph{undirected} for symmetry).
 
-The method we present is equally applicable to undirected and directed differentiable generative models, though often the extra structure present in the directed case can allow computational gains. Most \ac{ABC} inference methods concentrate on directed generative models. Typically the marginal density $\pden{\rvct{z}}$ will be tractable to explicitly compute in such cases, such that it is only the conditional density $\pden{\rvct{x}|\rvct{z}}$ which cannot evaluate. As this conditional density is often referred to as the \emph{likelihood}, this motivates the alternative designation of \emph{likelihood-free inference} for \ac{ABC} and related methods.
+%The method we present is equally applicable to undirected and directed differentiable generative models, though often the extra structure present in the directed case can allow computational gains. 
+Most \ac{ABC} inference methods concentrate on directed generative models. Typically the marginal density $\pden{\rvct{z}}$ will be tractable to explicitly compute in such cases, such that it is only the conditional density $\pden{\rvct{x}|\rvct{z}}$ which cannot evaluate. As this conditional density is often referred to as the \emph{likelihood}, this motivates the alternative designation of \emph{likelihood-free inference} for \ac{ABC} and related methods.
 
 
 %We define the class of models of interest, which we will term \emph{differentiable generative models} as follows. All models w
 
 \section{Approximate Bayesian Computation}\label{sec:abc}
 
-We will now review the \ac{ABC} approach to inference in generative models in order to help motivate our proposed method. We will assume here that the observed variables in the generative model of interest are real-valued, i.e. that $\set{X} \subseteq \reals^{N_{\rvct{x}}}$, with inference in generative models with discrete observations being in general simpler from a theoretical perspective (though not necessarily computationally). The auxiliary-variable description we give of \ac{ABC} is non-standard, but is consistent with the algorithms used in practice and will help illustrate the relation of our approach to existing \ac{ABC} methods.
+We will now review the \ac{ABC} approach to inference in generative models. We will assume here that the observed variables in the generative model of interest are real-valued, i.e. that $\set{X} \subseteq \reals^{N_{\rvct{x}}}$, with inference in generative models with discrete observations being in general simpler from a theoretical perspective (though not necessarily computationally). The auxiliary-variable description we give of \ac{ABC} is non-standard, but is consistent with the algorithms used in practice and will help illustrate the relation of our approach to existing \ac{ABC} methods.
 
-We introduce an auxiliary $\set{X}$-valued random vector $\rvct{y}$ which depends on the observed random vector $\rvct{x}$ via a regular conditional distribution $\prob{\rvct{y}|\rvct{x}=\vct{x}}$ we term the \emph{kernel} which has a conditional density $k_\epsilon : \set{X} \times \set{X} \to [0, \infty)$ with respect to the Lebesgue measure,
+We introduce an auxiliary $\set{X}$-valued random vector $\rvct{y}$ which depends on the observed random vector $\rvct{x}$ via a regular conditional distribution $\prob{\rvct{y}}(\cdot \gvn \rvct{x}=\vct{x})$ we term the \emph{kernel} which has a conditional density $k_\epsilon : \set{X} \times \set{X} \to [0, \infty)$ with respect to the Lebesgue measure,
 \begin{equation}\label{eq:abc-kernel}
-  \prob{\rvct{y}|\rvct{x}=\vct{x}}\lpa \set{A} \rpa = 
+  \prob{\rvct{y}}\lpa \set{A} \gvn \rvct{x}=\vct{x} \rpa = 
   \int_{\set{A}} k_{\epsilon}(\vct{y}; \vct{x}) \,\dr\vct{y}
   \qquad \forall \set{A} \in \borel(\set{X}).
 \end{equation}
@@ -162,7 +429,7 @@ The kernel density $k_\epsilon$ is parameterised by a \emph{tolerance} $\epsilon
   \lim_{\epsilon \to 0} \int_{\set{X}} f(\vct{x}) \, k_{\epsilon}(\vct{y}; \vct{x}) \,\dr\vct{x}
   &= f(\vct{y}).
 \end{align}
-For kernels meeting these condition \eqref{eq:abc-valid-kernel-condition-1} we have that $\forall \set{A} \in \borel(\set{X})$
+Intuitively these requirements correspond to kernels which collapse to a Dirac delta in the limit of $\epsilon \to 0$. For kernels meeting these condition \eqref{eq:abc-valid-kernel-condition-1} we have that $\forall \set{A} \in \borel(\set{X})$
 \begin{align}
   \lim_{\epsilon \to 0 } \prob{\rvct{y}}(\set{A}) &=
   \lim_{\epsilon \to 0} 
@@ -184,55 +451,79 @@ i.e. that in the limit $\epsilon \to 0$, $\rvct{y}$ has the same distribution as
   k_\epsilon(\vct{y};\,\vct{x}) &\propto 
   \frac{1}{\epsilon^{N_{\rvct{x}}}} 
   \ind{[0,\epsilon]}\lpa\Vert\vct{y} - \vct{x}\Vert_2\rpa & 
-  \qquad \textrm{(uniform ball kernel)},\\
+  \quad \textrm{(uniform ball)},\\
 \label{eq:gaussian-abc-kernel}
   \textrm{and}\quad
   k_\epsilon(\vct{y};\,\vct{x}) &= 
-  \nrm{\vct{y}\gvn\vct{x},\,\epsilon^2\mathbf{I}} &
-  \qquad \textrm{(Gaussian kernel)}. 
+  \nrm{\vct{y}\gvn\vct{x},\,\epsilon^2\idmtx} &
+  \quad \textrm{(Gaussian)}. 
 \end{align}
 The marginal distribution of $\rvct{y}$ can be written $\forall \set{A} \in \borel(\set{X})$ as
 \begin{equation}
   \prob{\rvct{y}}(\set{A}) = 
-  \int_{\set{X}\times\set{Z}} \prob{\rvct{y}|\rvct{x}=\vct{x}}\lpa \set{A} \rpa
-  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z})
+  \int_{\set{X}} \prob{\rvct{y}}\lpa \set{A} \gvn \rvct{x}=\vct{x} \rpa
+  \,\dr\prob{\rvct{x}}(\vct{x})
   =
-  \int_{\set{A}} \int_{\set{X}\times\set{Z}}
+  \int_{\set{A}} \int_{\set{X}}
     k_\epsilon(\vct{y};\,\vct{x})\,
-  \dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z})\,\dr\vct{y},
+  \dr\prob{\rvct{x}}(\vct{x})\,\dr\vct{y}.
 \end{equation}
-from which we have that $\prob{\rvct{y}}$ has a density with respect to the Lebesgue measure
-\begin{equation}
-  \pden{\rvct{y}}(\vct{y}) =
-  \int_{\set{X}\times\set{Z}}
-    k_\epsilon(\vct{y};\,\vct{x})\,
-  \dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z}) =
+Therefore $\prob{\rvct{y}}$ has a density with respect to the Lebesgue measure
+\begin{align}
+  \pden{\rvct{y}}(\vct{y})
+  &=
   \int_{\set{X}}
     k_\epsilon(\vct{y};\,\vct{x})\,
   \dr\prob{\rvct{x}}(\vct{x})
+  \\
+  &=
+  \int_{\set{X}\times\set{Z}}
+    k_\epsilon(\vct{y};\,\vct{x})\,
+  \dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z})
   \qquad \forall \vct{y} \in \set{X}.
-\end{equation}
-The density $\pden{\rvct{y}}$ exists irrespective of whether $\prob{\rvct{x}}$ has a density with respect to the Lebesgue measure (it may not for example if $\prob{\rvct{x}}$ only has support on a sub-manifold of $\set{X}$).%, however if such a density $\pden{\rvct{x}}$ exists we have that $\lim_{\epsilon \to 0} \pden{\rvct{y}} = \pden{\rvct{x}}$.
-
-Using this definition of the density $\pden{\rvct{y}}$ we have that for any measurable function $f : \set{Z} \to \set{F}$ of the unobserved variables and $\forall \set{A} \in \borel(\set{X})$ that
-\begin{align}\label{eq:abc-conditional-expectation-derivation}
+\end{align}
+The density $\pden{\rvct{y}}$ exists irrespective of whether $\prob{\rvct{x}}$ has a density with respect to the Lebesgue measure (it may not for example if $\prob{\rvct{x}}$ only has support on a sub-manifold of $\set{X}$). Using this definition of the density $\pden{\rvct{y}}$ we have that for any measurable function $f : \set{Z} \to \set{F}$ of the unobserved variables and $\forall \set{A} \in \borel(\set{X})$ that
+\begin{align}
+  \label{eq:abc-conditional-expectation-derivation-1}
   \int_{\set{A} \times \set{Z}} 
     f(\vct{z}) 
-  \,\dr\prob{\rvct{y},\rvct{z}}(\vct{y},\vct{z}) &=
+  \,\dr\prob{\rvct{y},\rvct{z}}(\vct{y},\vct{z}) 
+  &=
   \int_{\set{A} \times \set{X} \times \set{Z}} 
     f(\vct{z}) 
-  \,\dr\prob{\rvct{y},\rvct{x},\rvct{z}}(\vct{y},\vct{x},\vct{z})\\
+  \,\dr\prob{\rvct{y},\rvct{x},\rvct{z}}(\vct{y},\vct{x},\vct{z})
+  \\
+  \label{eq:abc-conditional-expectation-derivation-2}
   &=
-  \int_{\set{A}} \int_{\set{X}\times\set{Z}}
-    f(\vct{z})\,k_{\epsilon}(\vct{y};\,\vct{x})
-  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z})\,\dr\vct{y}\\
+  \int_{\set{X} \times \set{Z}} \int_{\set{A}}
+    f(\vct{z})
+    k_{\epsilon}(\vct{y};\,\vct{x})
+  \,\dr\vct{y}
+  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z})
+  \\
+  \label{eq:abc-conditional-expectation-derivation-3}
   &=
-  \int_{\set{A}^*} \frac{1}{\pden{\rvct{y}}(\vct{y})}
+  \int_{\set{A}} \int_{\set{X} \times \set{Z}} 
+    f(\vct{z})
+    k_{\epsilon}(\vct{y};\,\vct{x})
+  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z})
+ \,\dr\vct{y}.
+\end{align}
+Using that $\prob{\rvct{y}}$ has a density $\pden{\rvct{y}}$ with respect to the Lebesgue measure, and that we can safely ignore the set for which $\pden{\rvct{y}}(\vct{y}) = 0$ when integrating against $\prob{\rvct{y}}$ as it is zero-measure, we have that $\forall \set{A} \in \borel(\set{X})$
+\begin{equation}\label{eq:abc-conditional-expectation-derivation-4}
+\begin{split}
+  &\int_{\set{A} \times \set{Z}} 
+    f(\vct{z}) 
+  \,\dr\prob{\rvct{y},\rvct{z}}(\vct{y},\vct{z}) 
+  =\,\\
+  &\qquad
+  \int_{\set{A}} \frac{1}{\pden{\rvct{y}}(\vct{y})}
   \int_{\set{X}\times\set{Z}}
     f(\vct{z})\,k_{\epsilon}(\vct{y};\,\vct{x})
   \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z})\,\dr\prob{\rvct{y}}(\vct{y})
-\end{align}
-where we define $\set{A}^* = \lbrace \vct{y} \in \set{A} : \pden{\rvct{y}}(\vct{y}) > 0 \rbrace$. Comparing this to the definition of the conditional expectation in \eqref{eq:conditional-expectation-definition} we have that $\forall \vct{y} \in \set{X} : \pden{\rvct{y}}(\vct{y}) > 0$
+\end{split}
+\end{equation}
+Comparing this to the definition of the conditional expectation from Chapter \ref{ch:probabilistic-modelling} \eqref{eq:conditional-expectation-property} therefore we have $\forall \vct{y} \in \set{X} : \pden{\rvct{y}}(\vct{y}) > 0$
 \begin{align}
   \label{eq:abc-expectation-1}
   \expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y};\,\epsilon} 
@@ -255,8 +546,10 @@ where we define $\set{A}^* = \lbrace \vct{y} \in \set{A} : \pden{\rvct{y}}(\vct{
   \dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z})
   }.
 \end{align}
+We term this conditional expectation the \ac{ABC} posterior expectation. We will now consider how it is related to the conditional expectation we are interested in evaluating $\expc{f(\rvct{z}) \gvn \rvct{x}}$.
+
 If we assume that $\prob{\rvct{x},\rvct{z}}$ is absolutely continuous with respect to the Lebesgue measure with density $\pden{\rvct{x},\rvct{z}}$ and using \eqref{eq:abc-valid-kernel-condition-2} we have that $\forall \vct{y} \in \set{X} : \pden{\rvct{x}}(\vct{y}) > 0$
-\begin{align}
+\begin{align}\label{eq:abc-expectation-limit}
   \lim_{\epsilon \to 0}
   \expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y};\,\epsilon} &=
   \lim_{\epsilon \to 0}
@@ -280,7 +573,7 @@ If we assume that $\prob{\rvct{x},\rvct{z}}$ is absolutely continuous with respe
   &=
   \expc{f(\rvct{z}) \gvn \rvct{x} = \vct{y}}.
 \end{align}
-We therefore have that conditional expectations $\expc{f(\rvct{z}) \gvn \rvct{y};\,\epsilon}$ converge as $\epsilon \to 0$ to the conditional expectations we wish to be able to estimate $\expc{f(\rvct{z}) \gvn \rvct{x}\,}$. Crucially we also have that the numerator and denominator of \eqref{eq:abc-expectation-2} take the forms of expectations of known functions of $\rvct{x}$ and $\rvct{z}$, i.e.
+We therefore, as we would intuitively expect, have that \ac{ABC} posterior expectation $\expc{f(\rvct{z}) \gvn \rvct{y};\,\epsilon}$ converge as $\epsilon \to 0$ to the conditional expectations we wish to be able to estimate $\expc{f(\rvct{z}) \gvn \rvct{x}\,}$. Crucially we also have that the numerator and denominator of \eqref{eq:abc-expectation-2} take the forms of expectations of known functions of $\rvct{x}$ and $\rvct{z}$, i.e.
 \begin{equation}
   \label{eq:abc-expectation-3}
   \expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y};\,\epsilon} 
@@ -307,7 +600,7 @@ Generating Monte Carlo estimates of these expectations only requires us to be ab
   \rpa
   }
 \end{equation}
-Providing both $f(\rvct{z})\,k_{\epsilon}(\vct{y};\,\rvct{x})$ and $k_{\epsilon}(\vct{y};\,\rvct{x})$ have finite variance, then the estimator $\hat{\rvar{f}}_{S,\epsilon}$ will be consistent, i.e.
+This is of the same form as the importance sampling estimator discussed in Chapter \ref{ch:approximate-inference} Section \ref{subsec:importance-sampling}. Therefore providing both $f(\rvct{z})\,k_{\epsilon}(\vct{y};\,\rvct{x})$ and $k_{\epsilon}(\vct{y};\,\rvct{x})$ have finite variance, then the estimator $\hat{\rvar{f}}_{S,\epsilon}$ will be consistent, i.e.
 \begin{equation}
   \lim_{S\to \infty} \expc{\hat{\rvar{f}}_{S,\epsilon}} = \expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y};\,\epsilon}.
 \end{equation}
@@ -327,13 +620,17 @@ which corresponds to averaging the values of sampled unobserved variables $\rvct
 
 If we instead use a Gaussian (or other smoothly varying) kernel \eqref{eq:gaussian-abc-kernel}, then the estimator \eqref{eq:abc-kernel-estimator} can instead be considered to correspond to using the sampled variables to form a kernel density estimate of the conditional distribution $\prob{\rvct{z}|\rvct{x}=\vct{y}}$ we are estimating expectations with respect to as proposed in \citep{beaumont2002approximate}, with in this case all samples being used in the estimator rather than an accepted subset. 
 
-Irrespective of the kernel chosen, the estimate formed is only consistent for the conditional expectation $\expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y};\,\epsilon}$ rather than the actual expectation $\expc{f(\rvct{z}) \gvn \rvct{x} = \vct{y}}$ we are directly interested in. As $\epsilon \to 0$, $\expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y};\,\epsilon}$ converges to $\expc{f(\rvct{z}) \gvn \rvct{x} = \vct{y}}$, however for reject \ac{ABC} we also have that as $\epsilon \to 0$ the proportion of accepted samples will tend to zero meaning that we need to expend increasing computational effort to get an estimator for $\expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y};\,\epsilon}$ with a similar variance (which by a standard Monte Carlo arguments is inversely proportional to the number of accepted samples). In the case of more general kernels such as the Gaussian kernel although we do not reject any samples, we instead have that as $\epsilon \to 0$ that the kernel weightings will becoming increasingly dominated by the few samples closest to the observed data and so the contribution from to the estimator \eqref{eq:abc-kernel-estimator} from all but a few will be negligible, again leading to an increasing number of samples being needed to keep the variance of the estimator reasonable. For the exact $\epsilon = 0$ case we would only accept (or equivalently put non-zero weight on) samples for which $\rvct{x}_s$ is exactly equal to $\vct{y}$; for $\set{X} \subseteq \reals^{N_{\rvct{x}}}$ the event $\rvct{x} = \vct{y}$ has zero measure under $\prob{\rvct{x},\rvct{z}}$\footnote{In reality due the use of finite floating-point precision arithmetic the probability of generating observed values exactly consistent with data though vanishingly small is non-zero.} and so some degree of approximation due to non-zero $\epsilon$ is always required in practice. 
+Irrespective of the kernel chosen, the estimate formed is only consistent for the conditional expectation $\expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y};\,\epsilon}$ rather than the actual expectation $\expc{f(\rvct{z}) \gvn \rvct{x} = \vct{y}}$ we are directly interested in. As $\epsilon \to 0$, $\expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y};\,\epsilon}$ converges to $\expc{f(\rvct{z}) \gvn \rvct{x} = \vct{y}}$, however for reject \ac{ABC} we also have that as $\epsilon \to 0$ the proportion of accepted samples will tend to zero meaning that we need to expend increasing computational effort to get an estimator for $\expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y};\,\epsilon}$ with a similar variance (which by a standard Monte Carlo argument is inversely proportional to the number of accepted samples). In the case of more general kernels such as the Gaussian kernel although we do not reject any samples, we instead have that as $\epsilon \to 0$ that the kernel weightings will becoming increasingly dominated by the few samples closest to the observed data and so the contribution from to the estimator \eqref{eq:abc-kernel-estimator} from all but a few will be negligible, again leading to an increasing number of samples being needed to keep the variance of the estimator reasonable - i.e. the same issues which we discussed in the context of importance samplers in Chapter \ref{ch:approximate-inference}. 
 
-When the dimensionality of the observed variable vector $\rvct{x}$ is high it quickly becomes impractical to reduce the variance of these naive Monte Carlo estimators for \eqref{eq:abc-expectation-1} to reasonable levels without using large $\epsilon$ which introduces significant approximation error. Both rejection sampling and kernel density methods scale poorly with dimensionality due to well-documented curse of dimensionality effects \citep{blum2010approximate,marin2012approximate,prangle2015summary} - intuitively as we increase the dimensionality of observed variables, an $\epsilon$-ball $\set{B}_\epsilon = \fset{\vct{x} \in \set{X} : \Vert \vct{y} - \vct{x} \Vert_2 < \epsilon}$ centred around observed data $\vct{y}$ for a fixed $\epsilon$ will have a measure $\prob{\rvct{x}}(\set{B}_\epsilon)$ which tends to exponentially decrease towards zero as the dimensionality of $\set{X}$ increases.
+For the exact $\epsilon = 0$ case we would only accept (or equivalently put non-zero weight on) samples for which $\rvct{x}_s$ is exactly equal to $\vct{y}$. For $\set{X} \subseteq \reals^{N_{\rvct{x}}}$ the event $\rvct{x} = \vct{y}$ has zero measure under $\prob{\rvct{x},\rvct{z}}$\footnote{In reality due the use of finite floating-point precision arithmetic the probability of generating observed values exactly consistent with data though vanishingly small is non-zero.} and so some degree of approximation due to non-zero $\epsilon$ is always required in practice in these simple Monte Carlo \ac{ABC} schemes.
 
-Rather than conditioning on the full observed data most \ac{ABC} methods used in practice therefore instead use \emph{summary statistics} to extract lower dimensional representations of the observed data \citep{prangle2015summary}. We can treat this consistently within the existing description simply by including the calculation of summaries into the generative model with the vector $\rvct{x}$ now the simulated summary representation of the observed variables, and correspondingly the observed data values conditioned on $\vct{y}$ replaced with their own summary representation. In general the statistics used will not be \emph{sufficient} and so entail some loss of information about the plausible values for the unobserved variables compared to using the all of the observed data. Finding informative low-dimensional summaries is often critical to getting existing \ac{ABC} methods to work well in practice and their is a wide literature on developing effective methods for choosing summary statistics - see \citep{prangle2015summary} and \citep{blum2013comparative} for recent  reviews. As we will show in our experiments, within the class of differentiable generative models considered, our method is at least in some cases able to efficiently perform inference when conditioning on all of the observed data. If summaries corresponding to differentiable function of the model observed variables can be found however, these can be naturally integrated in to the proposed framework by just changing the definition of $\genfunc_{\rvct{x}}$ / $\rvct{x}$ accordingly.
+When the dimensionality of the observed variable vector $\rvct{x}$ is high it quickly becomes impractical to reduce the variance of these naive Monte Carlo estimators for \eqref{eq:abc-expectation-1} to reasonable levels without using large $\epsilon$ which introduces significant approximation error. Both rejection sampling and kernel density methods scale poorly with dimensionality due to curse of dimensionality effects \citep{blum2010approximate,marin2012approximate,prangle2015summary} - intuitively as we increase the dimensionality of observed variables, an $\epsilon$-ball $\set{B}_\epsilon = \fset{\vct{x} \in \set{X} : \Vert \vct{y} - \vct{x} \Vert_2 < \epsilon}$ centred around observed data $\vct{y}$ for a fixed $\epsilon$ will have a measure $\prob{\rvct{x}}(\set{B}_\epsilon)$ which tends to exponentially decrease towards zero as the dimensionality of $\set{X}$ increases.
 
-As an alternative to the simple Monte Carlo \ac{ABC} inference scheme so far described, methods have also been proposed to utilise more scalable inference methods to estimate the approximate expectation \eqref{eq:abc-expectation-1} including sequential Monte Carlo methods \citep{sisson2007sequential,toni2009approximate}, population Monte Carlo \citep{beaumont2009adaptive}, expectation propagation \citep{barthelme2014expectation} and variational Bayes \citep{tran2017variational}. Of particular relevance to our work is the use of \ac{MCMC} within an \ac{ABC} framework \citep{marjoram2003markov,sisson2011likelihood}. As is standard in \ac{ABC} methods, the \ac{ABC} \ac{MCMC} approach is targeted at directed models where the unobserved variables have a known marginal density $\pden{\rvct{z}}$ but we can only generate samples from the conditional distribution $\prob{\rvct{x}|\rvct{z}=\vct{z}}$. If a Markov chain is constructed with unique stationary distribution
+Rather than conditioning on the full observed data most \ac{ABC} methods used in practice therefore instead use \emph{summary statistics} to extract lower dimensional representations of the observed data \citep{prangle2015summary}. We can treat this consistently within the existing notation by including the calculation of summaries into the generative model with the vector $\rvct{x}$ now the simulated summary representation of the observed variables, and correspondingly the observed data values conditioned on $\vct{y}$ replaced with their own summary representation. In general the statistics used will not be \emph{sufficient} and so entail some loss of information about the plausible values for the unobserved variables compared to using the all of the observed data. Finding informative low-dimensional summaries is often critical to getting existing \ac{ABC} methods to work well in practice and their is a wide literature on developing effective methods for choosing summary statistics - see \citep{prangle2015summary} and \citep{blum2013comparative} for reviews. %As we will show in our experiments, within the class of differentiable generative models considered, our method is at least in some cases able to efficiently perform inference when conditioning on all of the observed data. If summaries corresponding to differentiable function of the model observed variables can be found however, these can be naturally integrated in to the proposed framework by just changing the definition of $\genfunc_{\rvct{x}}$ / $\rvct{x}$ accordingly.
+
+As an alternative to the simple Monte Carlo \ac{ABC} inference scheme so far described, methods have also been proposed to utilise more scalable inference methods to estimate the approximate expectation \eqref{eq:abc-expectation-1} including sequential Monte Carlo methods \citep{sisson2007sequential,toni2009approximate}, population Monte Carlo \citep{beaumont2009adaptive}, expectation propagation \citep{barthelme2014expectation} and variational methods \citep{tran2017variational}. Of particular relevance here is the use of \ac{MCMC} within an \ac{ABC} framework \citep{marjoram2003markov,sisson2011likelihood}. As is standard in \ac{ABC} methods, the \ac{ABC} \ac{MCMC} approach is targeted at directed models where the unobserved variables have a known marginal density $\pden{\rvct{z}}$ but we can only generate samples from the conditional distribution $\prob{\rvct{x}|\rvct{z}=\vct{z}}$. 
+
+If a Markov chain is constructed with unique stationary distribution
 \begin{equation}\label{eq:abc-mcmc-target}
   \prob{\rvct{x},\rvct{z}|\rvct{y}=\vct{y}}(\set{A},\,\set{B}) =
   \frac{1}{\pden{\rvct{y}}(\vct{y})}
@@ -356,7 +653,7 @@ The standard \ac{ABC} \ac{MCMC} approach uses a Metropolis--Hastings scheme whic
 the proposed $(\vct{x}^*,\vct{z}^*)$ pair is accepted such that $(\vct{x}_{s+1}, \vct{z}_{s+1}) \gets (\vct{x}^*,\vct{z}^*)$ otherwise a rejection occurs and $(\vct{x}_{s+1}, \vct{z}_{s+1}) \gets (\vct{x}_s,\vct{z}_s)$. The transition operator defined by this process leaves \eqref{eq:abc-mcmc-target} invariant, and under a suitable choice of proposal density for the $\rvct{z}$ updates will be aperiodic and irreducible and so have \eqref{eq:abc-mcmc-target} as its unique stationary distribution \citep{marjoram2003markov,sisson2011likelihood}. 
 
 By making small changes to the unobserved variables $\rvct{z}$ and so making use of information from the previous state about plausible values for $\rvct{z}$ under $\prob{\rvct{x},\rvct{z}|\rvct{y}=\vct{y}}$ rather than independently sampling them from $\prob{\rvct{z}}$ as in the simpler Monte Carlo schemes, \ac{ABC} \ac{MCMC} can often increase efficiency in generative models with large numbers of unobserved variables to infer \cite{sisson2011likelihood}. This potential improved efficiency comes at a cost of introducing the usual difficulties associated with \ac{MCMC} methods such as high dependence between successive samples and difficulty monitoring convergence. Further \ac{ABC} \ac{MCMC} chains can be prone to `sticking' pathologies - suffering large series of rejections visible as the variables being stuck at a fixed value in traces of the chain state. Though we propose small updates to $\rvct{z}$ we independently sample proposed simulated observations $\rvct{x}$ in each transition; often the conditional distribution $\prob{\rvct{x}|\rvct{z}=\vct{z}^*,\rvct{y}=\vct{y}}$, i.e. describing the plausible values for $\rvct{x}$ given the observed data \emph{and} proposed $\rvct{z}$ values, will be much more concentrated than the distribution $\prob{\rvct{x},\rvct{z}|\rvct{y}=\vct{y}}$ and so proposing updates to $\rvct{x}$ from the latter will often lead to proposed values for $(\rvct{x},\rvct{z})$ with a very low acceptance probability.
-The \ac{ABC MCMC} Metropolis--Hastings scheme can also be considered an instance of a pseudo-marginal \ac{MCMC} method \citep{beaumont2002approximate,andrieu2009pseudo} where such sticking artifacts are also a well known problem \citep{murray2010slice}. %Pseudo-marginal methods are targetted at problems where we can only compute an unbiased estimator of the density of the target distribution of interest, with here an independent sample of the observed variables $\rvct{x}$ from the generative model used to compute an unbiased estimate o.
+The \ac{ABC} \ac{MCMC} Metropolis--Hastings scheme can also be considered an instance of a pseudo-marginal \ac{MCMC} method \citep{beaumont2002approximate,andrieu2009pseudo} where such sticking artifacts are also a well known problem \citep{murray2010slice}. %Pseudo-marginal methods are targetted at problems where we can only compute an unbiased estimator of the density of the target distribution of interest, with here an independent sample of the observed variables $\rvct{x}$ from the generative model used to compute an unbiased estimate o.
 
 %the overall transition operator leaving \eqref{eq:abc-mcmc-target} stationary. The samples of the chain state can  then be used to compute consistent estimators of \eqref{eq:abc-expectations}. This scheme relies on being able to evaluate $\pden{\rvct{z}}$ and so is only applicable to directed models where the latent generator $\genfunc_1$ is of a tractable form such that $\pden{\rvct{z}}$ is known.
 
@@ -388,13 +685,13 @@ Crucially this reparameterisation takes the form of an integral of a function $f
   \pi_\epsilon(\vct{u}) = \frac{1}{\pden{\rvct{y}}(\vct{y})} 
   k_\epsilon{\lpa\vct{y};\,\genfunc_{\rvct{x}}(\vct{u})\rpa}\,\rho(\vct{u}),
 \end{equation}
-that we can evaluate up to an unknown normalising constant $\pden{\rvct{y}}(\vct{y})$. This is the typical setting for approximate inference in standard (explicit) probabilistic models, and so is straight away amenable to applying standard variants of methods such as \ac{MCMC} and variational inference. In the common special case (and typical \ac{ABC} setting) of a directed generative model with a tractable marginal density on the unobserved variables $\pden{\rvct{z}}$, using the notation introduced in Section \eqref{sec:differentiable-generative-models} we have that
+that we can evaluate up to an unknown normalising constant $\pden{\rvct{y}}(\vct{y})$. This is the typical setting for approximate inference in explicit probabilistic models, and so is straight away amenable to applying standard variants of methods such as \ac{MCMC} and variational inference. In the common special case (and typical \ac{ABC} setting) of a directed generative model with a tractable marginal density on the unobserved variables $\pden{\rvct{z}}$, using the notation introduced in Section \eqref{sec:differentiable-generative-models} we have that
 \begin{align}\label{eq:abc-expectation-input-space-directed}
   &\expc{f(\rvct{z}) \gvn \rvct{y}=\vct{y};\,\epsilon} =
   \frac{1}{\pden{\rvct{y}}(\vct{y})} 
   \expc{f(\rvct{z}) \, k_\epsilon\lpa\vct{y};\,\genfunc_{\rvct{x}|\rvct{z}}(\rvct{z},\,\rvct{u}_2)\rpa}
   \\
-  &\qquad\qquad=
+  &\qquad=
   \frac{1}{\pden{\rvct{y}}(\vct{y})}
   \int_\set{Z}\int_{\set{U}_2} 
     f(\vct{z}) \,
@@ -408,27 +705,29 @@ with now the explicit target density for inference being
   \pi_\epsilon(\vct{z},\vct{u}_2) = \frac{1}{\pden{\rvct{y}}(\vct{y})} 
   k_\epsilon{\lpa\vct{y};\,\genfunc_{\rvct{x}|\rvct{z}}(\vct{z},\,\vct{u}_2)\rpa}\,\pden{\rvct{z}}(\vct{z})\,\rho_2(\vct{u}_2).
 \end{equation}
-This latter form is directly comparable to the reparameterisation suggested in \citep{murray2010slice}  for pseudo-marginal inference problems. There it is applied to construct a \ac{MCMC} method which uses slice sampling transition operators to iterate between updating the unobserved variables $\rvct{z}$ given random inputs $\rvct{u}_2$ and vice versa. For models in which the target density \eqref{eq:abc-density-input-space} is continuous with respect to both arguments, the slice sampling updates will be almost surely move the state a non-zero distance, therefore the chain will not `stick'. Related approaches using Metropolis updates instead have also been proposed \citep{dahlin2015accelerating,deligiannidis2015correlated}.
+Rather than defining a \ac{MCMC} chain jointly updating all of the random inputs $\rvct{u}$ this formulation suggests a possible alternative approach of defining a chain on $(\rvct{z},\rvct{u}_2)$ and alternating transition operators updating $\rvct{z}$ while leaving $\rvct{u}_2$ fixed and updating $\rvct{u}_2$ while leaving $\rvct{z}$ fixed. We will revisit this reparameterisation in the context of a proposed slice-sampling approach for inference in the next chapter.
+%This latter form is directly comparable to the reparameterisation suggested in \citep{murray2010slice}  for pseudo-marginal inference problems. There it is applied to construct a \ac{MCMC} method which uses slice sampling transition operators to iterate between updating the unobserved variables $\rvct{z}$ given random inputs $\rvct{u}_2$ and vice versa. For models in which the target density \eqref{eq:abc-density-input-space} is continuous with respect to both arguments, the slice sampling updates will be almost surely move the state a non-zero distance, therefore the chain will not `stick'. Related approaches using Metropolis updates instead have also been proposed \citep{dahlin2015accelerating,deligiannidis2015correlated}.
 
-In the reparameterisation proposed so far we have still required the definition of a kernel $k_\epsilon$ and tolerance $\epsilon$ and the integral being estimated is the approximate expectation \eqref{eq:abc-expectation-1} rather than target conditional expectation $\expc{f(\rvct{z}) \gvn \rvct{x}\,}$ we are directly interested in. We now consider in the specific case of differentiable generative models how to perform inference without introducing an \ac{ABC} kernel.
+In the reparameterising inference in terms of evaluating an integral over the input space we have still so far required the definition of a kernel $k_\epsilon$ and tolerance $\epsilon$ and the integral being estimated is the approximate expectation \eqref{eq:abc-expectation-1} rather than target conditional expectation $\expc{f(\rvct{z}) \gvn \rvct{x}\,}$ we are directly interested in. We now consider in the specific case of differentiable generative models how to perform inference without introducing an \ac{ABC} kernel.
 
 %Although reparameterising the \ac{ABC} expectation as an integral over the input space and performing inference in that space can in itself sign
 %Now considering specifically differentiable generative models and returning to the general case where the model is not necessarily directed. 
-We begin an initial intuition for the approach, by considering taking the limit of $\epsilon \to 0$ in the integral \eqref{eq:abc-expectation-input-space} corresponding to evaluating the \ac{ABC} conditional expectation in the generator input space. In Section \ref{sec:abc} we previously showed that the approximate expectation $\expc{f(\rvct{z}) \gvn \rvct{y}= \vct{y};\,\epsilon}$ converges as $\epsilon \to 0$ to the conditional expectation of interest $\expc{f(\rvct{z}) \gvn \rvct{x} = \vct{y}}$, providing that the implicit distribution of the observed variables in the generative model $\prob{\rvct{x}}$ is absolutely continuous with respect to the Lebesgue measure with density $\pden{\rvct{x}}$. Informally we can consider that for kernels meeting the conditions \eqref{eq:abc-valid-kernel-condition-1} and \eqref{eq:abc-valid-kernel-condition-2}, in the limit of $\epsilon \to 0$ we can replace the kernel density terms $k_\epsilon\lpa{\vct{y}};\,\genfunc_{\rvct{x}}(\vct{u})\rpa$ with Dirac deltas ${\delta}_{\vct{y}}\lpa\genfunc_{\rvct{x}}(\vct{u})\rpa$ (defined as having the \emph{sifting} property $\int_{\set{X}} f(\vct{x}) \, \delta_{\vct{y}}(\vct{x})\,\dr\vct{x} = f(\vct{y})$)
+We begin an initial intuition for the approach, by considering taking the limit of $\epsilon \to 0$ in the integral \eqref{eq:abc-expectation-input-space} corresponding to evaluating the \ac{ABC} conditional expectation in the generator input space. We previously showed in \eqref{eq:abc-expectation-limit} that the approximate expectation $\expc{f(\rvct{z}) \gvn \rvct{y}= \vct{y};\,\epsilon}$ converges as $\epsilon \to 0$ to the conditional expectation of interest $\expc{f(\rvct{z}) \gvn \rvct{x} = \vct{y}}$, providing that the implicit distribution of the observed variables in the generative model $\prob{\rvct{x}}$ is absolutely continuous with respect to the Lebesgue measure with density $\pden{\rvct{x}}$. Informally we can consider that for kernels meeting the conditions \eqref{eq:abc-valid-kernel-condition-1} and \eqref{eq:abc-valid-kernel-condition-2}, in the limit of $\epsilon \to 0$ the kernel density terms $k_\epsilon\lpa{\vct{y}};\,\genfunc_{\rvct{x}}(\vct{u})\rpa$ tend to Dirac deltas ${\delta}\lpa\vct{y} - \genfunc_{\rvct{x}}(\vct{u})\rpa$ and so
 \begin{align}\label{eq:expectation-input-space-limit}
-  \expc{f(\rvct{z}) \gvn \rvct{x}=\vct{y}} =
+  \expc{f(\rvct{z}) \gvn \rvct{x}=\vct{y}} &=
   \lim_{\epsilon\to 0}  \expc{f(\rvct{z}) \gvn \rvct{y}=\vct{y};\,\epsilon} 
-  \simeq
+  \\
+  &\simeq
   \frac{
   \int_{\set{U}} 
     f\circ\genfunc_{\rvct{z}}(\vct{u}) \,
-    \delta_{\vct{y}}\lpa\genfunc_{\rvct{x}}(\vct{u})\rpa\,
+    \delta\lpa\vct{y} - \genfunc_{\rvct{x}}(\vct{u})\rpa\,
     \rho(\vct{u})
   \,\dr\vct{u}
   }
   {
     \int_{\set{U}} 
-    \delta_{\vct{y}}\lpa\genfunc_{\rvct{x}}(\vct{u})\rpa\,
+    \delta\lpa\vct{y} - \genfunc_{\rvct{x}}(\vct{u})\rpa\,
     \rho(\vct{u})
   \,\dr\vct{u}
   }.
@@ -440,33 +739,35 @@ We begin an initial intuition for the approach, by considering taking the limit 
 %    {\delta}\lpa{\vct{y}} - \genfunc_{\rvct{x}}(\vct{u})\rpa\,
 %    \rho(\vct{u})
 %  \,\dr\vct{u}.
-The Dirac delta term restricts the integral across the input space $\set{U}$ to an embedded, $M - N_{\rvct{x}}$ dimensional, implicitly-defined manifold $\fset{\vct{u} \in \set{U} :  \genfunc_{\rvct{x}}(\vct{u}) = \vct{y}}$. It is not necessarily immediately clear however how to define a corresponding density on that manifold for abitrary non-injective $\genfunc_{\rvct{x}}$.
+The Dirac delta term restricts the integral across the input space $\set{U}$ to an embedded, $M - N_{\rvct{x}}$ dimensional, implicitly-defined manifold corresponding to the pre-image under $\genfunc_{\rvct{x}}$ of $\vct{y}$, $\preimage{\genfunc_{\rvct{x}}}{\vct{y}} \equiv \fset{\vct{u} \in \set{U} :  \genfunc_{\rvct{x}}(\vct{u}) = \vct{y}}$. It is not necessarily immediately clear however how to define the required density on that manifold for abitrary non-injective $\genfunc_{\rvct{x}}$.
 
 In differentiable generative models (i.e. a model meeting the conditions stated in Section \ref{sec:differentiable-generative-models}) we can however use a derivation similar to that given by Diaconis, Holmes and Shahshahani in \citep{diaconis2013sampling} for the conditional density on a manifold to find an expression for the conditional expectation consistent with definition given earlier in \eqref{eq:conditional-expectation-definition}. Our derivation is largely a restatement of that given in \citep{diaconis2013sampling} except for the minor difference of working in terms of conditional expectations rather densities. % (with the motivation that the conditional expectation is object we are directly interested in).%; we provide the derivation mainly for completeness and to make it more easily relatable to our notation.
 The key result we will use is a formula from geometric measure-theory, Federer's \emph{co-area formula} \citep[\S 3.2.12]{federer2014geometric}.%, which generalises Fubini's theorem for iterated integrals that we earlier used implicitly when deriving the \ac{ABC} conditional expectation in \eqref{eq:abc-conditional-expectation-derivation}.
 
-\begin{theorem}[Co-area formula]
+\begin{theorem}[Co-area formula]\label{thm:co-area-formula}
 Let $\set{V} \subseteq \reals^L$ and $\set{W} \subseteq \reals^K$ with $L \geq K$, $\vctfunc{m}:\set{V}\to\set{W}$ be Lipschitz and $\func{h} : \set{V} \to \reals$ be Lebesgue measurable. Then
 \begin{equation}\label{eq:co-area-formula}
-\begin{split}
-    &\int_{\set{V}} 
-      \func{h}(\vct{v}) \, \left|\jacob{\vctfunc{m}}{\vct{v}}\jacob{\vctfunc{m}}{\vct{v}}^{\mathsf{T}}\right|^{\frac{1}{2}}
+    \int_{\set{V}} 
+      \func{h}(\vct{v}) \, \jacobproddet{\vctfunc{m}}{\vct{v}}
     \,\dr\lebm{L}(\vct{v})
-    = \,\\
-    &\qquad\qquad
+    = 
     \int_{\set{W}}
       \int_{\preimage{\vctfunc{m}}{\vct{w}}} \func{h}(\vct{v}) \,\dr\haum{L-K}(\vct{v})
     \,\dr\lebm{K}(\vct{w})
-\end{split}
 \end{equation}
-with $\preimage{\vctfunc{m}}{\vct{w}}$ denoting the preimage of $\lbrace \vct{w} \rbrace$ under the map $\vctfunc{m}$ i.e. 
-\begin{equation}\label{eq:preimage-notation-definition}
-  \preimage{\vctfunc{m}}{\vct{w}} \equiv 
-  \fset{\vct{v} \in \set V : \vctfunc{m}(\vct{v}) = \vct{w}}.
+with $\jacobproddet{\vctfunc{m}}{\vct{v}}$ denoting the Jacobian product determinant
+\begin{equation}\label{eq:jacobian-product-det}
+  \jacobproddet{\vctfunc{m}}{\vct{v}} \equiv 
+  \left|\,\pd{\vctfunc{m}}{\vct{u}}\pd{\vctfunc{m}}{\vct{u}}\tr\right|.
 \end{equation}
+%$\preimage{\vctfunc{m}}{\vct{w}}$ denoting the preimage of $\lbrace \vct{w} \rbrace$ under the map $\vctfunc{m}$ i.e. 
+%\begin{equation}\label{eq:preimage-notation-definition}
+%  \preimage{\vctfunc{m}}{\vct{w}} \equiv 
+%  \fset{\vct{v} \in \set V : \vctfunc{m}(\vct{v}) = \vct{w}}.
+%\end{equation}
 \end{theorem}
 More immediately applicable in our case is the following corollary.
-\begin{corollary}
+\begin{corollary}\label{col:co-area-formula}
 If $Q$ is a probability measure on $\set{V}$ with density $q$ with respect to the Lebesgue measure $\lambda^L$ and $\jacobian{\vctfunc{m}}$ is full row-rank $Q$-almost everywhere, then for Lebesgue measurable $\func{h}' : \set{V} \to \reals$
 \begin{equation}\label{eq:co-area-formula-corollary}
 \begin{split}
@@ -479,110 +780,103 @@ If $Q$ is a probability measure on $\set{V}$ with density $q$ with respect to th
       \int_{\preimage{\vctfunc{m}}{\vct{w}}}
         \func{h}'(\vct{v}) \,
         q(\vct{v})\,
-        \left|\jacob{\vctfunc{m}}{\vct{v}}\jacob{\vctfunc{m}}{\vct{v}}\phantom{}\tr\right|^{-\frac{1}{2}}
+        \jacobproddet{\vctfunc{m}}{\vct{v}}^{-1}
       \,\dr\haum{L-K}(\vct{v})
     \,\dr\lebm{K}(\vct{w}).
 \end{split}
 \end{equation}
 \end{corollary}
-This can be shown by setting $h(\vct{v}) = h'(\vct{v})\,q(\vct{v})|\jacob{\vctfunc{m}}{\vct{v}}\jacob{\vctfunc{m}}{\vct{v}}\phantom{}\tr|^{-\frac{1}{2}}$ in \eqref{eq:co-area-formula} and using the equivalence of Lebesgue integrals in which the integrand differs only zero-measure sets. 
+This can be shown by setting $h(\vct{v}) = h'(\vct{v})\,q(\vct{v})\jacobproddet{\vctfunc{f}}{\vct{v}}^{-1}$ in \eqref{eq:co-area-formula} and using the equivalence of Lebesgue integrals in which the integrand differs only zero-measure sets. 
 
 We first show that $\prob{\rvct{x}}$ has a density $\pden{\rvct{x}} = \td{\prob{\rvct{x}}}{\lebm{N_{\rvct{x}}}}$.
 
 \begin{proposition}[Change of variables in a differentiable generative model]
-For a differentiable generative model as defined previously in Section \ref{sec:differentiable-generative-models}, then the observed variable $\rvct{x}$ has a density with respect to the Lebesgue measure satisfying
+For a differentiable generative model $(\set{U},\sset{F}\kern-2pt,\rho,\mu,\genfunc_{\rvct{x}},\genfunc_{\rvct{z}})$ as defined in Definition \ref{def:differentiable-generative-model}, then if the generator Jacobian $\pd{\genfunc_{\rvct{x}}}{\vct{u}}$ is Lipschitz and has full row-rank $\prob{\rvct{u}}$-almost everywhere, the observed vector $\rvct{x}$ has a density with respect to the Lebesgue measure satisfying
 \begin{equation}\label{eq:dgm-marginal-density-x}
   \pden{\rvct{x}}({\vct{x}})  =
   \int_{\genfunc_{\rvct{x}}^{-1}[\vct{x}]}
     \rho(\vct{u})\,
-    \left|
-      \jacob{\genfunc_{\rvct{x}}}{\vct{u}}
-      \jacob{\genfunc_{\rvct{x}}}{\vct{u}}\phantom{}\tr
-    \right|^{-\frac{1}{2}}
+    \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
   \,\dr\haum{M-N_{\rvct{x}}}(\vct{u})
   \qquad \forall \vct{x} \in\set{X}.
 \end{equation}
 %with $\genfunc_{\rvct{x}}^{-1}[\vct{x}] = \fset{\vct{u} \in \set{U} : \genfunc_{\rvct{x}}(\vct{u}) = \vct{x}}$.
 \end{proposition}
 \begin{proof}
-From the earlier definitions that $\rvct{x} = \genfunc_{\rvct{x}}(\rvct{u})$ and $\pden{\rvct{u}} = \rho$ we have
-\begin{equation}
+From Definition \ref{def:differentiable-generative-model} we have that $\rvct{x} = \genfunc_{\rvct{x}}(\rvct{u})$ and $\td{\prob{\rvct{u}}}{\lebm{M}} = \rho$ and so
+\begin{equation*}
   \prob{\rvct{x}}(\set{A}) 
   =
   \int_{\set{U}} 
     \ind{\set{A}}\circ\genfunc_{\rvct{x}}(\vct{u})\,\rho(\vct{u})
   \,\dr\lebm{M}(\vct{u})
   \qquad \forall \set{A} \in\sset{G}.
-\end{equation}
-Applying the co-area corollary \eqref{eq:co-area-formula-corollary} we have that $\forall \set{A} \in\sset{G}$
-\begin{align}
-  \prob{\rvct{x}}(\set{A})  &=
+\end{equation*}
+As the generator Jacobian $\pd{\genfunc_{\rvct{x}}}{\vct{u}}$ is Lipschitz and has full row-rank $\prob{\rvct{u}}$-almost everywhere we can apply Corollary \ref{col:co-area-formula}, and so we have that $\forall \set{A} \in\sset{G}$
+\begin{equation*}
+  \prob{\rvct{x}}(\set{A}) =
   \int_{\set{X}}
   \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}}\kern-1pt
-    \ind{\set{A}}\!\circ\genfunc_{\rvct{x}}(\vct{u})\,\rho(\vct{u})\,
-    \left|
-      \jacob{\genfunc_{\rvct{x}}}{\vct{u}}
-      \jacob{\genfunc_{\rvct{x}}}{\vct{u}}\phantom{}\tr
-    \right|^{-\frac{1}{2}}\\ \nonumber 
-  &\qquad\qquad\qquad\qquad\qquad\qquad\qquad
+    \ind{\set{A}}\!\circ\,\genfunc_{\rvct{x}}(\vct{u})\,\rho(\vct{u})\,
+    \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
   \,\dr\haum{M-{N_{\rvct{x}}}}(\vct{u})
-  \,\dr\lebm{N_{\rvct{x}}}(\vct{x})
-  \\
+  \,\dr\lebm{N_{\rvct{x}}}(\vct{x}).
+\end{equation*}
+The term $\ind{\set{A}}\!\circ\,\genfunc_{\rvct{x}}(\vct{u})$ inside the inner integral is equal to $\ind{\set{A}}(\vct{x})$ across all points in the space $\preimage{\genfunc_{\rvct{x}}}{\vct{x}}$ being integrated across and so can be taken outside the inner integral to give
+\begin{align*}
+  \prob{\rvct{x}}(\set{A})
   &=
   \int_{\set{X}}
   \ind{\set{A}}(\vct{x})
   \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}} 
    \rho(\vct{u})\,
-    \left|
-      \jacob{\genfunc_{\rvct{x}}}{\vct{u}}
-      \jacob{\genfunc_{\rvct{x}}}{\vct{u}}\phantom{}\tr
-    \right|^{-\frac{1}{2}}\\ \nonumber 
-  &\qquad\qquad\qquad\qquad\qquad\qquad\qquad
+   \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
   \,\dr\haum{M-{N_{\rvct{x}}}}(\vct{u})
   \,\dr\lebm{N_{\rvct{x}}}(\vct{x})\\
   &=
   \int_{\set{A}}
   \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}} 
    \rho(\vct{u})\,
-    \left|
-      \jacob{\genfunc_{\rvct{x}}}{\vct{u}}
-      \jacob{\genfunc_{\rvct{x}}}{\vct{u}}\phantom{}\tr
-    \right|^{-\frac{1}{2}}
+   \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
   \,\dr\haum{M-{N_{\rvct{x}}}}(\vct{u})
   \,\dr\lebm{N_{\rvct{x}}}(\vct{x}).
-\end{align}
-$\therefore$ $\prob{\rvct{x}}$ has a density satisfying \eqref{eq:dgm-marginal-density-x} with respect to $\lebm{}$. \qedhere
+\end{align*}
+By definition the density $\pden{\rvct{x}}$ of a probability measure $\prob{\rvct{x}}$ with respect to the Lebesgue measure $\lebm{N_{\rvct{x}}}$ satisfies
+\begin{equation*}
+  \prob{\rvct{x}}(\set{A}) = \int_{\set{A}} \pden{\rvct{x}}(\vct{x}) \,\dr\lebm{N_{\rvct{x}}}(\vct{x})
+  \qquad \forall \set{A} \in \sset{G}
+\end{equation*}
+$\therefore$ $\prob{\rvct{x}}$ has a density corresponding to \eqref{eq:dgm-marginal-density-x} with respect to $\lebm{N_{\rvct{x}}}$. \qedhere
 \end{proof}
 This is the generalisation of the change of variables formula under a diffeomorphism encountered previously in Chapter \ref{ch:probabilistic-modelling}. We now derive a result for the conditional expectation.
 \begin{proposition}[Conditional expectations in a differentiable generative model]
-For a differentiable generative model as defined previously in Section \ref{sec:differentiable-generative-models}, then for measurable functions $f : \set{X} \to \reals$ and $\vct{x} \in \set{X}$ such that $\pden{\rvct{x}}(\vct{x}) > 0$ we have that
+For a differentiable generative model $(\set{U},\sset{F}\kern-2pt,\rho,\mu,\genfunc_{\rvct{x}},\genfunc_{\rvct{z}})$ as defined in Definition \ref{def:differentiable-generative-model}, then if the generator Jacobian $\pd{\genfunc_{\rvct{x}}}{\vct{u}}$ is Lipschitz and has full row-rank $\prob{\rvct{u}}$-almost everywhere, then for Lebesgue measurable functions $f : \set{X} \to \reals$ and $\vct{x} \in \set{X}$ such that $\pden{\rvct{x}}(\vct{x}) > 0$ we have that
 \begin{equation}\label{eq:cond-expectation-input-space}
 \begin{split}
   &\expc{f(\rvct{z}) \gvn \rvct{x}=\vct{x}}
   =\,\\
-  &\qquad
+  &\qquad\qquad
   \frac{1}{\pden{\rvct{x}}({\vct{x}})}
   \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}}
     f\circ\genfunc_{\rvct{z}}(\vct{u}) \, \rho(\vct{u}) \,
-    {\left|\jacob{\genfunc_{\rvct{x}}}{\vct{u}}\jacob{\genfunc_{\rvct{x}}}{\vct{u}}\tr\right|^{-\frac{1}{2}}}
+    \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
   \,\dr\haum{M-N_{\rvct{x}}}(\vct{u}).
 \end{split}
 \end{equation}
 %with $\set{C} = \fset{\vct{u} \in \set{U} :  \genfunc_{\rvct{x}}(\vct{u}) = \vct{x}}$.
 \end{proposition}
 \begin{proof}
-Restating the general definition for a conditional expectation, we need to find a function $\expc{f(\rvct{z}) \gvn \rvct{x}\,} : \set{X} \to \reals$ satisfying
-\begin{equation}\label{eq:cond-expectation-def-restate}
+Restating the general definition for a conditional expectation from Chapter \ref{ch:probabilistic-modelling}, we need to find a measurable function $\expc{f(\rvct{z}) \gvn \rvct{x}\,} : \set{X} \to \reals$ which $\forall\set{A} \in \sset{G}$ satisfies
+\begin{equation*}
   \int_{\set{A}}
     \expc{f(\rvct{z}) \gvn \rvct{x} = \vct{x}} 
   \,\dr\prob{\rvct{x}}(\vct{x}) =
   \int_{\set{A} \times \set{Z}}
     f(\vct{z}) 
-  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z})
-  \qquad\forall\set{A} \in \sset{G}.
-\end{equation}
-Using $\rvct{x} = \genfunc_{\rvct{x}}(\rvct{u})$, $\rvct{z} = \genfunc_{\rvct{z}}(\rvct{u})$ and $\pden{\rvct{u}} = \rho$ we have that $\forall\set{A} \in \sset{G}$
-\begin{equation}
+  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z}),
+\end{equation*}
+with this uniquely defining the conditional expectation up to $\prob{\rvct{x}}$-null sets. Using $\rvct{x} = \genfunc_{\rvct{x}}(\rvct{u})$, $\rvct{z} = \genfunc_{\rvct{z}}(\rvct{u})$ and $\pden{\rvct{u}} = \rho$ we have that $\forall\set{A} \in \sset{G}$
+\begin{equation*}
   \int_{\set{A} \times \set{Z}}
     f(\vct{z}) 
   \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z}) =
@@ -591,46 +885,56 @@ Using $\rvct{x} = \genfunc_{\rvct{x}}(\rvct{u})$, $\rvct{z} = \genfunc_{\rvct{z}
   f\circ\genfunc_{\rvct{z}}(\vct{u})\,
   \rho(\vct{u})
   \,\dr\lebm{M}(\vct{u}).
-\end{equation}
-Applying the co-area corollary \eqref{eq:co-area-formula-corollary} to the right-hand side we have that $\forall \set{A} \in\sset{G}$
-\begin{align}
+\end{equation*}
+Applying the co-area corollary \eqref{eq:co-area-formula-corollary} to the right-hand side and again noting the indicator term $\ind{\set{A}}\circ\,\genfunc_{\rvct{x}}(\vct{u})$ is constant across the space being integrated on, we have that $\forall \set{A} \in\sset{G}$
+\begin{align*}
   &\int_{\set{A} \times \set{Z}}
     f(\vct{z}) 
-  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z})
+  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z})\\
   &=
-  \int_{\set{A}}
-  \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}}\kern-1pt
+  \int_{\set{X}} \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}}
+   \ind{\set{A}}\circ\,\genfunc_{\rvct{x}}(\vct{u})\,
    f\circ\genfunc_{\rvct{z}}(\vct{u})\,
    \rho(\vct{u})\,
-    \left|
-      \jacob{\genfunc_{\rvct{x}}}{\vct{u}}
-      \jacob{\genfunc_{\rvct{x}}}{\vct{u}}\phantom{}\tr
-    \right|^{-\frac{1}{2}}
+   \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
   \,\dr\haum{M-{N_{\rvct{x}}}}(\vct{u})
   \,\dr\lebm{N_{\rvct{x}}}(\vct{x})
   \\
   &=
   \int_{\set{A}}
+  \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}}\kern-1pt
+   f\circ\genfunc_{\rvct{z}}(\vct{u})\,
+   \rho(\vct{u})\,
+   \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
+  \,\dr\haum{M-{N_{\rvct{x}}}}(\vct{u})
+  \,\dr\lebm{N_{\rvct{x}}}(\vct{x}).
+\end{align*}
+Finally using that $\prob{\rvct{x}}$ has a density $\pden{\rvct{x}}$ with respect to the Lebesgue measure as shown in the previous proposition, we have that
+\begin{equation*}
+\begin{split}
+  &\int_{\set{A} \times \set{Z}}
+    f(\vct{z}) 
+  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z}) =\,\\
+  &\qquad
+  \int_{\set{A}}
   \frac{1}{\pden{\rvct{x}}(\vct{x})}
   \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}}\kern-1pt
    f\circ\genfunc_{\rvct{z}}(\vct{u})\,
    \rho(\vct{u})\,
-    \left|
-      \jacob{\genfunc_{\rvct{x}}}{\vct{u}}
-      \jacob{\genfunc_{\rvct{x}}}{\vct{u}}\phantom{}\tr
-    \right|^{-\frac{1}{2}}
+   \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
   \,\dr\haum{M-{N_{\rvct{x}}}}(\vct{u})
   \,\dr\prob{\rvct{x}}(\vct{x}).
-\end{align}
-Comparing to \eqref{eq:cond-expectation-def-restate} we have that \eqref{eq:cond-expectation-input-space} satisfies the required definition. \qedhere
+\end{split}
+\end{equation*}
+Note that as we are integrating against the probability measure $\prob{\rvct{x}}$ we can safely ignore the points for which $\pden{\rvct{x}}(\vct{x}) = 0$ as the set of all such points naturally has zero measure under $\prob{\rvct{x}}$ and so does not contribute to integral. Comparing to the definition of the conditional expectation we have that \eqref{eq:cond-expectation-input-space} satisfies the definition. \qedhere
 \end{proof}
 
 %By applying the the \emph{Co-Area Formula} \citep[\S 3.2.12]{federer2014geometric} the integral with respect to the Lebesgue measure across $\set{U}$ in \eqref{eq:expectation-input-space-limit} can be rewritten as integral across the embedded manifold $\set{C}$ with respect the Hausdorff measure for the manifold
 The expression derived for the conditional expectation has the form of an integral of function $f \circ \genfunc_{\rvct{z}}$ integrated against a density
 \begin{equation}\label{eq:tgt-density-on-manifold}
     \pi(\vct{u}) =
-    \frac{1}{\pden{\rvct{x}}(\vct{x})}
-    \left|\jacob{\genfunc_{\rvct{x}}}{\vct{u}}\jacob{\genfunc_{\rvct{x}}}{\vct{u}}\tr\right|^{-\frac{1}{2}}
+    \frac{1}{\pden{\rvct{x}}(\vct{x})}\,
+    \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}\,
     \rho(\vct{u}) 
 \end{equation}
 which we can evaluate upto an unknown normalising constant $\pden{\rvct{x}}(\vct{x})$. The key complicating factor is that the integral is now not across a Euclidean space, but an implictly defined manifold corresponding to the pre-image $\preimage{\genfunc_{\rvct{x}}}{\vct{x}}$. However if we can construct a Markov transition operator which has an invariant distribution with density \eqref{eq:tgt-density-on-manifold} with respect to the Hausdorff measure on the manifold, then we can use samples of the chain states $\lbrace\rvct{u}^{(s)}\rbrace_{s=1}^S$ to compute an estimate
@@ -702,11 +1006,11 @@ Most relevantly here \citep{brubaker2012family} proposes using a constrained \ac
 
 The requirement for $\preimage{\genfunc_{\rvct{x}}}{\vct{x}}$ to be connected will generally be much more difficult to verify. If the pre-image consists of multiple disconnected components then the dynamic will generally remain confined to just one of them. Although problematic, this issue is similar to that faced by most \ac{MCMC} methods in target distributions which potentially have multiple separated modes. Defining an augmented generator $\genfunc_{\rvct{y}}(\rvct{u},\rvct{n}) = \genfunc_{\rvct{x}}(\rvct{u}) + \epsilon \rvct{n}$ with $\rvct{n}$ a vector of $N_{\rvct{x}}$ independent zero-mean unit-variance Gaussian random variables and $\epsilon$ a small constant and then performing constrained \ac{HMC} on the augmented pair $(\rvct{u},\rvct{n})$ will guarantee that the manifold $\preimage{\genfunc_{\rvct{y}}}{\vct{x}}$ is connected and $\jacobian{\genfunc_{\rvct{y}}}$ is full row-rank everywhere. Of course this is equivalent to the \ac{ABC} approach with a $\epsilon$ tolerance Gaussian kernel, and using our earlier observation we could alternatively perform standard \ac{HMC} in the input space using \eqref{eq:abc-density-input-space} as the target density. 
 
-If $\epsilon$ is small however the high gradients in the target density normal to the tangent space of the manifold $\preimage{\genfunc_{\rvct{x}}}{\vct{x}}$ will tend to lead to a small integrator step size needing to be used to maintain reasonable accept rates and the simulated trajectories tend to exhibit high frequency oscillations as illustrated in Figure \ref{fig:gaussian-abc-hmc-trajectory-example}. We have found in some cases that applying constrained \ac{HMC} with the Gaussian augmented generator $\genfunc_{\rvct{y}}$ can therefore still be more efficient than running standard \ac{HMC} in the \ac{ABC} target density, despite the much higher per-step costs, as constrained \ac{HMC} updates are able to make much larger steps, particularly when using small $\epsilon$. The constrained \ac{HMC} dynamic exploits more information about the geometry of the target distribution by using the Jacobian $\jacobian{\genfunc{\rvct{x}}}$ which describes the tangent space of the manifold. A related approach would be to use a Riemannian-manifold \ac{HMC} \citep{girolami2011riemann} method with a position-dependent metric $\mtx{M}(\vct{u}) = \jacob{\genfunc_{\rvct{x}}}{\vct{u}}\jacob{\genfunc_{\rvct{x}}}{\vct{u}}\phantom{}\tr + \epsilon^2\mathbf{I}$ when using a Gaussian \ac{ABC} kernel in the input space (equation \eqref{eq:abc-density-input-space}); this should dynamically adjust the momentum scaling so as to reduce the inefficient oscillatory behaviour seen in the standard (fixed metric) \ac{HMC} trajectories \cite{betancourt2013general}.
+If $\epsilon$ is small however the high gradients in the target density normal to the tangent space of the manifold $\preimage{\genfunc_{\rvct{x}}}{\vct{x}}$ will tend to lead to a small integrator step size needing to be used to maintain reasonable accept rates and the simulated trajectories tend to exhibit high frequency oscillations as illustrated in Figure \ref{fig:gaussian-abc-hmc-trajectory-example}. We have found in some cases that applying constrained \ac{HMC} with the Gaussian augmented generator $\genfunc_{\rvct{y}}$ can therefore still be more efficient than running standard \ac{HMC} in the \ac{ABC} target density, despite the much higher per-step costs, as constrained \ac{HMC} updates are able to make much larger steps, particularly when using small $\epsilon$. The constrained \ac{HMC} dynamic exploits more information about the geometry of the target distribution by using the Jacobian $\jacobian{\genfunc{\rvct{x}}}$ which describes the tangent space of the manifold. A related approach would be to use a Riemannian-manifold \ac{HMC} \citep{girolami2011riemann} method with a position-dependent metric $\mtx{M}(\vct{u}) = \jacob{\genfunc_{\rvct{x}}}{\vct{u}}\jacob{\genfunc_{\rvct{x}}}{\vct{u}}\phantom{}\tr + \epsilon^2\idmtx$ when using a Gaussian \ac{ABC} kernel in the input space (equation \eqref{eq:abc-density-input-space}); this should dynamically adjust the momentum scaling so as to reduce the inefficient oscillatory behaviour seen in the standard (fixed metric) \ac{HMC} trajectories \cite{betancourt2013general}.
 
 \section{Method}\label{sec:method}
 
-Our constrained \ac{HMC} implementation is shown in Algorithm \ref{alg:constrained_hmc}. We use a generalisation of the RATTLE scheme to simulate the dynamic. The inner updates of the state to solve for the geodesic motion on the constraint manifold are split into multiple smaller steps, which is a special case of the scheme described in \citep{leimkuhler2016efficient}. This allows more flexibility in choosing an appropriately small step-size to ensure convergence of the iterative solution of the equations projecting on to the constraint manifold while still allowing a more efficient larger step size for updates to the momentum due to the negative log density gradient. We have assumed $\mtx{M} = \mtx{I}$ here; other mass matrix choices can be equivalently implemented by adding an initial linear transformation stage in the generator.
+Our constrained \ac{HMC} implementation is shown in Algorithm \ref{alg:constrained_hmc}. We use a generalisation of the RATTLE scheme to simulate the dynamic. The inner updates of the state to solve for the geodesic motion on the constraint manifold are split into multiple smaller steps, which is a special case of the scheme described in \citep{leimkuhler2016efficient}. This allows more flexibility in choosing an appropriately small step-size to ensure convergence of the iterative solution of the equations projecting on to the constraint manifold while still allowing a more efficient larger step size for updates to the momentum due to the negative log density gradient. We have assumed $\mtx{M} = \idmtx$ here; other mass matrix choices can be equivalently implemented by adding an initial linear transformation stage in the generator.
 
 \begin{algorithm}[!t]
 \caption{Constrained Hamiltonian Monte Carlo}
@@ -862,6 +1166,10 @@ There is extensive theoretical discussion of the issues involved in sampling fro
 
 %In our setting the gradient of the logarithm of the target density on the manifold \eqref{eq:tgt-density-on-manifold} consists of the sum of $\grad\log\rho$ and $-\frac{1}{2}\nabla\log\left|\jacobian{\genfunc_{\rvct{x}}}\jacobian{\genfunc_{\rvct{x}}}\phantom{}\tr\right|$. The former will typically be cheap compute and as shown in the Appendix the latter can be efficiently computed 
 
+% coupled ABC
+% M/G/1 queue Neal
+% quantile distributions
+
 \emph{Hamiltonian ABC} \cite{meeds2015hamiltonian}, also proposes applying \ac{HMC} to perform inference in simulator models as considered here. An {ABC} set-up is used with a Gaussian synthetic-likelihood formed by estimating moments from simulated data. Rather than using automatic differentiation to exactly calculate gradients of the generator function, \emph{Hamiltonian ABC} uses a stochastic gradient estimator. This is based on previous work considering methods for using a stochastic gradients within \ac{HMC} \citep{welling2011bayesian,chen2014stochastic}. It has been suggested however that the use of stochastic gradients can destroy the favourable properties of Hamiltonian dynamics which enable coherent exploration of high dimensional state spaces \citep{betancourt2015fundamental}. In \emph{Hamiltonian ABC} it is also observed that representing the generative model as a deterministic function by fixing the random inputs to the generator is a useful method for improving exploration of the state space. This is achieved by including the seed of the pseudo-random number generator in the chain state rather than the set of random inputs.
 
 Also related is \emph{Optimisation Monte Carlo} \citep{meeds2015optimization}. The authors propose using an optimiser to find parameters of a simulator model consistent with observed data (to within some tolerance $\epsilon$) given fixed random inputs sampled independently. The optimisation is not volume-preserving and so the Jacobian of the map is approximated with finite differences to weight the samples. Our method also uses an optimiser to find inputs consistent with the observations, however by using a volume-preserving dynamic we avoid having to re-weight samples which can scale poorly with dimensionality. 
@@ -870,7 +1178,7 @@ Our method also differs in treating all inputs to a generator equivalently; whil
 
 \section{Experiments}\label{sec:experiments}
 
-To illustrate the wide applicability of the proposed method we performed inference tasks in three diverse settings: parameter inference in a stochastic Lotka-Volterra predator-prey model simulation, 3D human pose and camera parameter inference given 2D joint position information and finally in-painting of missing regions of digit images using a generative model trained on MNIST. In all three experiments Theano \citep{theano2016theano} was used to specify the generator function and calculate the required derivatives. All experiments were run on an Intel Core i5-2400 quad-core CPU. Python code for the experiments is available at \url{https://git.io/dgm}.
+To illustrate the applicability of the proposed method we performed inference tasks in three diverse settings: parameter inference in a stochastic Lotka-Volterra predator-prey model simulation, 3D human pose and camera parameter inference given 2D joint position information and finally in-painting of missing regions of digit images using a generative model trained on MNIST. In all three experiments Theano \citep{theano2016theano} was used to specify the generator function and calculate the required derivatives. All experiments were run on an Intel Core i5-2400 quad-core CPU. %Python code for the experiments is available at \url{https://git.io/dgm}.
 
 \subsection{Lotka--Volterra parameter inference}
 
@@ -962,7 +1270,7 @@ Although using effective sample sizes as a measure of performance can give misle
 \centering
 \begin{tikzpicture}
   \node[latent] (uah) {$\rvct{u}_{h}$} ; %
-  \factor[left= of uah] {pr-uah} {\tiny $\nrm{\vct{0}, \mathbf{I}}$} {} {uah} ; %
+  \factor[left= of uah] {pr-uah} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {uah} ; %
   \node[latent, right=1. of uah, yshift=12mm] (ms) {$\rvct{m}_1$} ; %
   \node[latent, right=1. of uah, yshift=4mm] (ks) {$\rvct{k}_1$} ; %
   \node[latent, right=1. of uah, yshift=-4mm] (mc) {$\rvct{m}_2$} ; %
@@ -974,31 +1282,31 @@ Although using effective sample sizes as a measure of performance can give misle
     %{\tiny $\exp(\rvct{k}_s)\odot \rvct{u}_{a,s} + \rvct{m}_s$} 
     {} {ms,ks} {s} ; %
   \node[latent, right=1. of uah, yshift=20mm] (uas) {$\rvct{u}_{1}$} ; %
-  \factor[left= of uas] {pr-uas} {\tiny $\nrm{\vct{0}, \mathbf{I}}$} {} {uas} ; %
+  \factor[left= of uas] {pr-uas} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {uas} ; %
   \draw (uas) -- (ms_ks_uas-s) ; %
   \node[latent, right= of mc, yshift=-4mm] (c) {$\rvct{r}_2$} ; %
   \op[left= of c] {mc_kc_uac-c}
     %{\tiny $\exp(\rvct{k}_s)\odot \rvct{u}_{a,s} + \rvct{m}_\sin$} 
     {} {mc,kc} {c} ; %
   \node[latent, right=1. of uah, yshift=-20mm] (uac) {$\rvct{u}_{2	}$} ; %
-  \factor[left= of uac] {pr-uac} {below: \tiny $\nrm{\vct{0}, \mathbf{I}}$} {} {uac} ; %
+  \factor[left= of uac] {pr-uac} {below: \tiny $\nrm{\vct{0}, \idmtx}$} {} {uac} ; %
   \draw (uac) -- (mc_kc_uac-c) ; %
   \node[latent, right= of s, yshift=-8mm] (a) {$\rvct{z}_a$} ; %
   \op[left= of a] {s-c_a} {} {s,c} {a} ; %
   \node[latent, below=0.5 of c] (ub) {$\rvct{u}_b$} ; %
-  \factor[left=of ub] {pr-ub} {\tiny $\nrm{\vct{0}, \mathbf{I}}$} {} {ub} ; %
+  \factor[left=of ub] {pr-ub} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {ub} ; %
   \node[latent, right= of ub] (b) {$\rvct{z}_b$} ; %
   \op[left= of b] {ub-b} {} {ub} {b} ; %
   \node[latent, right=of a, yshift=-10mm] (p) {$\rvct{p}$} ; %
   \op[left=of p] {a_b-p} {} {a,b} {p} ; %
   \node[latent] (un) at (b-|p) {$\rvct{u}_x$} ; %
-  \factor[left= of un] {pr-un} {below: \tiny $\nrm{\vct{0},\mathbf{I}}$} {} {un} ; %
+  \factor[left= of un] {pr-un} {below: \tiny $\nrm{\vct{0},\idmtx}$} {} {un} ; %
   \node[obs, right=of un] (x) {$\rvct{x}$} ; %
   \node[latent, below=0.3 of ub] (uc) {$\rvct{u}_c$} ; %
 %  \node[latent, right= of uc] (cxy) {$\rvct{z}_{c,:2}$} ; %
   \node[latent, right= of uc] (cxy) {$\rvct{z}_{c}$} ; %
   \op[left= of cxy] {uc-cxy} {} {uc} {cxy} ; %
-  \factor[left=of uc] {pr-uc} {\tiny $\nrm{\vct{0}, \mathbf{I}}$} {} {uc} ; % 
+  \factor[left=of uc] {pr-uc} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {uc} ; % 
 %  \node[latent, below=0.3 of cxy] (cz) {$\rvar{z}_{c,2}$} ; %
 %  \op[left= of cz] {uc-cz} {} {uc} {cz} ; %
   \node[latent, right= of cxy, yshift=-0.15] (cm) {$\rvct{C}$} ; %
@@ -1078,7 +1386,7 @@ Although using effective sample sizes as a measure of performance can give misle
 
 For our next experiment we considered inferring a three-dimensional human pose and camera model from two-dimensional projections of joint positions. We used a 19 joint skeleton model, with a learnt prior distribution over poses parametrised by 47 local joint angles $\rvct{z}_a$. The pose model was learnt from the \emph{PosePrior} motion capture data-set \citep{akhter2015pose} with a Gaussian \ac{VAE} \citep{kingma2013auto} trained to match the distribution of the motion capture joint angle data. The circular topology of the angular data is poorly matched by the Euclidean space a Gaussian \ac{VAE} typically learns a distribution on, and simply `unwrapping' the angles to e.g. $[-\pi,\pi)$ leads to unnatural discontinuities at the $\pm \pi$ cut-point, this both making the initial learning problem challenging (as there is no in-built prior knowledge of continuity across the cut-point) and tending to lead to a learned latent space less amenable to \ac{MCMC} inference as `nearby' poses with one or more joint angles on opposite sides of the cut-point will likely end up corresponding to points far apart in the latent space.
 
-During training we therefore mapped each vector of 47 joint angles $\vct{z}_a^{(i)}$ (corresponding to a single motion capture datapoint) to a pair of 47-dimensional vectors $(\vct{r}_1^{(i)},\vct{r}_2^{(i)})$ by sampling a Gaussian random vector $\vct{n}^{(i)} \sim \nrm{\vct{0},\,\mathbf{I}}$ and then computing $\vct{r}_1^{(i)} = \exp\vct{n}^{(i)}\,\odot\,\cos\vct{z}_a^{(i)}$ and $ \vct{r}^{(i)}_2 = \exp\vct{n}^{(i)}\,\odot\,\sin\vct{z}^{(i)}_a$ and training the \ac{VAE} to maximise (a variational lower bound) on the joint marginal density of the $\lbrace \vct{r}^{(i)}_1,\,\vct{r}^{(i)}_2\rbrace_i$ pairs. At the cost of doubling the dimension, this leads to an embedding in a Euclidean space which does not introduce any arbitary cut-points and empirically seemed to lead to better sample quality from the learned generative model compared to learning the angles directly. Given the trained model we can generate a vector of angles $\rvct{z}_a$ using the model by sampling a Gaussian code (latent representation) vector $\rvct{u}_h$ from $\nrm{\vct{0},\mathbf{I}}$ then sampling a pair of 47-dimensional vectors $\rvct{r}_1$ and $\rvct{r}_2$ from the learnt Gaussian decoder model given $\rvct{u}_h$ (and further Gaussian random input vectors $\rvct{u}_1$ and $\rvct{u}_2$), and finally recovering an angle by computing $\rvct{z}_a = \textrm{atan2}(\rvct{r}_2,\rvct{r}_1)$. The resulting distribution on $\rvct{z}_a$ is only implicitly defined, but the overall generative model is differentiable with respect to the input vectors $\rvct{u}_h$, $\rvct{u}_1$ and $\rvct{u}_2$.
+During training we therefore mapped each vector of 47 joint angles $\vct{z}_a^{(i)}$ (corresponding to a single motion capture datapoint) to a pair of 47-dimensional vectors $(\vct{r}_1^{(i)},\vct{r}_2^{(i)})$ by sampling a Gaussian random vector $\vct{n}^{(i)} \sim \nrm{\vct{0},\,\idmtx}$ and then computing $\vct{r}_1^{(i)} = \exp\vct{n}^{(i)}\,\odot\,\cos\vct{z}_a^{(i)}$ and $ \vct{r}^{(i)}_2 = \exp\vct{n}^{(i)}\,\odot\,\sin\vct{z}^{(i)}_a$ and training the \ac{VAE} to maximise (a variational lower bound) on the joint marginal density of the $\lbrace \vct{r}^{(i)}_1,\,\vct{r}^{(i)}_2\rbrace_i$ pairs. At the cost of doubling the dimension, this leads to an embedding in a Euclidean space which does not introduce any arbitary cut-points and empirically seemed to lead to better sample quality from the learned generative model compared to learning the angles directly. Given the trained model we can generate a vector of angles $\rvct{z}_a$ using the model by sampling a Gaussian code (latent representation) vector $\rvct{u}_h$ from $\nrm{\vct{0},\idmtx}$ then sampling a pair of 47-dimensional vectors $\rvct{r}_1$ and $\rvct{r}_2$ from the learnt Gaussian decoder model given $\rvct{u}_h$ (and further Gaussian random input vectors $\rvct{u}_1$ and $\rvct{u}_2$), and finally recovering an angle by computing $\rvct{z}_a = \textrm{atan2}(\rvct{r}_2,\rvct{r}_1)$. The resulting distribution on $\rvct{z}_a$ is only implicitly defined, but the overall generative model is differentiable with respect to the input vectors $\rvct{u}_h$, $\rvct{u}_1$ and $\rvct{u}_2$.
 
 The \emph{PosePrior} motion capture data includes recordings from only a relatively small number of distinct actors and so limited variation in the `bone-lengths' of the skeleton model. Therefore a serparate log-normal model for the bone lengths $\rvct{z}_b$ was fitted using data from the \emph{ANSUR} anthropometric data-set \citep{gordon1988ansur}, due to symmetry in the skeleton thirteen independent lengths being specified. A simple pin-hole projective camera model with three position parameters $\rvct{z}_c$ and fixed focal-length was used\footnote{The camera orientation was assumed fixed to avoid replicating the degrees of freedom specified by the angular orientation of the root joint of the skeleton: only the relative camera--skeleton orientation is important.}. A log-normal prior distribution was placed on the depth co-ordinate $\rvar{z}_{c,2}$ to enforce positivity with normal priors on the other two co-ordinates $\rvar{z}_{c,0}$ and $\rvar{z}_{c,1}$. 
 
