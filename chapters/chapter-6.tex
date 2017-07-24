@@ -1,0 +1,220 @@
+\chapter{Pseudo-marginal methods}\label{ch:pseudo-marginal-methods}
+
+The \ac{MCMC} methods considered in Chapters \ref{ch:approximate-inference} and \ref{ch:hamiltonian-monte-carlo} provide a very general set of tools for performing inference in probabilistic models where we can evaluate a density of the target distribution of interest, potentially only up to an unknown normalising constant. In some models we may not be able to directly evaluate such a function however but instead have access to an unbiased estimator of the target density. The \emph{pseudo-marginal} \ac{MCMC} framework \citep{andrieu2009pseudo} allows \ac{MCMC} methods to be extended to such problems.
+
+The typical setting for pseudo-marginal methods is that a distribution on an extended set of variables is constructed which has the target distribution as a marginal. Values of a density function for the target distribution are then estimated by using a Monte Carlo method such as importance sampling to approximately marginalise out the additional variables. The variables which are marginalised out may correspond to latent variables specified in the model but that are not of direct interest for the inference task or variables introduced solely for computational reasons. In both cases it will usually be possible to specify a Markov transition operator which leaves the distribution on the extended set of variables invariant, with such schemes often being described as \emph{data augmentation} \citep{tanner1987calculation,van2001art} or \emph{auxiliary variable}  \citep{edwards1988generalization,higdon1998auxiliary} methods. Here we will refer to any variables which are marginalised over in the density estimate as auxiliary variables and the variables of interest we wish to infer plausible values for as the target variables.
+
+The density of the joint distribution on auxiliary and target variables will often have a complex geometry with strong dependencies between the variables and potentially multiple modes. This can lead to poor exploration of the extended space by simple \ac{MCMC} schemes such as random-walk Metropolis--Hastings and Gibbs sampling \citep{andrieu2009pseudo}. The motivation for pseudo-marginal methods is that in some cases the density of the marginal distribution on the target variables will have a much simpler geometry than the density of the joint distribution on the extended space and therefore is more amenable to exploration by standard \ac{MCMC} methods. Although in general we cannot analytically integrate out the auxiliary variables, the pseudo-marginal framework shows how an unbiased estimator of the marginal density can be used within a Metropolis--Hastings update while maintaining the asymptoptic exactness of standard \ac{MCMC} methods.  Intuitively the lower the variance of the density estimator the closer the behaviour of the algorithm to the case where the auxiliary variables are analytically marginalised out. We can control the variance of the estimator both by varying the number of auxiliary variable samples used in the Monte Carlo estimate and by using variance reduction methods to increase the efficiency of the estimator.
+
+%In some cases simple \ac{MCMC} schemes such as random-walk Metropolis--Hastings and Gibbs sampling are only able to make small moves in the extended space of auxiliary and target variables due to strong dependencies between the variables. This can lead to high correlations between the chain states and so poor effective sample sizes \citep{andrieu2009pseudo}. The motivation for pseudo-marginal methods is that the marginal distribution on the target variables will sometimes have a
+
+  %and so by approximately marginalising out the auxiliary variables more efficient updates to the target variables can be performed. Intuitively the lower the variance of the density estimator the closer the behaviour of the algorithm to the case where the auxiliary variables are analytically marginalised out \citep{andrieu2009pseudo}. We can control the variance of the estimator both by varying the number of auxiliary variable samples used in the Monte Carlo estimate and by using variance reduction methods to increase the efficiency of the estimator. The pseudo-marginal framework shows how the marginal density estimate can be used within a Metropolis--Hastings type update while still maintaining the asymptoptic exactness guarantees of standard \ac{MCMC} methods.
+
+%A further advantage of the pseudo-marginal formulation is that 
+By posing the problem of specifying an \ac{MCMC} algorithm in terms of designing an efficient\footnote{We use `efficient' in a general sense here rather than the notion of a minimum-variance unbiased estimator satisfying the Cram\'{e}r-Rao lower bound.} unbiased estimator of the density of interest, the extensive literature on methods for constructing low-variance unbiased estimators can be exploited. For example comparatively cheap but biased optimisation-based inference approaches such as Laplace's method can be combined with an importance sampling `debiasing' step to produce an unbiased estimator which can then be used in a pseudo-marginal \ac{MCMC} update. This provides a way of exploiting cheap but biased approximate inference methods within a \ac{MCMC} method which gives asymptoptically exact results.
+
+Pseudo-marginal methods have been successfully applied to perform inference in a diverse range of problems, including genetic population modelling \citep{beaumont2003estimation}, Gaussian process classification models \citep{filippone2014pseudo}, continuous time stochastic process models \citep{georgoulas2015unbiased} and `doubly-intractable' distributions where an intractable normalising constant depends on the variables being inferred \cite{murray2006mcmc,moller2006efficient,lyne2015russian}. The standard pseudo-marginal method which uses a Metropolis--Hastings transition operator however can be suspectible to `sticking' behaviour where proposed moves are repeatedly rejected over many iterations. The method can also be difficult to tune as it breaks some of the assumptions underlying standard heuristics for adapting the free parameters of Metropolis--Hastings methods.
+
+%In pseudo-marginal methods an estimated `pseudo-' marginal density is instead used in a Metropolis 
+
+%Typically pseudo-marginal methods are applied to problems in which auxiliary unobserved variables are introduced which need to be marginalised over to evaluate the target distribution of interest. In some cases these auxiliary variables may be interpretable quantities directly specified in the model of interest. For example in hierarchical probabilistic models with a set of global latent variables $\rvct{\theta}$ and local per-datapoint latent variable $\lbrace \rvct{z}_i\rbrace$ we may be only directly interested in computing plausible values for the global latent variables in order to allow these values to be used to make predictions for unseen datapoints.
+
+In this chapter we will discuss an alternative formulation of the pseudo-marginal framework which bridges between the approach of directly specifying a Markov transition operator on the extended state space which includes the auxiliary variables and the pseudo-marginal approach where the auxiliary variables are approximately marginalised out. This \emph{auxiliary pseudo-marginal} framework still allows the intuitive design of pseudo-marginal algorithms in terms of identifying low-variance unbiased estimators, while overcoming some of the issues of the pseudo-marginal Metropolis--Hastings method. In particular it shows how more flexible adaptive \ac{MCMC} algorithms such as slice-sampling can be used within the pseudo-marginal setting, which can improve the robustness and ease of application of the approach by minimising the amount of user-tuning of free parameters required.
+
+The work summarised in this chapter was a collaboration with Iain Murray which resulted in the published conference paper
+\begin{itemize}
+ \item Pseudo-marginal slice sampling. Iain Murray and Matthew M. Graham. \emph{The Proceedings of the 19th International Conference on Artificial Intelligence and Statistics, JMLR W\&CP 51:911-919}, 2016.
+\end{itemize}
+Iain Murray was the main contributor of the ideas proposed in that publication and responsible for the Gaussian and Ising model experiments in Sections 5.1 and 5.2 of the paper. My contribution was implementing and analysing the Gaussian process classification experiments summarised in Section 5.3 in that work which are reproduced here, and helping in writing the paper. The additional experiments presented in this chapter are also my own work. Although my contribution to the novel ideas discussed in this chapter was therefore minor, this work is summarised here to provide background material on the pseudo-marginal method which will be important in the following chapter on inference in implicit generative models, and to explain the auxiliary pseudo-marginal \ac{MCMC} methods proposed in the above paper which we will use variants of in the experiments in the next chapter.
+
+\section{Problem definition}
+
+As in the previous chapters our goal is to be able to compute estimates of expectations with respect to a distribution of interest, that is integrals of the form
+\begin{equation}
+  \bar{f} = \int_{\set{X}} f(\vct{x})\,P(\dr \vct{x}) = \int_{\set{X}} f(\vct{x})\,p(\vct{x})\,\mu(\dr\vct{x})
+\end{equation}
+where $f : \set{X} \to \reals$ is an arbitrary Lebesgue integrable function and $P$ is a target probability distribution on a space $\set{X}$ with density $\tgtdens = \td{\tgtprob}{\mu}$. We assume as previously that density $\tgtdens$ may have an intractable normalising constant $Z$ that we cannot evaluate i.e. $\tgtdens(\vct{x}) = \utgtdens(\vct{x}) / Z$. We make the further assumption here however that we cannot directly evaluate $\utgtdens$ either but only compute an unbiased estimate of it. More explicitly we assume we have access to a function $\esttgtdens : \set{X} \times \set{U} \to [0,\infty)$ and a distribution $R$ on $\set{U}$ with density $\rho = \td{R}{\nu}$ such that
+\begin{equation}\label{eq:density-unbiased-estimator-property}
+  \utgtdens(\vct{x}) = \int_{\set{U}} \esttgtdens(\vct{x}\gvn\vct{u})\,\rho(\vct{u})\,\nu(\dr\vct{u})
+  \quad \forall \vct{x} \in \set{X}.
+\end{equation}
+Here $\set{U}$ is the space of \emph{all} of the auxiliary random variables used in the density estimator, i.e. including any `repeats' 
+
+ with the assumption that the auxiliary variable distribution $R$ is tractable to generate independent samples from. The property \eqref{eq:density-unbiased-estimator-property} means that if $\rvct{u}$ is a random variable generated from $R$ then $\expc{\esttgtdens(\vct{x}\gvn\rvct{u})} = \utgtdens(\vct{x})$ i.e. $\esttgtdens(\vct{x}\gvn\rvct{u})$ is an unbiased estimator for $\utgtdens(\vct{x})$.
+
+\section{Pseudo-marginal Metropolis--Hastings}
+
+\begin{algorithm}[!t]
+\caption{Pseudo-marginal Metropolis--Hastings.}
+\label{alg:pseudo-marginal-metropolis-hastings}
+\begin{algorithmic}
+\small
+    \Require
+    $(\vct{x}_n, \hat{p}_n)$ : current target state -- density estimate pair,~
+    $\esttgtdens$ : estimator function for density of target distribution,~
+    $\rho$ : density of estimator's auxiliary variable distribution,~
+    $q$ : proposal density for updates to target state.
+    \Ensure\raggedright
+    $(\vct{x}_{n+1}, \hat{p}_{n+1})$ : new target state -- density estimate pair.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $\vct{x}^* \sim q(\vct{x}_n)$ \Comment{Propose new target state.}
+  \State $\vct{u} \sim \rho$\label{ln:density-estimate-1}
+  \State $\hat{p}^* \gets \esttgtdens(\vct{x}^*|\vct{u})$ \label{ln:density-estimate-2} \Comment{Estimate density at proposed state.}
+  \State $v \sim \mathcal{U}(0,1)$
+  \If{$ v <  \frac{q(\vct{x}_n\gvn\vct{x}^*)\,\hat{p}^*}{q(\vct{x}^*\gvn\vct{x}_n)\,\hat{p}_n}$}
+    \State $(\vct{x}_{n+1},\hat{p}_{n+1}) \gets (\vct{x}^*,\hat{p}^*)$ \Comment{Accept proposal.}
+  \Else
+    \State  $ (\vct{x}_{n+1},\hat{p}_{n+1}) \gets (\vct{x}_n,\hat{p}_n)$ \Comment{Reject proposal.}
+  \EndIf
+  \State \Return $(\vct{x}_{n+1},\hat{p}_{n+1})$
+\end{algorithmic}
+\end{algorithm}
+
+The pseudo-marginal Metropolis--Hastings method is summarised in Algorithm \ref{alg:pseudo-marginal-metropolis-hastings}. The term \emph{pseudo-marginal} was proposed by Andrieu and Roberts in \citep{andrieu2009pseudo}, with they citing Beaumont \citep{beaumont2003estimation} as the original source of the algorithm. Special cases of the algorithm have also been independently proposed, for example in the statistical physics literature by Kennedy and Kuti \citep{kennedy1985noise} and a \ac{MCMC} method for doubly intractable distributions by Moller et al. \citep{moller2006efficient}.
+% The extensive theoretical analysis of the properties of the pseudo-marginal method in \citep{andrieu2009pseudo} was a major factor of the strong subsequent interest from the statistics community.
+
+The algorithm takes an intuitive form, with a very similar structure to the standard Metropolis--Hastings method (Algorithm \ref{alg:metropolis-hastings}) except for the ratio of densities in the accept probability calculation being replaced with the ratio of the density \emph{estimates}. Importantly the stochastic density estimates are maintained as part of the chain state: if we reject a proposed update on the next iteration of the algorithm we reuse the same density estimate for the current state as in the previous iteration. This is required for the correctness of the algorithm, but also helps explain the sticking behaviour sometimes encountered with pseudo-marginal Metropolis--Hastings chains. If the density estimator has a heavy-tailed distribution occassionally a density estimate $\hat{p}_n$ will be sampled for the current target state $\vct{x}_n$ which is much higher than the expected value i.e $\utgtdens(\vct{x}_n)$. Assuming for simplicity a symmetric proposal density $q$ is used such that the accept probability ratio in Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} reduces to $\hat{p}^* / \hat{p}_n$, for subsequent proposed $(\vct{x}^*,\hat{p}^*)$ pairs the $\hat{p}^*$ values will typically be much smaller than the outlier $\hat{p}_n$ value and so the accept probability low. This can cause a long sequence of proposed moves being rejected until a move is proposed to an $\vct{x}^*$ where the density is similar to $\hat{p}_n$ or another atypically high density estimate is proposed.
+
+Rather than defining the chain state as the target state -- density estimate pair $(\vct{x},\hat{p})$, we could instead replace the density esimate $\hat{p}$ with the auxiliary random variables $\vct{u}$ drawn from $R$ used to compute the estimate. As $\hat{p}$ is a deterministic function of $\vct{x}$ and $\vct{u}$ these two parameterisations are equivalent. In practice for implementations of the pseudo-marginal Metropolis--Hastings update in Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} it is simpler to consider the density estimate as defining the chain state as this avoids the $\vct{u}$ values needing to be stored in memory and in fact means they do not need to be explicitly included in the algorithm at all - we can consider lines \ref{ln:density-estimate-1} and \ref{ln:density-estimate-2} in Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} as being combined in a `black-box' estimator function which has access to a pseudo-random number generator and simply returns a random unbiased density estimate given a provided target state value.
+
+While this formulation of the algorithm is the more useful for implementation purposes, showing the correctness of the update is most easily done by considering the state as $(\vct{x},\vct{u})$. From \eqref{eq:density-unbiased-estimator-property} we known that a distribution on $\set{X}\times\set{U}$ with density
+\begin{equation}\label{eq:auxiliary-pm-target-density}
+  \pi(\vct{x},\vct{u}) = \frac{1}{Z} \,\esttgtdens(\vct{x}\gvn\vct{u})\,\rho(\vct{u})
+\end{equation}
+will have the target distribution on $\set{X}$ as its marginal distribution. Showing that the transition operator defined by Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} leaves a distribution with density corresponding to \eqref{eq:auxiliary-pm-target-density} invariant is therefore sufficient for ensuring the correctness of the algorithm.
+
+The transition operator corresponding to Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} has a density% transition density (as previously using Dirac deltas to represent the `density' of a singular measure)
+\begin{equation*}
+\begin{split}
+  \trans(\vct{x}'\kern-2pt,\vct{u}'\kern-1pt\gvn\vct{x},\vct{u}) =\,&
+  q(\vct{x}'\kern-1pt\gvn\vct{x}) \rho(\vct{u}') \alpha(\vct{x}'\kern-1pt,\vct{u}'\kern-1pt\gvn\vct{x},\vct{u}) +
+  \delta(\vct{x} - \vct{x}')\,\delta(\vct{u} -\vct{u}')\\
+  &
+  \lpa 
+    1 - \kern-3pt
+    \int_{\set{U}} \int_{\set{X}} 
+      q(\vct{x}'\kern-1pt\gvn\vct{x}) \rho(\vct{u}') \alpha(\vct{x}'\kern-2pt,\vct{u}'\kern-1pt\gvn\vct{x},\vct{u})
+    \,\mu(\dr\vct{x})\nu(\dr\vct{u})
+  \rpa,
+\end{split}
+\end{equation*}
+with the accept probability $\alpha$ being defined here as
+\begin{equation}
+  \alpha(\vct{x}',\vct{u}'\gvn\vct{x},\vct{u}) =
+  \min\lbr 1, \frac{q(\vct{x}\gvn\vct{x}')\esttgtdens(\vct{x}'\gvn\vct{u}')}{q(\vct{x}'\gvn\vct{x})\esttgtdens(\vct{x}\gvn\vct{u})}\rbr.
+\end{equation}
+As in Chapter \ref{ch:approximate-inference} it is sufficient to show the non self-transition term in this transition density satisfies detailed balance with respect to the target density \eqref{eq:auxiliary-pm-target-density} as self-transitions leave any distribution invariant. We have that for $\vct{x} \neq \vct{x}'$, $\vct{u} \neq \vct{u}'$
+\begin{equation}
+\begin{split}
+  &\trans(\vct{x}'\kern-1pt,\vct{u}'\gvn\vct{x},\vct{u}) \, \pi(\vct{x},\vct{u}) \\
+  &\qquad=
+  \frac{1}{Z} \, q(\vct{x}'\gvn\vct{x}) \, \rho(\vct{u}')\, 
+  \alpha(\vct{x}',\vct{u}'\gvn\vct{x},\vct{u}) \,
+ \esttgtdens(\vct{x}\gvn\vct{u})\,\rho(\vct{u})\\
+  &\qquad=
+  \frac{1}{Z} \,\rho(\vct{u}')\,\rho(\vct{u})\, 
+  \min\lbr 
+    q(\vct{x}'\gvn\vct{x})\,\esttgtdens(\vct{x}\gvn\vct{u}),
+    q(\vct{x}\gvn\vct{x}')\,\esttgtdens(\vct{x}'\gvn\vct{u}')
+  \rbr
+  \\
+  &\qquad=
+  \frac{1}{Z} \, q(\vct{x}\gvn\vct{x}') \, \rho(\vct{u})\, 
+  \alpha(\vct{x},\vct{u}\gvn\vct{x}',\vct{u}') \,
+ \esttgtdens(\vct{x}'\gvn\vct{u}')\,\rho(\vct{u}')\\
+ &\qquad=
+ \trans(\vct{x},\vct{u}\gvn\vct{x}',\vct{u}') \, \pi(\vct{x}',\vct{u}'),
+\end{split}
+\end{equation}
+and so the transition operator corresponding to Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} leaves the target distribution invariant. We can equivalently consider Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} as a standard Metropolis--Hastings transition operator on a target distribution with density  \eqref{eq:auxiliary-pm-target-density} using a proposal $q(\vct{x}'\gvn\vct{x})\rho(\vct{u}')$ i.e. perturbatively updating the $\vct{x}$ values and indepedently resampling the $\vct{u}$ values. Substituting this proposal density and target density into the standard Metropolis--Hastings accept ratio recovers the form used in the pseudo-marginal variant in Algorithm \ref{alg:pseudo-marginal-metropolis-hastings},
+\begin{equation}
+\frac
+  {q(\vct{x}\gvn\vct{x}')\rho(\vct{u})  \frac{1}{Z} \,\esttgtdens(\vct{x}'\gvn\vct{u}')\,\rho(\vct{u}')}
+  {q(\vct{x}'\gvn\vct{x})\rho(\vct{u}')  \frac{1}{Z} \,\esttgtdens(\vct{x}\gvn\vct{u})\,\rho(\vct{u})}
+  =
+\frac
+  {q(\vct{x}\gvn\vct{x}')\esttgtdens(\vct{x}'\gvn\vct{u}')}
+  {q(\vct{x}'\gvn\vct{x})\esttgtdens(\vct{x}\gvn\vct{u})}.
+\end{equation}
+This formulation also highlights a potential source of the computational issues with the algorithm. In high-dimensional spaces generally we would expect independent resampling of a subset of the variables in a Markov chain state from their marginal distribution for a proposed Metropolis--Hastings move to have a low probability of acceptance.  Unless the variables being independently resampled have little or no dependency on the rest of the chain state, the marginal distribution will be significantly different from the conditional distribution given the remaining variables and so be a poor proposal distribution.
+
+\section{Auxiliary pseudo-marginal methods}
+
+\begin{algorithm}[!t]
+\caption{Auxiliary pseudo-marginal framework.}
+\label{alg:auxiliary-pseudo-marginal}
+\begin{algorithmic}
+\small
+    \Require
+    $(\vct{x}_n, \vct{u}_n)$ : current target variables -- auxiliary variables pair,~
+    $\transop_1$ : transition operator updating only auxiliary variables $\vct{u}$ and leaving distribution with density in \eqref{eq:auxiliary-pm-target-density} invariant,~
+    $\transop_2$ : transition operator updating only target variables $\vct{x}$ and leaving distribution with density in \eqref{eq:auxiliary-pm-target-density} invariant.
+    \Ensure\raggedright
+    $(\vct{x}_{n+1}, \vct{u}_{n+1})$ : new target state  -- auxiliary variables pair.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $\vct{u}_{n+1} \sim \transop_1(\cdot \gvn \vct{x}_n,\,\vct{u}_n)$
+  \State $\vct{x}_{n+1} \sim \transop_2(\cdot \gvn \vct{x}_n,\,\vct{u}_{n+1})$
+  \State \Return $(\vct{x}_{n+1},\, \vct{u}_{n+1})$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[!t]
+\caption{Auxiliary pseudo-marginal MI + MH.}
+\label{alg:auxiliary-pseudo-marginal-mi-mh}
+\begin{algorithmic}
+\small
+    \Require
+    $(\vct{x}_n, \vct{u}_n)$ : current target -- auxiliary variables state pair,~
+    $\esttgtdens$ : estimator function for density of target distribution,~
+    $\rho$ : density of estimator's auxiliary variable distribution,~
+    $q$ : proposal density for updates to target state.
+    \Ensure\raggedright
+    $(\vct{x}_{n+1}, \vct{u}_{n+1})$ : new target -- auxiliary variables state pair.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $\vct{u}^* \sim \rho$ \Comment{$\transop_1$: MI update to auxiliary variables.}
+  \State $v \sim \mathcal{U}(0,1)$
+  \If{$v < \frac{\esttgtdens(\vct{x}_n\gvn\vct{u}^*)}{\esttgtdens(\vct{x}_n\gvn\vct{u}_n)}$}
+    \State $\vct{u}_{n+1} \gets \vct{u}^*$
+  \Else
+    \State $\vct{u}_{n+1} \gets \vct{u}_n$
+  \EndIf
+  \State $\vct{x}^* \sim q(\vct{x}_n)$ \Comment{$\transop_2$: MH update to target variables.}
+  \State $w \sim \mathcal{U}(0,1)$
+  \If{$ w <  \frac{q(\vct{x}_n\gvn\vct{x}^*)\,\esttgtdens(\vct{x}^*\gvn\vct{u}_{n+1})}{q(\vct{x}^*\gvn\vct{x}_n)\,\esttgtdens(\vct{x}_n\gvn\vct{u}_{n+1})}$}
+    \State $\vct{x}_{n+1} \gets \vct{x}^*$
+  \Else
+    \State  $\vct{x}_{n+1} \gets \vct{x}_n$
+  \EndIf
+  \State \Return $(\vct{x}_{n+1},\,\vct{u}_{n+1})$
+\end{algorithmic}
+\end{algorithm}
+
+The observation that the pseudo-marginal Metropolis--Hastings update just corresponds to a special case of the standard Metropolis--Hastings algorithm with independent updates to the auxiliary random variables suggests the possibility of using alternative transition operators within a pseudo-marginal context. A particularly simple framework is to alternate updates to the target state $\vct{x}$ given the auxiliary variables $\vct{u}$ and to the auxiliary variables $\vct{u}$ given the target state $\vct{x}$. We refer to this scheme as the \ac{APM} framework and summarise it in Algorithm \ref{alg:auxiliary-pseudo-marginal}.
+
+A simple example of an \ac{APM} method is formed by alternating \ac{MI} updates to the auxiliary variables given the target variables using $R$ as the proposal distribution with \ac{MH} updates to the target variables given the current auxiliary variables; this variant is described in Algorithm \ref{alg:auxiliary-pseudo-marginal-mi-mh}. Following the convention of \citep{murray2016pseudo} we name this method \ac{APM} \ac{MI}+\ac{MH} for short and will in general use the form \ac{APM} \textsc{[t1]}+\textsc{[t2]} to name \ac{APM} methods where \textsc{[t1]} and \textsc{[t2]} are abbreviations for the types of the transition operators $\transop_1$ and $\transop_2$ respectively. This method retains the black-box nature of the original pseudo-marginal Metropolis--Hastings algorithm by requiring no explicit knowledge of the auxiliary random variables used in the density estimate providing we can read and write the internal state of the \ac{PRNG} used by the estimator. This can be achieved for example using the \texttt{.Random.seed} attribute in \texttt{R} and the \texttt{get\_state} and \texttt{set\_state} methods of a \texttt{NumPy} \texttt{RandomState} object. We then only need to store the \ac{PRNG} state associated with each evaluation of the target density estimator and restore a previous state if we wish to estimate the density at a new target state with the same set of auxiliary variables as used for a previous evaluation.
+
+Any pseudo-marginal \ac{MH} implementation can easily be converted in to a \ac{APM} \ac{MI}+\ac{MH} method as the two algorithms require exactly the same input objects with the \ac{APM} \ac{MI}+\ac{MH} method simply splitting the original single Metropolis--Hastings step in to two separate propose-accept steps. The \ac{APM} \ac{MI}+\ac{MH} method introduces some overhead by requiring two new evaluations of the target density estimator per update (once for the new proposed auxiliary variables and once for the new proposed target variables) compared to the single evaluation required for the standard pseudo-marginal \ac{MH} algorithm. Importantly however the updates to the target variables in \ac{APM} \ac{MI}+\ac{MH} take the form of a standard perturbative Metropolis--Hastings update. If we use a random-walk Metropolis update then this means we can use established approaches to tune the step size of the updates for example appealing to theoretical results suggesting tuning the step size to achieve an average acceptance rate of 0.234 is `optimal' when making perturbative moves in high-dimensions \citep{gelman1997weak}. The non-perturbative independent proposed updates of the auxiliary variables in the standard pseudo-marginal \ac{MH} algorithm mean these guidelines for tuning the proposals are not applicable, and in fact a target acceptance rate of 0.234 may not be possible irrespective of how small the step size is chosen. This increased ease of tuning can lead to more efficient algorithms in practice which outweigh the overhead from the additional density estimator evaluations.
+
+Rather than using a Metropolis--Hastings update to the target variables, the \ac{APM} framework also makes it simple to apply alternative transition operators to pseudo-marginal inference problems. A particularly appealing option are the linear and elliptical \ac{SS} algorithms discussed in Chapter \ref{ch:approximate-inference}; when combined with MI updates to the auxiliary variables we term such methods \ac{APM} \ac{MI}+\ac{SS}. Slice sampling algorithms automatically adapt the scale of proposed moves and so generally require less tuning than random-walk Metropolis to achieve reasonable performance. Slice sampling updates will also always lead to a non-zero move of the target variables on each update providing for fixed values of the auxiliary variables the estimator function $\esttgtdens$ is a smooth function of the target variables. In such cases \ac{APM} \ac{MI}+\ac{SS} chains will not show the `sticking' artifacts in the traces of the target variables common to pseudo-marginal Metropolis--Hastings chains. As the auxiliary variables are still being updated using Metropolis independence transitions however they will still be susceptible to having proposed moves rejected so while the accept rate (and traces if available) of the auxiliary variables updates should also be monitored to check for convergence issues. %so while using slice-sampling updates for the target variables can potentially help treat the visible symptom of sticking artifacts it does not necessarily treat the underlying cause.
+	
+The \ac{APM} \ac{MI}+\ac{MH} and \ac{MI}+\ac{SS} methods although offering some advantages over the standard pseudo-marginal Metropolis--Hastings method do not tackle the fundamental issue that proposing new auxiliary variable values for fixed values of the target variables independent of the previous auxiliary variable values tends to work poorly in high dimensions. Even weak dependence between the auxiliary variables and target variables will mean that in high-dimensions the typical set of the  marginal auxiliary variable distribution $R$ used as the proposal distribution will differ significantly from the typical set of the conditional distribution on the auxiliary variables given the current target variables values used in the Metropolis accept step and so the probability of proposed updates to the auxiliary variables being accepted will be small. If we are prepared to increase the implementation demands slightly by requiring explicit access to the auxiliary variables used in the estimator however we can also apply perturbative updates to the auxiliary variables. In general we would expect this to perform significantly better when
+
+
+\section{Related work}
+
+% correlated pseudo-marginal methods
+% particle Gibbs
+% pseudo-marginal HMC
+
+\section{Numerical experiments}
+
+\section{Discussion}
