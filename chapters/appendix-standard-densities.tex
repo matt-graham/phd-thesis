@@ -1,0 +1,209 @@
+\chapter{\mbox{Distribution definitions}}\label{app:distribution-definitions}
+
+\newgeometry{
+  includehead,
+  includemp,
+  headsep=5mm,
+  %nomarginpar,
+  marginparsep=8mm,
+  marginparwidth=27mm,	
+  top=20mm,
+  bottom=40mm,
+  outer=20mm,
+  inner=40mm
+}
+
+\begin{landscape}
+
+\vspace*{-8mm}
+\begin{table}[H]
+\centering
+\begin{tabular}{p{4cm}p{5cm}lll}
+\toprule
+  \textsf{Name} & \textsf{Parameters} & \textsf{Shorthand} & \textsf{Density} & Support \\
+\midrule
+%%%%%%%%%%%%%
+  Bernoulli & 
+  $\pi \in [0,1]$ &
+  $\textrm{Ber}(x \gvn \pi)$ & 
+  $\pi^x (1 -\pi)^{(1-x)}$ &
+  $x \in \fset{0,1}$\\
+%%%%%%%%%%%%%
+  Categorical & 
+  $\vct{\pi} \in \vvmathbb{S}^K$ &
+  $\textrm{Cat}(x \gvn \vct{\pi})$ & 
+  $\sum_{k=1}^K \lpa \ind{\fset{k}}(x) \pi_k \rpa$ &
+  $x \in \fset{1 \dots K}$\\
+%%%%%%%%%%%%%
+\bottomrule
+\end{tabular}
+\caption[Standard discrete density definitions.]{Definitions of densities of parameteric distributions for discrete random variables used in this thesis.}
+\label{tab:standard-distributions-discrete}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{p{4cm}p{5cm}ll}
+\toprule
+  \textsf{Name} & \textsf{Parameters} & \textsf{Shorthand} & \textsf{Density} \\
+\midrule
+%%%%%%%%%%%%%
+  Normal & 
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\mu \in \reals$ &~: mean\\[-1mm]
+  $\sigma > 0$ &~: standard deviation 
+  \end{tabular} &
+  $\nrm{x \gvn \mu,\sigma^2}$ & 
+  $\frac{1}{\sqrt{2\uppi}\sigma} \exp\lpa -\frac{(x-\mu)^2}{2\sigma^2}\rpa$ \\[0mm]
+%%%%%%%%%%%%%
+  Multivariate normal &
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\vct{\mu} \in \reals^D$ &~: mean vector \\[-1mm]
+$\mtx{\Sigma} \in \sset{S}^{D}_{++}$ &~: covariance matrix
+  \end{tabular} &
+  $\nrm{\vct{x} \gvn \vct{\mu}, \mtx{\Sigma}}$ & 
+  $\frac{1}{\sqrt{(2\uppi)^D|\mtx{\Sigma}|}} \exp\lpa -\frac{1}{2} (\vct{x}-\vct{\mu})\tr\mtx{\Sigma}^{-1}(\vct{x}-\vct{\mu})\rpa$ \\[4mm]
+%%%%%%%%%%%%%
+  Student's \emph{t} & 
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\nu > 0$ &~: degrees of freedom\\[-1mm]
+  $\mu \in \reals$ &~: location\\[-1mm]
+  $\sigma > 0$ &~: scale\\ 
+  \end{tabular} &
+  $\mathrm{StT}(x \gvn \nu, \mu, \sigma)$ & 
+  $\frac{\upGamma\lpa\frac{\nu + 1}{2}\rpa}{\upGamma\lpa\frac{\nu}{2}\rpa\sqrt{\uppi\nu}\sigma}\lpa 1 + \frac{1}{\nu}\lpa\frac{x-\mu}{\sigma}\rpa^2\rpa^{-\frac{\nu + 1}{2}}$\\[6mm] 
+%%%%%%%%%%%%%
+%  Cauchy & 
+%  \setlength\tabcolsep{0pt}
+%  \begin{tabular}{ll}
+%  $\mu \in \reals$ &~: location\\
+%  $\sigma > 0$ &~: scale 
+%  \end{tabular} &
+%  $\mathcal{C}(x \gvn \mu, \sigma)$ & 
+%  $\frac{1}{\uppi \sigma \lsb 1 + \lpa\frac{x - \mu}{\sigma}\rpa^2\rsb}$ \\[0mm]
+%%%%%%%%%%%%%
+  Logistic &
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\mu \in \reals$ &~: location\\[-1mm]
+  $\sigma > 0$ &~: scale 
+  \end{tabular} &
+  $\textrm{Logistic}(x \gvn \mu,\sigma)$ & 
+  $\frac{1}{4\sigma}\cosh\lpa\frac{x - \mu}{2\sigma}\rpa^{-2}$ \\[0mm]
+%%%%%%%%%%%%%
+  Inverse cosh  & 
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\mu \in \reals$ &~: location\\[-1mm]
+  $\sigma > 0$ &~: scale 
+  \end{tabular} &
+  $\textrm{InvCosh}(x \gvn \mu, \sigma)$ & 
+  $\frac{1}{2\sigma} \cosh\lpa\frac{\uppi(x - \mu)}{2 \sigma}\rpa^{-1}$ \\
+%%%%%%%%%%%%%
+\bottomrule
+\end{tabular}
+\caption[Standard unbounded density definitions.]{Definitions of densities of parameteric distributions for unbounded real random variables used in this thesis.}
+\label{tab:standard-distributions-unbounded}
+\end{table}
+\end{landscape}
+
+\begin{landscape}
+\begin{table}[htp]
+\centering
+\begin{tabular}{p{4cm}p{5cm}lll}
+\toprule
+  \textsf{Name} & \textsf{Parameters} & \textsf{Shorthand} & \textsf{Density} & \textsf{Support} \\
+\midrule
+%%%%%%%%%%%%%
+  Log-normal & 
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\mu \in \reals$ &~: log mean\\[-1mm]
+  $\sigma > 0$ &~: log standard deviation 
+  \end{tabular} &
+  $\textrm{LogNorm}(x \gvn \mu,\sigma^2)$ & 
+  $\frac{1}{x\sqrt{2\uppi}\sigma} \exp\lpa -\frac{(\log x-\mu)^2}{2\sigma^2}\rpa$ & 
+  $x > 0$ \\[3mm]
+%%%%%%%%%%%%%
+  Multivariate log-normal &
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\vct{\mu} \in \reals^D$ &~: log mean \\[-1mm]
+  $\mtx{\Sigma} \in \sset{S}^{D}_{++}$ &~: log covariance
+  \end{tabular} &
+  $\textrm{LogNorm}(\vct{x} \gvn \vct{\mu}, \mtx{\Sigma})$ & 
+  $\frac{\exp\lpa -\frac{1}{2} (\log\vct{x}-\vct{\mu})\tr\mtx{\Sigma}^{-1}(\log\vct{x}-\vct{\mu})\rpa}{\prod_{d=1}^D(x_d)\sqrt{(2\uppi)^D|\mtx{\Sigma}|}} $ & $\vct{x} \in [0, \infty)^D$ \\[3mm]
+%%%%%%%%%%%%%
+  Exponential & 
+  $\lambda > 0$ : rate &
+  $\mathrm{Exp}(x \gvn \lambda)$ & 
+  $\lambda \exp(-\lambda x)$ & 
+  $x \geq 0$\\[2mm]
+%%%%%%%%%%%%%
+  Uniform & 
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $a \in \reals$ &~: minimum\\[-1mm]
+  $b \in \reals$ &~: maximum, $b > a$
+  \end{tabular} &
+  $\mathcal{U}(x \gvn a, b)$ & 
+  $\frac{1}{b-a}\ind{[a,b]}(x)$ & 
+  $a \leq x \leq b$\\[3mm]
+%%%%%%%%%%%%%
+  Half-Cauchy & 
+  $\gamma > 0$ : scale &
+  $\mathcal{C}_{\geq 0}(x \gvn \gamma)$ & 
+  $\frac{2}{\uppi \gamma} \lpa 1 + \frac{x^2}{\gamma^2} \rpa^{-1}$ & 
+  $x \geq 0$ \\[2mm]
+%%%%%%%%%%%%%
+%  Chi-squared & 
+%  $k \in \naturals_{+}$ : degrees of freedom &
+%  $\chi^2(x \gvn k)$ & 
+%  $\frac{x^{\frac{k}{2}-1}\exp\lpa -\frac{x}{2}\rpa}{\Gamma\lpa\frac{k}{2}\rpa 2^{\frac{k}{2}}}$ & 
+%  $x > 0$ \\[2mm]
+%%%%%%%%%%%%%
+  Gamma &
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\alpha > 0$ &~: shape\\[-1mm]
+  $\beta > 0$ &~: rate 
+  \end{tabular} &
+  $\textrm{Gamma}(x \gvn \alpha, \beta)$ & 
+  $\frac{\beta^\alpha}{\upGamma(\alpha)} x^{\alpha - 1} \exp(-\beta x)$& 
+  $x \geq 0$ \\[3mm]
+%%%%%%%%%%%%%
+  Beta &
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\alpha > 0$ &~: shape\\[-1mm]
+  $\beta > 0$ &~: shape 
+  \end{tabular} &
+  $\textrm{Beta}(x \gvn \alpha, \beta)$ & 
+  $\frac{\upGamma(\alpha + \beta)}{\upGamma(\alpha)\upGamma(\beta)} x^{\alpha - 1} (1 - x)^{\beta - 1}$& 
+  $0 \leq x \leq 1$ \\[3mm]
+%%%%%%%%%%%%%
+  Dirichlet &
+  $\vct{\alpha} \in (0,\infty)^K$ : concentration &
+  $\textrm{Dir}(\vct{x} \gvn \vct{\alpha})$ & 
+  $\frac{\upGamma\lpa \sum_{k=1}^K \alpha_k \rpa}{\prod_{k=1}^K \upGamma(\alpha_k)} \prod_{k=1}^K x_i^{\alpha_k -1}$& 
+  $\vct{x} \in \vvmathbb{S}^K$ \\[2mm]
+%%%%%%%%%%%%%
+  Lomax &
+  \setlength\tabcolsep{0pt}
+  \begin{tabular}{ll}
+  $\alpha > 0$ &~: shape\\[-1mm]
+  $\beta > 0$ &~: scale 
+  \end{tabular} &
+  $\textrm{Lomax}(x \gvn \alpha, \beta)$ & 
+  $\frac{\alpha\beta^\alpha}{(\beta + x)^{\alpha + 1}}$& 
+  $x \geq 0$ \\
+\bottomrule
+\end{tabular}
+\caption[Standard bounded density definitions.]{Definitions of densities of parameteric distributions for bounded real random variables used in this thesis.}
+\label{tab:standard-distributions-bounded}
+\end{table}
+\end{landscape}
+\restoregeometry

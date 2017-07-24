@@ -3,24 +3,23 @@
 %\marginpar{We are hardly able to get through one waking hour without facing some situation (e.g. will it rain or won’t it?) where we do not have enough information to permit deductive reasoning \\--- Edward Jaynes}
 \marginpar{The actual science of logic is conversant at present only with things either certain, impossible, or entirely doubtful, none of which (fortunately) we have to reason on. Therefore the true logic for this world is the calculus of probabilities\\---James Clerk Maxwell}
 Inference is the process of drawing conclusions from evidence. Much of our lives are spent making inferences about the world given our observations of it; in particular inference is a central aspect of the scientific process. Although deductive logic offers a framework for inferring conclusions from absolute statements of truth, it does not apply to the more typical real-world setting where the information we receive is subject to uncertainty. 
-
 %\marginpar{Probability theory is nothing but common sense reduced to calculation. \\--- Pierre-Simon Laplace}%
-To make inferences under conditions of uncertainty, we must instead turn to probability theory. Probabilities offer a consistent framework for quantifying the uncertainty in our beliefs about the world and making inferences given these beliefs. The output of the inference process is itself probabilistic, reflecting that the conclusions we make given uncertain information will themselves be subject to uncertainty. 
+To make inferences under conditions of uncertainty, we must instead turn to probability theory. Probabilities offer a consistent framework for quantifying the uncertainty in our beliefs and making inferences given these beliefs. The output of the inference process is itself probabilistic, reflecting that the conclusions we make given uncertain information will themselves be subject to uncertainty. 
 
 %Various axiomatic bases have been proposed for deriving the laws of probability. Of particular note are the Kolmogorov axioms \citep{} which are the basis for the modern measure-theoretic formulation of probability theory. Cox's theorem \citep{} and related work by Polya \citep{} and Jaynes \citep{}, offers an alternative axiomatic basis for deriving probability theory from a minimal set of `common-sense' postulates, with resulting system of \emph{plausible reasoning} seen as natural extension of formal deductive logic under conditions of uncertainty. There has been much philosophical debate over the interpretation of probabilties
 
 %\marginpar{Probability theory is nothing but common sense reduced to calculation. \\--- Pierre-Simon Laplace}
-In this chapter we will first introduce the probability notation we will use in the rest of this work, and state some basic results which will be important in the later chapters. We will introduce graphical models as a compact way of visualising structure in probabilistic models. Finally we will give a concrete definition of the inference tasks that the methods presented in the rest of this thesis are aimed at computing (approximate) solutions to,and motivate why such approximate computational methods are needed.
+In this chapter we will first introduce the probability notation we will use in the rest of this thesis, and review some basic results which will be important in the later chapters. We will introduce graphical models as a compact way of visualising structure in probabilistic models and computation graphs as analagous tool for visualising the structure of functions. Finally we will give a concrete definition of the inference tasks that the methods presented in the rest of this thesis are aimed at computing approximate solutions to and motivate why such approximate computational methods are needed.
 
 %We will here largely ignore philosophical disucssions of interpretations of probabilities, and instead concentrate on the computational aspects of performing probabilistic inference.
 
 \section{Probability theory}\label{sec:probability-theory}
 
+\marginpar{A $\sigma$-algebra, $\sset{E}$, on a set $\set{S}$ is set of subsets of $\set{S}$ with $\set{S} \in \sset{E}$, $\emptyset \in \sset{E}$ and which is closed under complement and countable unions and intersections.}
 A \emph{probability space} is defined as a triplet $(\set{S},\,\sset{E},\,\probability)$ where
 
 \begin{itemize}
   \item $\set{S}$ is the \emph{sample space}, the set of all possible outcomes,
-  \marginpar{A $\sigma$-algebra, $\sset{E}$, on a set $\set{S}$ is set of subsets of $\set{S}$ with $\set{S} \in \sset{E}$, $\emptyset \in \sset{E}$ and which is closed under complement and countable unions and intersections.}
   \item $\sset{E}$ is the \emph{event space}, a $\sigma$-algebra on $\set{S}$, defining all possible events (measurable subsets of $\set{S}$),
   \item $\probability$ is the \emph{probability measure}, a finite measure satisfying $\probability(\set{S}) = 1$, which specifies the probabilities of events in $\sset{E}$.
 \end{itemize}
@@ -47,7 +46,7 @@ A measure-theoretic approach has the advantage of providing a unified treatment 
 When modelling real-world processes, rather than considering events as subsets of an abstract sample space, it is usually more helpful to consider \emph{random variables} which represent quantities in the model of interest. A random variable $\rvar{x} : \set{S} \to \set{X}$ is defined as a measurable function from the sample space to a measurable space $(\set{X},\,\sset{F})$. 
 
 \marginpar{The Borel $\sigma$-algebra $\borel(\reals)$ is the smallest $\sigma$-algebra on $\reals$ which contains all open real intervals.}
-Often $\set{X}$ is the reals, $\reals$, and $\sset{F}$ is the Borel $\sigma$-algebra on the reals, $\borel(\reals)$, in which case we will refer to a \emph{real random variable}. It is also common to consider cases where $\set{X}$ is a real vector space, $\reals^D$, and $\sset{F} = \borel(\reals^D)$ - in this case we will term the resulting random variable a \emph{random vector} and use the notation $\rvct{x} : \set{S} \to \set{X}$. A final special case is when $\set{X}$ is countable and $\sset{F}$ is the power set $\powerset(\set{X})$ in which case we will refer to $\rvar{x}$ as a \emph{discrete random variable}.
+Often $\set{X}$ is the reals, $\reals$, and $\sset{F}$ is the Borel $\sigma$-algebra on the reals, $\borel(\reals)$, in which case we will refer to a \emph{real random variable}. It is also common to consider cases where $\set{X}$ is a real vector space, $\reals^D$, and $\sset{F} = \borel(\reals^D)$ - in this case we will term the resulting random variable a \emph{real random vector} and use the notation $\rvct{x} : \set{S} \to \set{X}$. A final common special case is when $\set{X}$ is countable and $\sset{F}$ is the power set $\powerset(\set{X})$ in which case we will refer to $\rvar{x}$ as a \emph{discrete random variable}. As we will generally be concerned with real-valued random variables (and vectors) in this thesis, when it is unambiguous to do so we will drop the `real' qualifier and simply refer to \emph{random variables} and \emph{random vectors}.
 
 \marginpar{If $(\set{X},\,\sset{F})$ and $(\set{Y},\,\sset{G})$ are two measurable spaces, $\mu$ a measure on these spaces and $f : \set{X} \to \set{Y}$ a measurable function, the pushforward measure $\mu_f$ satisfies $\mu_f(\set{A}) = \mu \circ f^{-1}(\set{A})$ $\forall \set{A} \in \sset{G}$.}
 Due to the definition of a random variable as a measurable function, we can define a pushforward measure on a random variable $\rvar{x}$
@@ -57,13 +56,13 @@ Due to the definition of a random variable as a measurable function, we can defi
   = \probability\lpa \lbr s \in \set{S}: \rvar{x}(s) \in A \rbr \rpa
   \quad \forall \set{A} \in \sset{F}.
 \end{equation}
-The measure $\prob{\rvar{x}}$ specifies that the probability of the event that the random variable $\rvar{x}$ takes a value in a measurable set $\set{A} \in \sset{F}$ is $\prob{\rvar{x}}(\set{A})$. We will sometimes describe $\prob{\rvar{x}}$ as the \emph{probability distribution} of $\rvar{x}$.
+The measure $\prob{\rvar{x}}$ specifies that the probability of the event that the random variable $\rvar{x}$ takes a value in a measurable set $\set{A} \in \sset{F}$ is $\prob{\rvar{x}}(\set{A})$. We will often describe $\prob{\rvar{x}}$ as the \emph{distribution} of $\rvar{x}$.
 
 %Random variables will play a central role in the explanation of the work in this thesis. We will consider a random variable to represent a quantity we are uncertain about the value of; that uncertainty may be considered to arise from incomplete knowledge of the quantity or it having a fundamentally stochastic nature, this is mainly an issue of interpretation which we will largely sidestep.
 
 \subsection{Joint and conditional probability}\label{subsec:joint-and-conditional-probabilities}
 
-Often we will jointly define multiple random variables on the same probability space. Let $(\set{S},\,\sset{E},\,\probability)$ be a probability space and $\rvar{x} : \set{S} \to \set{X}$, $\rvar{y} : \set{S} \to \set{Y}$ be two random variables with corresponding $\sigma$-algebras $\sset{F}$ and $\sset{G}$. Then the \emph{joint probability} of $\rvar{x}$ and $\rvar{y}$ is defined as
+Typically we will jointly define multiple random variables on the same probability space. Let $(\set{S},\,\sset{E},\,\probability)$ be a probability space and $\rvar{x} : \set{S} \to \set{X}$, $\rvar{y} : \set{S} \to \set{Y}$ be two random variables with corresponding $\sigma$-algebras $\sset{F}$ and $\sset{G}$. Then the \emph{joint probability} of $\rvar{x}$ and $\rvar{y}$ is defined as
 \begin{equation}\label{eq:joint-probability-rvar}
   \prob{\rvar{x},\rvar{y}}(\set{A},\,\set{B}) = 
   \probability\lpa \rvar{x}^{-1}(\set{A}) \cap \rvar{y}^{-1}(\set{B})\rpa
@@ -77,33 +76,28 @@ The joint probability is related to $\prob{\rvar{x}}$ and $\prob{\rvar{y}}$ by
   \prob{\rvar{y}}(\set{B})
   \quad \forall \set{A} \in \sset{F},\,\set{B} \in \sset{G}.
 \end{equation}
-In this context $\prob{\rvar{x}}$ and $\prob{\rvar{y}}$ are referred to as \emph{marginals} of the joint.
-
-The two random variables are said to be independent if and only if
+In this context $\prob{\rvar{x}}$ and $\prob{\rvar{y}}$ are referred to as \emph{marginal distributions} of the joint distribution. Two random variables $\rvar{x}$ and $\rvar{y}$ are said to be independent if and only if
 \begin{equation}\label{eq:independent-rvars}
-  \prob{\rvar{x},\,\rvar{y}}(\set{A},\set{B}) = \prob{\rvar{x}}(\set{A})\prob{\rvar{y}}(\set{B})
+  \prob{\rvar{x},\,\rvar{y}}(\set{A},\set{B}) = \prob{\rvar{x}}(\set{A})\,\prob{\rvar{y}}(\set{B})
   \quad \forall \set{A} \in \sset{F},\,\set{B} \in \sset{G}.
 \end{equation}
 \marginpar{In Kolmogorov's probability theory, \eqref{eq:conditional-probability} is given as an additional definition distinct from the basic axioms. In alternatives such as the work of Cox \citep{cox1946probability,cox1963algebra} and de Finetti \citep{de1992foresight}, conditional probabilities are instead viewed as a primitive.}
-Also useful is the definition of \emph{conditional probability}
+A particulary key concept for inference is the definition of \emph{conditional probability}. The conditional probability of an event $\set{A} \in \sset{E}$ occuring given another event $\set{B} \in \sset{E}$ has occured is denoted $\probability(\set{A} \gvn \set{B})$ and we have the definition
 \begin{equation}\label{eq:conditional-probability}
   \probability(\set{A} \gvn \set{B}) =
   \frac{\probability(\set{A} \cap \set{B})}{\probability(\set{B})}
   \quad \forall \set{A} \in \sset{E},\,\set{B} \in \sset{E} : \probability(\set{B}) \neq 0.
 \end{equation}
-Correspondingly, the conditional probabilities of random variables $\prob{\rvar{x}|\rvar{y}}$ and $\prob{\rvar{x}|\rvar{y}}$ can likewise be defined as satisfying
+Correspondingly we denote the conditional probability of the event of the random variable $\rvar{x}$ taking a value in $\set{A} \in \sset{F}$ given the event that the random variable $\rvar{y}$ takes a value in $\set{B} \in \sset{G}$ as $\prob{\rvar{x}|\rvar{y}}(\set{A}\gvn\set{B})$. Using \eqref{eq:conditional-probability} and \eqref{eq:joint-probability-rvar}, $\prob{\rvar{x}|\rvar{y}}$ and $\prob{\rvar{x}|\rvar{y}}$ can be shown to satisfy
 \begin{equation}\label{eq:product-rule}
 \begin{split}
   \prob{\rvar{x},\rvar{y}}(\set{A},\,\set{B}) =
   \prob{\rvar{x}|\rvar{y}}(\set{A} \gvn \set{B}) \, \prob{\rvar{y}}(\set{B}) =
   \prob{\rvar{y}|\rvar{x}}(\set{B} \gvn \set{A}) \, \prob{\rvar{x}}(\set{A})\\
-  \forall \set{A} \in \sset{F},\,\set{B} \in \sset{G} : 
-  \prob{\rvar{x},\rvar{y}}(\set{A},\,\set{B}) \neq 0,
+  \forall \set{A} \in \sset{F},\,\set{B} \in \sset{G}.
 \end{split}
 \end{equation}
-which is sometimes referred to as the product rule. 
-
-An implication of \eqref{eq:product-rule} is what is often termed \emph{Bayes' theorem}
+This decomposition of a joint probability into a product of a conditional and marginal is sometimes referred to as the product rule. An implication of \eqref{eq:product-rule} is what is often termed \emph{Bayes' theorem}
 \begin{equation}\label{eq:bayes-theorem}
 \begin{split}
   \prob{\rvar{x}|\rvar{y}}(\set{A} \gvn \set{B}) =
@@ -121,18 +115,19 @@ The definition in \eqref{eq:joint-probability-rvar} of the joint probability of 
 
 \subsection{Probability densities}\label{subsec:probability-densities}
 
-So far we have ignored how the probability measure $\probability$ is defined and by consequence the probability of a random variable. 
+So far we have ignored how the probability measure $\probability$ is defined and by consequence the probability (distribution) of a random variable. 
 \marginpar{A measure on $\set{X}$ is $\sigma$-finite if $\set{X}$ is a countable union of finite measure sets.}
 The Radon--Nikodym theorem guarantees that for a pair of $\sigma-$finite measures $\mu$ and $\nu$ on a measurable space $(\set{X},\,\sset{F})$ where $\nu$ is absolutely continuous with respect to $\mu$,  then there is a unique (up to $\mu$-null sets) measurable function $f : \set{X} \to [0,\infty)$ termed a \emph{density} such that
 \begin{equation}\label{eq:radon-nikodym}
-  \nu(\set{A}) = \int_{\set{A}} f\,\dr\mu
+  \nu(\set{A}) = \int_{\set{A}} f\,\dr\mu 
+  = \int_{\set{A}} f(x) \, \mu(\dr x)
   \quad \forall \set{A} \in \sset{F}.
 \end{equation}
 \marginpar{If $\mu$ and $\nu$ are measures on a measurable space $(\set{X},\,\sset{F})$ then $\nu$ has absolute continuity \acs{wrt} to $\mu$ if $~\forall \set{A} \in \sset{F}$, \mbox{$\mu(\set{A})=0 \Rightarrow \nu(\set{A})=0$.}}
-The density function $f$ is also termed the \emph{Radon-Nikodym derivative} of $\nu$ with respect to $\mu$, denoted $\td{\nu}{\mu}$. Density functions therefore represent a convenient way to define a probability measure with respect to an appropriate base measure. % (which the probability measure will be absolutely continuous with respect to).
+The two Lebesgue integral notations above are equivalent and we will use them interchangeably. The density function $f$ is also termed the \emph{Radon-Nikodym derivative} of $\nu$ with respect to $\mu$, denoted $\td{\nu}{\mu}$. Density functions therefore represent a convenient way to define a probability distribution with respect to an appropriate base measure. % (which the probability measure will be absolutely continuous with respect to).
 It can also be shown that if $f = \td{\nu}{\mu}$ and  $g$ is a 	 measurable function that
 \begin{equation}\label{eq:integral-wrt-density}
-  \int_{\set{X}} g\,\dr\nu = \int_{\set{X}} g\, f\,\dr\mu,
+  \int_{\set{X}} g(x)\,\nu(\dr x) = \int_{\set{X}} g(x)\, f(x)\,\mu(\dr x),
 \end{equation}
 which we will use later when discussing calculation of expectations.
 
@@ -140,7 +135,7 @@ which we will use later when discussing calculation of expectations.
 For real random variables, an appropriate base measure is the \emph{Lebesgue measure}, $\lebm{1}$, on $\reals$. The probability $\prob{\rvar{x}}$ of a real random variable $\rvar{x}$ can then be defined via a \emph{probability density} $\pden{\rvar{x}} : \reals \to [0,\,\infty)$ by
 \begin{equation}\label{eq:real-rv-prob-dens}
     \prob{\rvar{x}}(\set{A})
-    = \int_{\set{A}} \pden{\rvar{x}} \,\dr\lebm{1}
+    = \int_{\set{A}} \pden{\rvar{x}}(x) \,\lebm{1}(\dr x)
     = \int_{\set{A}} \pden{\rvar{x}}(x) \,\dr x
     \qquad
     \forall \set{A} \in \borel(\reals).
@@ -148,7 +143,7 @@ For real random variables, an appropriate base measure is the \emph{Lebesgue mea
 Analagously for a random vector $\rvct{x}$ with density $\pden{\rvct{x}} : \reals^D \to [0,\,\infty)$ with respect to the $D$-dimensional Lebesgue measure $\lebm{D}$
 \begin{equation}\label{eq:vector-prob-dens}
     \prob{\rvct{x}}(\set{A})
-    = \int_{\set{A}} \pden{\rvct{x}} \,\dr\lebm{D}
+    = \int_{\set{A}} \pden{\rvct{x}}(\vct{x}) \,\lebm{D}(\dr \vct{x})
     = \int_{\set{A}} \pden{\rvct{x}}(\vct{x}) \,\dr \vct{x}
     \qquad
     \forall \set{A} \in \borel(\reals^D).
@@ -157,265 +152,70 @@ Analagously for a random vector $\rvct{x}$ with density $\pden{\rvct{x}} : \real
 The notation in the second equalities in \eqref{eq:real-rv-prob-dens} and \eqref{eq:vector-prob-dens} uses a convention that will be used throughout this thesis that integrals without an explicit measure are with respect to the Lebesgue measure. 
 \marginpar{The counting measure $\countm$ is defined as $\countm(\set{A}) = |\set{A}|$ for all finite $\set{A}$ and $\countm(\set{A}) = +\infty$ otherwise.}
 
-For discrete random variables, an appropriate base measure is instead \pagebreak the \emph{counting measure}, $\countm$. The probability of a discrete random variable is then defined via a probability density $\pden{\rvar{x}} : \set{X} \to [0,\,1]$ by
+For discrete random variables, an appropriate base measure is instead the \emph{counting measure}, $\countm$. The probability of a discrete random variable is then defined via a probability density $\pden{\rvar{x}} : \set{X} \to [0,\,1]$ by
 \begin{equation}
     \prob{\rvar{x}}(\set{A})
-    = \int_{\set{A}} \pden{\rvar{x}} \,\dr\countm
+    = \int_{\set{A}} \pden{\rvar{x}}(x) \,\countm(\dr x)
     = \sum_{x \in \set{A}} \pden{\rvar{x}}(x) 
     \qquad
     \forall \set{A} \in \powerset(\set{X}).
 \end{equation}
 The co-domain of a probability density $\pden{\rvar{x}}$ for a discrete random variable is restricted to $[0,\,1]$ due to the non-negativity and normalisation requirements for the probability measure $\prob{\rvar{x}}$, with $\sum_{x\in\set{X}} \pden{\rvar{x}}(x) = 1$. Commonly for the case of a discrete random variable, the density $\pden{\rvar{x}}$ is instead referred to as a \emph{probability mass function}, with density reserved for real random variables. We will however use \emph{probability density} in both cases in keeping with the earlier definition of a density with respect to a base measure, this avoiding difficulties when definining joint probabilities on a mixture of real and discrete random variables.
 
-The joint probability $\prob{\rvar{x},\rvar{y}}$ of a pair of random variables $\rvar{x}$ and $\rvar{y}$ with co-domains the measurable spaces $(\set{X},\,\sset{F})$ and $(\set{Y},\,\sset{G})$ respectively, can be defined via a joint probability density $\pden{\rvar{x},\rvar{y}} : \set{X} \times \set{Y} \to [0,\infty)$ by
-\begin{equation}\label{eq:real-rv-joint-prob-dens}
-  \prob{\rvar{x},\rvar{y}}(\set{A},\set{B}) =
-  \int_{\set{A}\times\set{B}} 
-    \pden{\rvar{x},\rvar{y}} 
-  \,\dr(\mu_{\rvar{x}} \times \mu_{\rvar{y}})
-  \quad \forall \set{A} \in \sset{F}, \,\set{B} \in \sset{G},
-\end{equation}
 \marginpar{If $(\set{X}_1,\,\sset{F}_1,\,\mu_1)$ and $(\set{X}_2,\,\sset{F}_2,\,\mu_2)$ are two measure spaces, the product measure $\mu_1 \times \mu_2$ on a measurable space $(\set{X}_1\times\set{X}_2,\,\sset{F}_1\otimes\sset{F}_2)$ is defined as satisfying $(\mu_1\times\mu_2)(\set{A}_1\times\set{A}_2) = \mu_1(\set{A}_1)\mu_2(\set{A}_2)$ $\forall \set{A}_1\in\sset{F}_1,\,\set{A}_2\in\sset{F}_2$.}
-where $\mu_{\rvar{x}} \times \mu_{\rvar{y}}$ represents the product measure of two appropriate base measures $\mu_{\rvar{x}}$ and $\mu_{\rvar{y}}$, e.g. $\mu_{\rvar{x}} = \lebm{1}$ and $\mu_{\rvar{y}} = \countm$ if $\rvar{x}$ is a real random variable and $\rvar{y}$ is a discrete random variable.
+The joint probability $\prob{\rvar{x},\rvar{y}}$ of a pair of random variables $\rvar{x}$ and $\rvar{y}$ with co-domains the measurable spaces $(\set{X},\,\sset{F})$ and $(\set{Y},\,\sset{G})$ respectively, can be defined via a joint probability density $\pden{\rvar{x},\rvar{y}} : \set{X} \times \set{Y} \to [0,\infty)$ with respect to a product measure $\mu_{\rvar{x},\rvar{y}} = \mu_{\rvar{x}} \times \mu_{\rvar{y}}$ by
+\begin{equation}\label{eq:real-rv-joint-prob-dens}
+\begin{split}
+  \prob{\rvar{x},\rvar{y}}(\set{A},\set{B}) &=
+  \int_{\set{A}\times\set{B}} 
+    \pden{\rvar{x},\rvar{y}}(x,y)
+  \,\mu_{\rvar{x},\rvar{y}}(\dr x, \dr y) 
+  \\  
+  &=
+  \int_{\set{A}} \int_{\set{B}}
+    \pden{\rvar{x},\rvar{y}}(x,y)
+  \,\mu_{\rvar{x}}(\dr x)\,\mu_{\rvar{y}}(\dr y)
+  \\  
+  &=
+  \int_{\set{B}} \int_{\set{A}}
+    \pden{\rvar{x},\rvar{y}}(x,y)
+  \,\mu_{\rvar{y}}(\dr y)\,\mu_{\rvar{x}}(\dr x)
+  \quad \forall \set{A} \in \sset{F}, \,\set{B} \in \sset{G}.
+\end{split}
+\end{equation}
+The last two equalities are a consequence of Fubini's theorem. The two measures $\mu_{\rvar{x}}$ and $\mu_{\rvar{y}}$ can differ for example $\mu_{\rvar{x}} = \lebm{1}$ and $\mu_{\rvar{y}} = \countm$ if $\rvar{x}$ is a real random variable and $\rvar{y}$ is a discrete random variable.
 
 When dealing with random variables, we will often only specify the co-domain of the random variable(s) and a (joint) probability density, with the base measure being implicitly defined as the Lebesgue measure for real random variables (or vectors), counting measure for discrete random variables and an appropriate product measure for a mix of random variables. Similarly we will usually neglect to explicitly define the probability space $(\set{S},\,\sset{E},\,\probability)$ which the random variable(s) map from. In this case we will typically use the loose notation $\rvar{x} \in \set{X}$ to mean a random variable $\rvar{x}$ with co-domain $\set{X}$. 
 
 This less explicit but more succinct probability notation in terms of random variables and densities is common in the machine learning and computational statitistics literature and will generally be preferred to improve readability. 
 %The underlying measure-theoretic basis of these concepts will however be important for some of the upcoming definitions in this chapter and some of the derivations later in the thesis. 
-Tables \ref{tab:standard-distributions-discrete}, \ref{tab:standard-distributions-unbounded} and \ref{tab:standard-distributions-bounded} give definitions of the densities and shorthand notation for some common parametric probability distributions that we will use in this thesis.
-
-\newgeometry{
-  includehead,
-  includemp,
-  headsep=5mm,
-  %nomarginpar,
-  marginparsep=8mm,
-  marginparwidth=27mm,	
-  top=20mm,
-  bottom=40mm,
-  outer=20mm,
-  inner=40mm
-}
-
-\begin{landscape}
-\vspace*{-8mm}
-\begin{table}[H]
-\centering
-\begin{tabular}{p{4cm}p{5cm}lll}
-\toprule
-  \textsf{Name} & \textsf{Parameters} & \textsf{Shorthand} & \textsf{Density} & Support \\
-\midrule
-%%%%%%%%%%%%%
-  Bernoulli & 
-  $\pi \in [0,1]$ &
-  $\textrm{Ber}(x \gvn \pi)$ & 
-  $\pi^x (1 -\pi)^{(1-x)}$ &
-  $x \in \fset{0,1}$\\
-%%%%%%%%%%%%%
-  Categorical & 
-  $\vct{\pi} \in \vvmathbb{S}^K$ &
-  $\textrm{Cat}(x \gvn \vct{\pi})$ & 
-  $\sum_{k=1}^K \lpa \ind{\fset{k}}(x) \pi_k \rpa$ &
-  $x \in \fset{1 \dots K}$\\
-%%%%%%%%%%%%%
-\bottomrule
-\end{tabular}
-\caption[Standard discrete density definitions.]{Definitions of densities of parameteric distributions for discrete random variables that will be used in this thesis.}
-\label{tab:standard-distributions-discrete}
-\end{table}
-
-\begin{table}[H]
-\centering
-\begin{tabular}{p{4cm}p{5cm}ll}
-\toprule
-  \textsf{Name} & \textsf{Parameters} & \textsf{Shorthand} & \textsf{Density} \\
-\midrule
-%%%%%%%%%%%%%
-  Normal & 
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\mu \in \reals$ &~: mean\\[-1mm]
-  $\sigma > 0$ &~: standard deviation 
-  \end{tabular} &
-  $\nrm{x \gvn \mu,\sigma^2}$ & 
-  $\frac{1}{\sqrt{2\uppi}\sigma} \exp\lpa -\frac{(x-\mu)^2}{2\sigma^2}\rpa$ \\[0mm]
-%%%%%%%%%%%%%
-  Multivariate normal &
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\vct{\mu} \in \reals^D$ &~: mean vector \\[-1mm]
-$\mtx{\Sigma} \in \sset{S}^{D}_{++}$ &~: covariance matrix
-  \end{tabular} &
-  $\nrm{\vct{x} \gvn \vct{\mu}, \mtx{\Sigma}}$ & 
-  $\frac{1}{\sqrt{(2\uppi)^D|\mtx{\Sigma}|}} \exp\lpa -\frac{1}{2} (\vct{x}-\vct{\mu})\tr\mtx{\Sigma}^{-1}(\vct{x}-\vct{\mu})\rpa$ \\[4mm]
-%%%%%%%%%%%%%
-  Student's \emph{t} & 
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\nu > 0$ &~: degrees of freedom\\[-1mm]
-  $\mu \in \reals$ &~: location\\[-1mm]
-  $\sigma > 0$ &~: scale\\ 
-  \end{tabular} &
-  $\mathrm{StT}(x \gvn \nu, \mu, \sigma)$ & 
-  $\frac{\upGamma\lpa\frac{\nu + 1}{2}\rpa}{\upGamma\lpa\frac{\nu}{2}\rpa\sqrt{\uppi\nu}\sigma}\lpa 1 + \frac{1}{\nu}\lpa\frac{x-\mu}{\sigma}\rpa^2\rpa^{-\frac{\nu + 1}{2}}$\\[6mm] 
-%%%%%%%%%%%%%
-%  Cauchy & 
-%  \setlength\tabcolsep{0pt}
-%  \begin{tabular}{ll}
-%  $\mu \in \reals$ &~: location\\
-%  $\sigma > 0$ &~: scale 
-%  \end{tabular} &
-%  $\mathcal{C}(x \gvn \mu, \sigma)$ & 
-%  $\frac{1}{\uppi \sigma \lsb 1 + \lpa\frac{x - \mu}{\sigma}\rpa^2\rsb}$ \\[0mm]
-%%%%%%%%%%%%%
-  Logistic &
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\mu \in \reals$ &~: location\\[-1mm]
-  $\sigma > 0$ &~: scale 
-  \end{tabular} &
-  $\textrm{Logistic}(x \gvn \mu,\sigma)$ & 
-  $\frac{1}{4\sigma}\cosh\lpa\frac{x - \mu}{2\sigma}\rpa^{-2}$ \\[0mm]
-%%%%%%%%%%%%%
-  Inverse cosh  & 
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\mu \in \reals$ &~: location\\[-1mm]
-  $\sigma > 0$ &~: scale 
-  \end{tabular} &
-  $\textrm{InvCosh}(x \gvn \mu, \sigma)$ & 
-  $\frac{1}{2\sigma} \cosh\lpa\frac{\uppi(x - \mu)}{2 \sigma}\rpa^{-1}$ \\
-%%%%%%%%%%%%%
-\bottomrule
-\end{tabular}
-\caption[Standard unbounded density definitions.]{Definitions of densities of parameteric distributions for unbounded real random variables that will be used in this thesis.}
-\label{tab:standard-distributions-unbounded}
-\end{table}
-\end{landscape}
-
-\begin{landscape}
-\begin{table}[htp]
-\centering
-\begin{tabular}{p{4cm}p{5cm}lll}
-\toprule
-  \textsf{Name} & \textsf{Parameters} & \textsf{Shorthand} & \textsf{Density} & \textsf{Support} \\
-\midrule
-%%%%%%%%%%%%%
-  Log-normal & 
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\mu \in \reals$ &~: log mean\\[-1mm]
-  $\sigma > 0$ &~: log standard deviation 
-  \end{tabular} &
-  $\textrm{LogNorm}(x \gvn \mu,\sigma^2)$ & 
-  $\frac{1}{x\sqrt{2\uppi}\sigma} \exp\lpa -\frac{(\log x-\mu)^2}{2\sigma^2}\rpa$ & 
-  $x > 0$ \\[3mm]
-%%%%%%%%%%%%%
-  Multivariate log-normal &
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\vct{\mu} \in \reals^D$ &~: log mean \\[-1mm]
-  $\mtx{\Sigma} \in \sset{S}^{D}_{++}$ &~: log covariance
-  \end{tabular} &
-  $\textrm{LogNorm}(\vct{x} \gvn \vct{\mu}, \mtx{\Sigma})$ & 
-  $\frac{\exp\lpa -\frac{1}{2} (\log\vct{x}-\vct{\mu})\tr\mtx{\Sigma}^{-1}(\log\vct{x}-\vct{\mu})\rpa}{\prod_{d=1}^D(x_d)\sqrt{(2\uppi)^D|\mtx{\Sigma}|}} $ & $\vct{x} \in [0, \infty)^D$ \\[3mm]
-%%%%%%%%%%%%%
-  Exponential & 
-  $\lambda > 0$ : rate &
-  $\mathrm{Exp}(x \gvn \lambda)$ & 
-  $\lambda \exp(-\lambda x)$ & 
-  $x \geq 0$\\[2mm]
-%%%%%%%%%%%%%
-  Uniform & 
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $a \in \reals$ &~: minimum\\[-1mm]
-  $b \in \reals$ &~: maximum, $b > a$
-  \end{tabular} &
-  $\mathcal{U}(x \gvn a, b)$ & 
-  $\frac{1}{b-a}\ind{[a,b]}(x)$ & 
-  $a \leq x \leq b$\\[3mm]
-%%%%%%%%%%%%%
-  Half-Cauchy & 
-  $\gamma > 0$ : scale &
-  $\mathcal{C}_{\geq 0}(x \gvn \gamma)$ & 
-  $\frac{2}{\uppi \gamma} \lpa 1 + \frac{x^2}{\gamma^2} \rpa^{-1}$ & 
-  $x \geq 0$ \\[2mm]
-%%%%%%%%%%%%%
-%  Chi-squared & 
-%  $k \in \naturals_{+}$ : degrees of freedom &
-%  $\chi^2(x \gvn k)$ & 
-%  $\frac{x^{\frac{k}{2}-1}\exp\lpa -\frac{x}{2}\rpa}{\Gamma\lpa\frac{k}{2}\rpa 2^{\frac{k}{2}}}$ & 
-%  $x > 0$ \\[2mm]
-%%%%%%%%%%%%%
-  Gamma &
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\alpha > 0$ &~: shape\\[-1mm]
-  $\beta > 0$ &~: rate 
-  \end{tabular} &
-  $\textrm{Gamma}(x \gvn \alpha, \beta)$ & 
-  $\frac{\beta^\alpha}{\upGamma(\alpha)} x^{\alpha - 1} \exp(-\beta x)$& 
-  $x \geq 0$ \\[3mm]
-%%%%%%%%%%%%%
-  Beta &
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\alpha > 0$ &~: shape\\[-1mm]
-  $\beta > 0$ &~: shape 
-  \end{tabular} &
-  $\textrm{Beta}(x \gvn \alpha, \beta)$ & 
-  $\frac{\upGamma(\alpha + \beta)}{\upGamma(\alpha)\upGamma(\beta)} x^{\alpha - 1} (1 - x)^{\beta - 1}$& 
-  $0 \leq x \leq 1$ \\[3mm]
-%%%%%%%%%%%%%
-  Dirichlet &
-  $\vct{\alpha} \in (0,\infty)^K$ : concentration &
-  $\textrm{Dir}(\vct{x} \gvn \vct{\alpha})$ & 
-  $\frac{\upGamma\lpa \sum_{k=1}^K \alpha_k \rpa}{\prod_{k=1}^K \upGamma(\alpha_k)} \prod_{k=1}^K x_i^{\alpha_k -1}$& 
-  $\vct{x} \in \vvmathbb{S}^K$ \\[2mm]
-%%%%%%%%%%%%%
-  Lomax &
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\alpha > 0$ &~: shape\\[-1mm]
-  $\beta > 0$ &~: scale 
-  \end{tabular} &
-  $\textrm{Lomax}(x \gvn \alpha, \beta)$ & 
-  $\frac{\alpha\beta^\alpha}{(\beta + x)^{\alpha + 1}}$& 
-  $x \geq 0$ \\
-\bottomrule
-\end{tabular}
-\caption[Standard bounded density definitions.]{Definitions of densities of parameteric distributions for bounded real random variables that will be used in this thesis.}
-\label{tab:standard-distributions-bounded}
-\end{table}
-\end{landscape}
-\restoregeometry
+Tables \ref{tab:standard-distributions-discrete}, \ref{tab:standard-distributions-unbounded} and \ref{tab:standard-distributions-bounded} in Appendix \ref{app:distribution-definitions} give definitions of the densities and shorthand notation for some common parametric probability distributions that we use in this thesis.
 
 \subsection{Transforms of random variables}\label{subsec:change-of-variables}
 
-It is common to define a random variable via a transform of another. Let $\rvar{x}$ be a random variable with co-domain the measurable space $(\set{X},\,\sset{F})$. Further let $(\set{Y},\,\sset{G})$ be a second measurable space and $\phi : \set{X} \to \set{Y}$ a measurable function between the two spaces. If we define $\rvar{y} = \phi \circ \rvar{x}$ then analagously to our original definition of $\prob{\rvar{x}}$ as the pushforward measure of $\probability$ under the measurable function defining $\rvar{x}$, we can define $\prob{\rvar{y}}$ in terms of $\prob{\rvar{x}}$ as
+A key concept we will repeatedly make use of in this thesis is defining random variables via transformations of other random variables. Let $\rvar{x}$ be a random variable with co-domain the measurable space $(\set{X},\,\sset{F})$. Further let $(\set{Y},\,\sset{G})$ be a second measurable space and $\phi : \set{X} \to \set{Y}$ a measurable function between the two spaces. If we define $\rvar{y} = \phi \circ \rvar{x}$ then analagously to our original definition of $\prob{\rvar{x}}$ as the pushforward measure of $\probability$ under the measurable function defining $\rvar{x}$, we can define $\prob{\rvar{y}}$ in terms of $\prob{\rvar{x}}$ as
 \begin{equation}\label{eq:change-of-variables-probability}
   \prob{\rvar{y}}(\set{A}) = 
   \prob{\rvar{x}} \circ \phi^{-1}(\set{A}) =
   \prob{\rvar{x}}\lpa \lbrace x \in \set{X} : \phi(x) \in \set{A} \rbrace \rpa
   \quad \forall \set{A} \in \sset{G},
 \end{equation}
-i.e. the probability of the event $\rvar{y} \in \set{A}$ is equal to the probability of $\rvar{x}$ being in the pre-image under $\phi$ of $\set{A}$. To calculate probabilities of transformed random variables therefore we will therefore need to be able to find the pre-images of values of the transformed  variable.
+i.e. the probability of the event $\rvar{y} \in \set{A}$ is equal to the probability of $\rvar{x}$ taking a value in the pre-image under $\phi$ of $\set{A}$. To calculate probabilities of transformed random variables therefore we will therefore need to be able to find the pre-images of values of the transformed variable.
 
-If the probability $\prob{\rvar{x}}$ is defined by a probability density $\pden{\rvar{x}}$ with respect to a measure $\mu_{\rvar{x}}$, we can also in some cases find a density $\pden{\rvar{y}}$ on the transformed variable $\rvar{y} = \phi(\rvar{x})$ with respect to a (potentially different) measure $\mu_{\rvar{y}}$ which can be used to calculate the probability $\prob{\rvar{y}}$, 
+If the distribution $\prob{\rvar{x}}$ is defined by a density $\pden{\rvar{x}}$ with respect to a measure $\mu_{\rvar{x}}$, we can also in some cases find a density $\pden{\rvar{y}}$ on the transformed variable $\rvar{y} = \phi(\rvar{x})$ with respect to a (potentially different) measure $\mu_{\rvar{y}}$
 \begin{equation}\label{eq:change-of-variables-general}
   \prob{\rvar{y}}(\set{A}) =
-  \int_{\phi^{-1}(\set{A})} \pden{\rvar{x}} \,\dr\mu_{\rvar{x}} = 
-  \int_{\set{A}} \pden{\rvar{y}} \,\dr\mu_{\rvar{y}}
+  \int_{\phi^{-1}(\set{A})} \pden{\rvar{x}}(x) \,\mu_{\rvar{x}}(\dr x) = 
+  \int_{\set{A}} \pden{\rvar{y}}(y) \,\mu_{\rvar{y}}(\dr y)
   \quad \forall \set{A} \in \sset{G}.
 \end{equation}
 
-For random variables with countable co-domains where the integral in \eqref{eq:change-of-variables-general} corresponds to a sum, a $\pden{\rvar{y}}$ satisfying \eqref{eq:change-of-variables-general} is simple to identify. If $\rvar{x}$ is a discrete random variable with probability density $\pden{\rvar{x}}$ with respect to the counting measure, then $\rvar{y} = \phi(\rvar{x})$ will necessarily also be a discrete random variable. Applying \eqref{eq:change-of-variables-general} for $\pden{\rvar{x}} = \td{\prob{\rvar{x}}}{\countm}$ we have that
+For random variables with countable co-domains where the integral in \eqref{eq:change-of-variables-general} corresponds to a sum, a $\pden{\rvar{y}}$ satisfying \eqref{eq:change-of-variables-general} is simple to identify. If $\rvar{x}$ is a discrete random variable with probability density $\pden{\rvar{x}}$ with respect to the counting measure, then $\rvar{y} = \phi(\rvar{x})$ will necessarily also be a discrete random variable. Applying \eqref{eq:change-of-variables-general} for $\pden{\rvar{x}} = \td{\prob{\rvar{x}}}{\countm}$ we have that\footnote{We use $\phi^{-1}(y)$ as a shorthand here for $\phi^{-1}(\lbrace y \rbrace)$ i.e. the pre-image of a singleton set. In cases where an inverse function exists we will also use the same notation, which of the three meanings is intended should be clear from the context.} 
 \begin{align}\label{eq:change-of-variables-discrete-derivation}
-  \int_{\phi^{-1}(\set{A})} \pden{\rvar{x}}(x) \,\dr\countm(x) &= 
+  \int_{\phi^{-1}(\set{A})} \pden{\rvar{x}}(x) \,\countm(\dr x) &= 
   \sum_{x\in\phi^{-1}(\set{A})} \pden{\rvar{x}}(x)  =
   \sum_{y \in \set{A}} \sum_{x\in\phi^{-1}(y)} \pden{\rvar{x}}(x) \nonumber \\
-  &= \int_{\set{A}} \sum_{x\in\phi^{-1}(y)} \pden{\rvar{x}}(x) \,\dr\countm(y)
+  &= \int_{\set{A}} \sum_{x\in\phi^{-1}(y)} \pden{\rvar{x}}(x) \,\countm(\dr y)
   \quad \forall \set{A} \in \sset{G}.
 \end{align}
 We can therefore define $\pden{\rvar{y}} = \td{\prob{\rvar{y}}}{\countm}$ in terms of $\pden{\rvar{x}}$ as
@@ -423,132 +223,88 @@ We can therefore define $\pden{\rvar{y}} = \td{\prob{\rvar{y}}}{\countm}$ in ter
   \pden{\rvar{y}}(y) = \sum_{x \in \phi^{-1}(y)} \pden{\rvar{x}}(x)
   \quad \forall y \in \set{Y}.
 \end{equation}
-In the special case that $\phi$ is bijective we have that 
+In the special case that $\phi$ is bijective with an inverse $\phi^{-1}$ we have that 
 \begin{equation}\label{eq:change-of-variables-discrete-bijective}
   \pden{\rvar{y}}(y) = \pden{\rvar{x}}\circ\phi^{-1}(y)
   \quad \forall y \in \set{Y}.
 \end{equation}
-For transformations of real random variables and vectors, the situation is more complicated as we need to account for any local contraction or expansion of space by the map $\phi$. Let $\set{X} = \reals^M$ and $\set{Y} = \reals^N$ with $N \leq M, \, N,M \in \naturals$. %(we do not consider the case $N > M$ as would necessarily correspond to the transformed random variable only having support on a $N$ dimensional manifold in $\set{Y}$). 
-We will need a result from geometric measure theory, the \emph{co-area formula} \citep{federer1969geometric}. Let $g$ be an $L^1$ integrable function and $\vct{\phi} : \set{X} \to \set{Y}$ a Lipschitz map. Then the co-area formula states that
-\begin{equation}\label{eq:co-area-formula}
-  \int_{\set{X}} 
-    g(\vct{x}) \, J_{\vct{\phi}}(\vct{x})
-  \,\dr\lambda^{M}(\vct{x}) =
-  \int_{\set{Y}} \int_{\vct{\phi}^{-1}(\vct{y})}
-    g(\vct{x})
-  \,\dr\haum{M-N}(\vct{x})\,\dr\lebm{N}(\vct{y})
+For transformations of real random variables and vectors, the situation is more complicated as we need to account for any local contraction or expansion of space by the transformation. We will consider here the special case where the transformation is a \emph{diffeomorphism}: a differentiable bijection which has an inverse which is also differentiable. In Chapter \ref{ch:differentiable-generative-models} we will consider how this can be generalised to non-bijective differentiable functions, including the case where the dimensionalities of the domain and co-domain of the function differ.
+
+Let $\set{X} \subseteq \reals^N$ and $\set{Y} \subseteq \reals^N$ and $\vct{\phi} : \set{X} \to \set{Y}$ be a diffeomorphism. Then the \emph{Jacobian} of $\vct{\phi}$ is defined as
+\begin{equation}
+  \jacob{\vct{\phi}}{\vct{x}} = \pd{\vct{\phi}}{\vct{x}} =
+  \begin{bmatrix}
+    \pd{\phi_1}{x_1} & \cdots & \pd{\phi_1}{x_N}\\
+    \vdots & \ddots & \vdots \\
+    \pd{\phi_N}{x_1} & \cdots & \pd{\phi_N}{x_N}
+  \end{bmatrix}.
 \end{equation}
-\marginpar{The $D$-dimensional Hausdorff measure $\haum{D}$ on $\reals^N$ for $D \in \naturals$, $0 < D < N$ formalises a measure of the `volume' of $D$-dimensional submanifolds of $\reals^N$ - e.g. for $D=1$ it corresponds to the length of a curve in $\reals^N$. Additionally $\haum{N} = \lebm{N}$ and $\haum{0} = \countm$.}
-where $\haum{D}$ is the $D$-dimensional \emph{Hausdorff measure}  and $J_{\vct{\phi}} : \set{X} \to [0,\infty)$ is the \emph{Jacobian determinant} defined as
-\begin{equation}\label{eq:jacobian-determinant-def}
- J_{\vct{\phi}}(\vct{x}) = 
- \left|\pd{\vct{\phi}}{\vct{x}}\pd{\vct{\phi}}{\vct{x}}\tr\right|^{\frac{1}{2}}
- \quad \forall \vct{x} \in \set{X}.
+The Jacobian matrix describes the local transformation of an infintesimal volume element $\dr\vct{x}$ in $\set{X}$ under the map $\vct{\phi}$. In particular the corresponding volume element in $\set{Y}$ under the map will be an infintesimal parallelotope spanned by the columns of the Jacobian $\jacob{\vct{\phi}}{\vct{x}}$. The Jacobian matrix determinant $\left|\,\jacob{\vct{\phi}}{\vct{x}}\right|$ which corresponds to the volume of this parallelotope therefore determines hows the volume elements scales unders the map - a value more than one corresponds to a local expansion and less than one to a contraction. Informally we therefore have that $\dr\vct{y} = \left|\,\jacob{\vct{\phi}}{\vct{x}}\right|\,\dr\vct{x}$ and applying the same arguments to the inverse map $\vct{\phi}^{-1}$, $\dr\vct{x} = \left|\,\jacob{\vct{\phi}^{-1}}{\vct{y}}\right|\,\dr\vct{y}$.
+
+Now let $\rvct{x}$ be a random vector taking values in the measurable space $(\set{X},\,\borel(\set{X}))$ and define $\rvct{y} = \vct{\phi} \circ \rvct{x}$ as a random vector taking values in  $(\set{Y},\,\borel(\set{Y}))$. If $\prob{\rvct{x}}$ has a density $\pden{\rvct{x}}$ with respect to the Lebesgue measure then we have that
+\begin{equation}
+\begin{split}
+  \prob{\rvct{y}}(\set{A}) = \prob{\rvct{x}}\circ\vct{\phi}^{-1}(\set{A})
+  &= \int_{\vct{\phi}^{-1}(\set{A})}\kern-2pt\pden{\rvct{x}}(\vct{x})\,\dr\vct{x}\\
+  &= \int_{\set{A}} \pden{\rvct{x}}\circ\vct{\phi}^{-1}(\vct{y}) \,\left|\,\jacob{\vct{\phi}^{-1}}{\vct{y}}\right|\,\dr\vct{y}.
+\end{split}
 \end{equation}
-Now let $\rvct{x}$ be a random vector with co-domain the measurable space $(\set{X},\,\borel(\reals^M))$ and define $\rvct{y} = \vct{\phi} \circ \rvct{x}$ as a random vector with co-domain the measurable space $(\set{Y},\,\borel(\reals^N))$ with $\vct{\phi} : \set{X} \to \set{Y}$ a Lipschitz map as above. Let $\set{Z} = \lbr \vct{x} \in \set{X} : J_{\vct{\phi}}(\vct{x}) = 0 \rbr$ and require that $\prob{\rvar{x}}(\set{Z}) = 0$. Then for $\set{A} \in \borel(\reals^N)$ define an $L^1$ integrable function $g$ as
-\begin{equation}\label{eq:change-of-var-real-vector-derivation-1}
-  g(\vct{x}) = 
-  \begin{cases}
-    \ind{\set{A}}\circ\,\vct{\phi}(\vct{x}) \, \pden{\rvct{x}}(\vct{x}) \, J_{\vct{\phi}}(\vct{x})^{-1}
-    & \quad \forall \vct{x} \in \set{X} \setminus \set{Z}\\
-    0 & \quad \forall \vct{x} \in \set{Z}
-  \end{cases}.
-\end{equation}
-Integrating $g(\vct{x})\,J_{\vct{\phi}}(\vct{x})$ over $\vct{x} \in \set{X}$ we have that
-\begin{align}\label{eq:change-of-var-real-vector-derivation-2}
-  \int_{\set{X}} 
-    g(\vct{x}) \, J_{\vct{\phi}}(\vct{x})
-  \,\dr\lambda^{M}(\vct{x}) 
-  &=
-  \int_{\set{X}\setminus{\set{Z}}}
-    \ind{\set{A}}\circ\,\vct{\phi}(\vct{x})\,
-    \pden{\rvct{x}}(\vct{x})
-  \,\dr\lambda^{M}(\vct{x})\\
-  &=
-  \int_{\set{X}}
-    \ind{\set{A}}\circ\,\vct{\phi}(\vct{x})
-  \,\dr\prob{\rvar{x}}(\vct{x})
-  \\
-  &=
-  \int_{\phi^{-1}(\set{A})}
-  \,\dr\prob{\rvar{x}}(\vct{x}) = \prob{\rvar{y}}(\set{A}).
-\end{align}
-The equality between first and second lines comes from the requirement $\prob{\rvar{x}}(\set{Z}) = 0$, with the Lebesgue integrals of a function over two sets which differ by only a zero-measure set equal. Now applying the co-area formula \eqref{eq:co-area-formula} to the left-hand side gives
-\begin{equation}\label{eq:change-of-var-real-vector-derivation-3}
-  \int_{\set{Y}} \int_{\vct{\phi}^{-1}(\vct{y})} g(\vct{x}) \,\dr\haum{M-N}(\vct{x})\,\dr\lebm{N}(\vct{y})
-  = \prob{\rvar{y}}(\set{A}).
-\end{equation}
-Therefore we can define a density $\pden{\rvar{y}} = \td{\prob{\rvar{y}}}{\lebm{N}}$ satisfying \eqref{eq:change-of-variables-general} as
-\begin{equation}\label{eq:change-of-variables-vector}
-  \pden{\rvct{y}}(\vct{y}) = 
-  \int_{\vct{\phi}^{-1}(\vct{y})} 
-    \pden{\rvct{x}}(\vct{x})\,J_{\vct{\phi}}(\vct{x})^{-1}
-  \,\dr\haum{M-N}(\vct{x})
-  \quad \forall \vct{y} \not\in \vct{\phi}(\set{Z}).
-\end{equation}
-For the special case of a dimension-preserving map $\vct{\phi}$ with $N = M$ the integral in \eqref{eq:change-of-variables-vector} is with respect to $\haum{0}$ which is equivalent to the counting measure $\countm$. In this case $J_{\vct{\phi}}(\vct{x}) = \left|\pd{\vct{\phi}}{\vct{x}}\right|$ and we therefore get
-\begin{equation}\label{eq:change-of-variables-vector-same-dim}
-  \pden{\rvct{y}}(\vct{y}) = 
-  \sum_{\vct{x} \in \vct{\phi}^{-1}(\vct{y})} 
-    \pden{\rvct{x}}(\vct{x}) \, \left| \pd{\vct{\phi}}{\vct{x}} \right|^{-1}
-  \quad \forall \vct{y} \not\in \vct{\phi}(\set{Z}).
-\end{equation}
-Under the further restriction that $\vct{\phi}$ is bi-Lipschitz, i.e. it is bijective and Lipschitz in both directions, we recover the more commonly presented multidimensional change of variables formula
+Therefore $\prob{\rvct{y}}$ has a density $\pden{\rvct{y}}$ with respect to the Lebesgue measure 
 \begin{equation}\label{eq:change-of-variables-vector-bijective}
   \pden{\rvct{y}}(\vct{y}) = 
-    \pden{\rvct{x}}\circ\vct{\phi}^{-1}(\vct{y})
-    \left|\pd{\vct{\phi}^{-1}}{\vct{y}}\right|
+    \pden{\rvct{x}}\circ\vct{\phi}^{-1}(\vct{y})\,
+    \left|\,\jacob{\vct{\phi}^{-1}}{\vct{y}}\right|
   \quad \forall \vct{y} \in \set{Y}.
 \end{equation}
-In both of the cases considered, we have seen that if the function $\phi$ the random variable $\rvar{x}$ is mapped through is bijective, the resulting expression for the density on the mapped random variable $\rvar{y}$ is simpler in the sense that the pre-image $\phi^{-1}(y)$ of a point $y \in \set{Y}$ is itself a point and so we do not need to integrate or sum over points in the pre-image which will often be difficult to do analytically. 
-
-Bijectivity is a very limiting condition however, with many models involving non-bijective transformations of random variables. Later in this thesis we will see that methods used for defining the more general forms for calculating the density of a transformed variable are key to proposed methods for performing inference in generative models defined by complex, non-dimension preserving and non-bijective transformations of random variables.
+In both the discrete and real-valued cases considered, we have seen that if the function $\phi$ the random variable $\rvar{x}$ is mapped through is bijective, it is tractable to compute a density on the mapped random variable $\rvar{y}$ as the pre-image $\phi^{-1}(y)$ of a point $y \in \set{Y}$ is itself a point. Bijectivity is a very limiting condition however, with many models involving non-bijective transformations of random variables. In Chapter \ref{ch:differentiable-generative-models} we will discuss methods for performing inference in generative models defined by complex, non-dimension preserving and non-bijective transformations of random variables.
 
 \subsection{Expectations}\label{subsec:expectations}
 
 A key operation when working with probabilistic models is computing expectations. Let $(\set{S},\,\sset{E},\,\probability)$ be a probability space, and $\rvar{x} : \set{S} \to \set{X}$ a random variable on this space. The \emph{expected value of $\rvar{x}$} is defined as
 \begin{equation}\label{eq:expectation-general}
-  \expc{\rvar{x}} = \int_{\set{S}} \rvar{x}(s) \,\dr\probability(s).
+  \expc{\rvar{x}} = \int_{\set{S}} \rvar{x}\,\dr\probability.
 \end{equation}
-Often it will be more convenient to express expectations in terms of the probability $\prob{\rvar{x}}$ instead. If $f : \set{S} \to \set{X}$ is a measurable function and $\mu$ a measure on $\set{S}$ then the integral with respect to the pushforward measure $\mu_f$ of an integrable function $g$ satisfies
+Usually it will be more convenient to express expectations in terms of the probability $\prob{\rvar{x}}$. If $g : \set{X} \to \reals$ is an integrable function then
 \begin{equation}\label{eq:integral-wrt-pushforward-measure}
-  \int_{\set{X}} g(x) \,\dr\mu_{f}(x) =
-  \int_{\set{S}} g \circ f(s) \,\dr\mu(s).
+  \int_{\set{X}} g(x) \,\prob{\rvar{x}}(\dr x) =
+  \int_{\set{S}} g \circ \rvar{x}(s) \,\probability(\dr s).
 \end{equation}
 If we take $g$ as the identity map we therefore have that
 \begin{equation}\label{eq:expectation-pushfoward}
-  \expc{\rvar{x}} = \int_{\set{X}} x \,\dr\prob{\rvar{x}}(x).
+  \expc{\rvar{x}} = \int_{\set{X}} x \,\prob{\rvar{x}}(\dr x).
 \end{equation}
 If $\probability_{\rvar{x}}$ is given by a density $\pden{\rvar{x}} = \td{\prob{\rvar{x}}}{\mu}$ then using \eqref{eq:integral-wrt-density} we also have
 \begin{equation}\label{eq:expectation-density}
-  \expc{\rvar{x}} = \int_{\set{X}} x \,\pden{\rvar{x}}(x) \,\dr\mu(x),
+  \expc{\rvar{x}} = \int_{\set{X}} x \,\pden{\rvar{x}}(x) \,\mu(\dr x),
 \end{equation}
 which is often the form used for computation.
 
 A further useful implication of \eqref{eq:integral-wrt-pushforward-measure} is what is sometimes termed the \emph{Law of the unconscious statistician}. Let $\rvar{x} : \set{S} \to \set{X}$ be a random variable, $\phi : \set{X} \to \set{Y}$ a measurable function and define $\rvar{y} = \phi \circ \rvar{x}$. Then %the expected value of $\rvar{y}$ is
 \begin{equation}\label{eq:law-of-the-unconscious-statistician}
-  \expc{\rvar{y}} = \int_{\set{S}} \rvar{y}(s) \,\dr\probability(s)
-  = \int_{\set{S}} \phi \circ \rvar{x}(s) \,\dr\probability(s)
-  = \int_{\set{X}} \phi(x) \,\dr\prob{\rvar{x}}(x),
+  \expc{\rvar{y}} = \int_{\set{S}} \rvar{y}(s) \,\probability(\dr s)
+  = \int_{\set{S}} \phi \circ \rvar{x}(s) \,\probability(\dr s)
+  = \int_{\set{X}} \phi(x) \,\prob{\rvar{x}}(\dr x),
 \end{equation}
-i.e. it can be calculated by integrating $\phi$ with respect to $\prob{\rvar{x}}$. This means we can calculate expectations of a transformed random variable $\rvar{y} = \phi(\rvar{x})$ without needing to use the change of variables formulae from Section \ref{subsec:change-of-variables} to explicitly calculate the probability $\prob{\rvar{y}}$ (or density $\pden{\rvar{y}}$) and with a relatively weak condition of measurability on $\phi$.
+i.e. it can be calculated by integrating $\phi$ with respect to $\prob{\rvar{x}}$. This means we can calculate the expected value of a transformed random variable $\rvar{y} = \phi(\rvar{x})$ without needing to use the change of variables formulae from Section \ref{subsec:change-of-variables} to explicitly calculate the probability $\prob{\rvar{y}}$ (or density $\pden{\rvar{y}}$) and with a relatively weak condition of measurability on $\phi$.
 
-Related to the expected value are the \emph{variance} and \emph{covariance}, which for scalar random variables $\rvar{x}$ and $\rvar{y}$ are respectively defined as
+Closely related to the expected value are the \emph{variance} and \emph{covariance} of a random variable. The variance of a random variable $\rvar{x}$ is defined
 \begin{equation}\label{eq:variance-definition}
-  \var{\rvar{x}} = \expc{(\rvar{x} - \expc{\rvar{x}})^2}
-  ~\textrm{and}~
-  \cov{\rvar{x}, \rvar{y}} = \expc{(\rvar{x} - \expc{\rvar{x}})(\rvar{y} - \expc{\rvar{x}})}.
+  \var{\rvar{x}} = \expc{(\rvar{x} - \expc{\rvar{x}})^2} = \expc{\rvar{x}^2} - \expc{\rvar{x}}^2.
+\end{equation}
+For a pair of random variables $\rvar{x}$ and $\rvar{y}$ their covariance is defined 
+\begin{equation}\label{eq:covvariance-definition}
+  \cov{\rvar{x}, \rvar{y}} = \expc{(\rvar{x} - \expc{\rvar{x}})(\rvar{y} - \expc{\rvar{y}})}.
 \end{equation}
 
 \subsection{Conditional expectations and densities}
 
 A related concept, and one which will be key in our discussion of inference, is conditional expectation. Let $(\set{S},\,\sset{E},\,\probability)$ be a probability space, $(\set{X},\,\sset{F})$ and $(\set{Y},\,\sset{G})$ two measurable spaces and $\rvar{x} : \set{S} \to \set{X}$ and $\rvar{y} : \set{S} \to \set{Y}$ two random variables. Then the \emph{conditional expectation of $\rvar{x}$ given $\rvar{y}$}, is defined as a measurable function $\expc{\rvar{x}\gvn\rvar{y}} : \set{Y} \to \set{X}$ satisfying
 \begin{equation}\label{eq:conditional-expectation-property}
-  \int_{\rvar{y}^{-1}(\set{A})} \rvar{x}(s) \,\dr\probability(s) =
-  \int_{\set{A}} \expc{\rvar{x}\gvn\rvar{y}}(y) \,\dr\prob{\rvar{y}}(y)
-  \quad \forall \set{A} \in \sset{G}.
+  \int_{\rvar{y}^{-1}(\set{B})} \rvar{x}(s) \,\probability(\dr s) =
+  \int_{\set{B}} \expc{\rvar{x}\gvn\rvar{y}}(y) \,\prob{\rvar{y}}(\dr y)
+  \quad \forall \set{B} \in \sset{G}.
 \end{equation}
-$\expc{\rvar{x}\gvn\rvar{y}}$ is guaranteed to be uniquely defined almost everywhere in $\set{Y}$ by \eqref{eq:conditional-expectation-property}, i.e. up to $\prob{\rvar{y}}$-null sets. As a particular case where $\set{A} = \set{Y}$ we recover what is sometimes termed the \emph{Law of total expectation}
+$\expc{\rvar{x}\gvn\rvar{y}}$ is guaranteed to be uniquely defined almost everywhere in $\set{Y}$ by \eqref{eq:conditional-expectation-property}, i.e. up to $\prob{\rvar{y}}$-null sets. As a particular case where $\set{B} = \set{Y}$ we recover what is sometimes termed the \emph{Law of total expectation}
 \begin{equation}\label{eq:law-of-total-expectation}
   \int_{\set{S}} \rvar{x} \,\dr\probability =
   \int_{\set{S}} \expc{\rvar{x}\gvn\rvar{y}} \circ \rvar{y} \,\dr\probability
@@ -558,76 +314,63 @@ $\expc{\rvar{x}\gvn\rvar{y}}$ is guaranteed to be uniquely defined almost everyw
 \end{equation}
 We will also use an alternative notation for the conditional expectation evaluated at point $\expc{\rvar{x}\gvn\rvar{y} = y} \equiv \expc{\rvar{x}\gvn\rvar{y}}(y)$ but use the latter in this section to stress its definition as a measurable function.
 
-Conditional expectation can be used to define the \emph{regular conditional probability distribution} of a random variable conditioned on another random variable
+Conditional expectation can be used to define the \emph{regular conditional distribution} of a random variable conditioned on another random variable taking a particular value
 \begin{equation}\label{eq:regular-conditional-probability}
-  \prob{\rvar{x}}(\set{B} \gvn \rvar{y}) = \expc{\ind{A}\circ\,\rvar{x} \gvn \rvar{y}}
-  \quad\forall \set{B} \in \sset{F}.
+  \prob{\rvar{x}|\rvar{y}}(\set{A} \gvn y) = \expc{\ind{\set{A}}\circ\,\rvar{x} \gvn \rvar{y}}(y)
+  \quad\forall y \in \set{Y},\,\set{A} \in \sset{F}.
 \end{equation}
-Likewise we can use conditional expectation to motivate a definition of conditional density. Assume a joint density $\pden{\rvar{x},\rvar{y}} = \td{\prob{\rvar{x},\rvar{y}}}{(\mu_{\rvar{x}}\times\mu_{\rvar{y}})}$ exists and has marginal density $\pden{\rvar{y}} = \td{\prob{\rvar{y}}}{\mu_{\rvar{y}}}$. Then for all $\set{A} \in \sset{G}$
-\begin{align}
-  \int_{\rvar{y}^{-1}(\set{A})} \rvar{x}(s) \, \dr\probability(s) 
-    &= \int_{\set{S}} \rvar{x}(s) \ind{\set{A}} \circ \, \rvar{y}(s) \,\dr\probability(s)\\
-    &= \int_{\set{X}\times\set{Y}} x \ind{\set{A}}(y) \,\dr\prob{\rvar{x},\rvar{y}}(x,y)\\
-    &= \int_{\set{A}} \int_{\set{X}} 
-      x \, \pden{\rvar{x},\rvar{y}}(x,y) 
-    \,\dr\mu_{\rvar{x}}(x) \,\dr\mu_{\rvar{y}}(y). \label{eq:conditional-density-expc-derivation-1}
-\end{align}
-Define $g : \set{Y} \to \set{X}$ as
-\begin{equation}\label{eq:conditional-density-expc-derivation-2}
-  g(y) = 
+We have reused our notation for conditional probability of random variables from Section \ref{subsec:joint-and-conditional-probabilities} here however it should be clear from whether the value conditioned on is a point or a set which is being referred to. A regular conditional distribution $\prob{\rvar{x}|\rvar{y}}$ defines a valid probability measure on $(\set{X},\sset{F})$ and using \eqref{eq:conditional-expectation-property} we have that
+\begin{equation}\label{eq:regular-conditional-probability-joint-relationship}
+  \prob{\rvar{x},\rvar{y}}(\set{A},\set{B}) =
+  \int_{\set{B}} \prob{\rvar{x}|\rvar{y}}(\set{A}\gvn y) \,\prob{\rvar{y}}(\dr y)
+  \qquad \forall \set{A} \in \sset{F},\,\set{B} \in \sset{G}.
+\end{equation}
+We can use this relationship to also motivate a definition of conditional density. We require that a joint density $\pden{\rvar{x},\rvar{y}} = \td{\prob{\rvar{x},\rvar{y}}}{(\mu_{\rvar{x}}\times\mu_{\rvar{y}})}$ exists and has marginal density $\pden{\rvar{y}} = \td{\prob{\rvar{y}}}{\mu_{\rvar{y}}}$. Then for all $\set{A} \in \sset{F}$, $\set{B} \in \sset{G}$
+\begin{equation}\label{eq:conditional-density-derivation-1}
+  \int_{\set{B}} \prob{\rvar{x}|\rvar{y}}(\set{A}\gvn y) \,\prob{\rvar{y}}(\dr y)
+  =
+  \int_{\set{B}}\int_{\set{A}} 
+    \pden{\rvar{x},\rvar{y}}(x,y)
+  \,\mu_{\rvar{x}}(\dr x)\,\mu_{\rvar{y}}(\dr y)
+\end{equation}
+If we define the \emph{conditional density} $\pden{\rvar{x}|\rvar{y}}$ as
+\begin{equation}\label{eq:conditional-density-definition}
+  \pden{\rvar{x}|\rvar{y}}(x\gvn y) =
   \begin{cases}
-    \int_{\set{X}} x \, \frac{\pden{\rvar{x},\rvar{y}}(x,y)}{\pden{\rvar{y}}(y)} \,\dr\mu_{\rvar{x}}(x)
-    & \forall y \in \set{Y} : \pden{\rvar{y}}(y) > 0\\
-    0 & \forall y \in \set{Y} : \pden{\rvar{y}}(y) = 0.
+    \frac{\pden{\rvar{x},\rvar{y}}(x,y)}{\pden{\rvar{y}}(y)} 
+    &\qquad \forall x\in\set{X},\, y \in \set{Y} : \pden{\rvar{y}}(y) > 0\\
+    0
+    &\qquad \forall x\in\set{X},\,y \in \set{Y} : \pden{\rvar{y}}(y) = 0
   \end{cases}
 \end{equation}
-Then from \eqref{eq:conditional-density-expc-derivation-1} we have that for all $\set{A} \in \sset{G}$
-\begin{equation}
-  \int_{\rvar{y}^{-1}(\set{A})} \rvar{x}(s) \, \dr\probability(s)
+then subsituting this definition in to \eqref{eq:conditional-density-derivation-1} we have
+\begin{equation}\label{eq:conditional-density-derivation-2}
+  \int_{\set{B}} \prob{\rvar{x}|\rvar{y}}(\set{A}\gvn y) \,\prob{\rvar{y}}(\dr y)
   =
-  \int_{\set{A}} g(y) \, \pden{\rvar{y}}(y) \,\dr\mu_{\rvar{y}}(y)
-  =
-  \int_{\set{A}} g(y) \,\dr\prob{\rvar{y}}(y).
+  \int_{\set{B}}\int_{\set{A}} 
+    \pden{\rvar{x}|\rvar{y}}(x\gvn y)
+  \,\mu_{\rvar{x}}(\dr x)\,\prob{\rvar{y}}(\dr y).
 \end{equation}
-The definition of $g$ in \eqref{eq:conditional-density-expc-derivation-2} therefore satisfies the definition of conditional expectation in \eqref{eq:conditional-expectation-property} and is uniquely defined up to a $\prob{\rvar{y}}$-null set. Therefore if $\pden{\rvar{x},\rvar{y}}$ and $\pden{\rvar{y}}$ can be defined we have that 
+Therefore $\pden{\rvar{x}|\rvar{y}}$ is the density of the regular conditional distribution $\prob{\rvar{x}|\rvar{y}}$. We also have that if $\pden{\rvar{x},\rvar{y}}$ and $\pden{\rvar{y}}$ can be defined that 
 \begin{equation}\label{eq:conditional-expectation-density}
   \expc{\rvar{x}\gvn\rvar{y}}(y) =
-  \int_{\set{X}} x\,\pden{\rvar{x}|\rvar{y}}(x\gvn y) \,\dr\mu_{\rvar{x}}(x)
+  \int_{\set{X}} x\,\pden{\rvar{x}|\rvar{y}}(x\gvn y) \,\mu_{\rvar{x}}(\dr x)
   \quad \forall y \in \set{Y} : \pden{\rvar{y}}(y) > 0
 \end{equation}
-where the \emph{conditional density of $\rvar{x}$ given $\rvar{y}$}, $\pden{\rvar{x}|\rvar{y}}$, is defined as
-\begin{equation}\label{eq:conditional-density}
-  \pden{\rvar{x}|\rvar{y}}(x\gvn y) =
-  \frac{\pden{\rvar{x},\rvar{y}}(x,y)}{\pden{\rvar{y}}(y)}
-  \quad \forall x \in \set{X},\, y \in \set{Y} : \pden{\rvar{y}}(y) > 0
-\end{equation}
-which can be seen to be analagous to the definition of conditional probability in \eqref{eq:conditional-probability}. Note the definition of conditional expectation in \eqref{eq:conditional-expectation-property} was not dependent on a joint density $\pden{\rvar{x},\rvar{y}}$ being defined.% and so is more general than \eqref{eq:conditional-expectation-density}.
+Note that the initial definition of conditional expectation in \eqref{eq:conditional-expectation-property} was not dependent on a joint density $\pden{\rvar{x},\rvar{y}}$ being defined. %available and so is more general than \eqref{eq:conditional-expectation-density}.
 
 \section{Graphical models}\label{sec:graphical-models}
 
 \marginpar{Graphical models = statistics × graph theory × computer science\\---Zoubin Ghahramani}
-When working with probabilistic models involving large numbers of random variables, it will often be the case that not all the variables are jointly dependent on each other but that instead there are more local conditional relationships between them. Graphical models, which use graphs to describe the dependencies between random variables, are a useful framework for visualising the structure in complex probabilistic models and for giving a graph-theoretic basis for establishing the dependence between sets of random variables.
-
-Central to all graphical models is the concept of conditional independence. Let $(\set{S},\,\sset{E},\,\probability)$ be a probability space and $\rvar{x} : \set{S} \to \set{X}$, $\rvar{y} : \set{S} \to \set{Y}$ and $\rvar{z} : \set{S} \to \set{Z}$ be three random variables with corresponding $\sigma$-algebras, $\sset{F}_{\rvar{x}}$, $\sset{F}_{\rvar{y}}$ and $\sset{F}_{\rvar{z}}$ respectively. Following from our earlier definition of (unconditional) independence of random variables in \eqref{eq:independent-rvars}, we say that \emph{$\rvar{x}$ and $\rvar{y}$ are conditionally independent given $\rvar{z}$}, denoted $\rvar{x} \perp \rvar{y} \gvn \rvar{z}$, if
+When working with probabilistic models involving large numbers of random variables, it will often be the case that not all the variables are jointly dependent on each other but that instead there are more local conditional relationships between them. Graphical models, which use graphs to describe the dependencies between random variables, are a useful framework for visualising the structure in complex probabilistic models and for giving a graph-theoretic basis for establishing the dependence between sets of random variables. Central to graphical models is the concept of conditional independence. Let $\rvar{x} : \set{S} \to \set{X}$, $\rvar{y} : \set{S} \to \set{Y}$ and $\rvar{z} : \set{S} \to \set{Z}$ be three random variables with corresponding $\sigma$-algebras, $\sset{F}_{\rvar{x}}$, $\sset{F}_{\rvar{y}}$ and $\sset{F}_{\rvar{z}}$ respectively. Following from our earlier definition of (unconditional) independence of random variables in \eqref{eq:independent-rvars}, we say that \emph{$\rvar{x}$ and $\rvar{y}$ are conditionally independent given $\rvar{z}$}, denoted $\rvar{x} \perp \rvar{y} \gvn \rvar{z}$, if for $\prob{\rvar{z}}$-almost all $z \in \set{Z}$
 \begin{equation}\label{eq:conditional-independence-property}
-\begin{split}
-  \prob{\rvar{x},\rvar{y}}(\set{A},\set{B} \gvn \rvar{z}) =
-  \prob{\rvar{x}}(\set{A} \gvn \rvar{z})\,
-  \prob{\rvar{y}}(\set{B} \gvn \rvar{z})
+  \prob{\rvar{x},\rvar{y}|\rvar{z}}(\set{A},\set{B} \gvn z) =
+  \prob{\rvar{x}|\rvar{z}}(\set{A} \gvn z)\,
+  \prob{\rvar{y}|\rvar{z}}(\set{B} \gvn z)
   ~\,\forall 
   \set{A} \in \sset{F}_{\rvar{x}},\,
-  \set{B} \in \sset{F}_{\rvar{y}},
-\end{split}	
+  \set{B} \in \sset{F}_{\rvar{y}}.
 \end{equation}
-holds almost everywhere with respect to $\prob{\rvar{z}}$. 
-
-%A consequence of this is that for any pair of measurable function $f: \set{X} \to \reals$ and $g: \set{Y} \to \reals$
-%\begin{equation}\label{eq:conditional-independence-property}
-%  \rvar{x} \perp \rvar{y} \gvn \rvar{z} \implies
-%  \expc{f(\rvar{x}) \, g(\rvar{y}) \gvn\rvar{z}} =
-%  \expc{f(\rvar{x})\gvn\rvar{z}}\,
-%  \expc{g(\rvar{y})\gvn\rvar{z}} ~\prob{\rvar{z}}\text{-a.e}.
-%\end{equation}
 If a joint density on the random variables exists, a sufficient condition for $\rvar{x} \perp \rvar{y} \gvn \rvar{z}$ is that the conditional density $\pden{\rvar{x},\rvar{y}|\rvar{z}}$ factorises as
 \begin{equation}\label{eq:conditional-independence-densities}
   \pden{\rvar{x},\rvar{y}|\rvar{z}}(x,y \gvn z) =
@@ -643,7 +386,7 @@ This definition can be naturally extended to conditional independence when condi
   \rvar{v} \perp \rvar{x} \gvn \rvar{y},\,\rvar{z} \implies
   \pden{\rvar{v},\rvar{x}|\rvar{y},\rvar{z}}(v,x \gvn y,z) =
   \pden{\rvar{v}|\rvar{y},\rvar{z}}(v \gvn y,z)
-  \pden{\rvar{x}|\rvar{y},\rvar{z}}(x \gvn y,z)
+  \pden{\rvar{x}|\rvar{y},\rvar{z}}(x \gvn y,z).
 \end{equation}
 
 % conditional independence and independence
@@ -697,9 +440,9 @@ An example directed graphical model for three random variables, $\rvar{x}_1$, $\
   \pden{\rvar{x}_3|\rvar{x}_1,\rvar{x}_2}(x_3 \gvn x_1,x_2) \,
   \pden{\rvar{x}_1}(x_1) \, \pden{\rvar{x}_2}(x_2).
 \end{equation}
+\marginpar{Ancestral sampling in a directed graphical model corresponds to first sampling values from all the root nodes from their marginal densities, then iteratively sampling from the conditional densities on each node for which all the parents nodes already have sampled values to condition on.}
 Note that this factorisation would not be valid for all joint densities on the three variables; in particular we have that $\rvar{x}_1$ and $\rvar{x}_2$ are (unconditionally) independent and so that the joint density $\pden{\rvar{x}_1,\rvar{x}_2}$ can be written as the product of the two marginals $\pden{\rvar{x}_1}$ and $\pden{\rvar{x}_2}$.
 
-\marginpar{Ancestral sampling in a directed graphical model corresponds to first sampling values from all the root nodes from their marginal densities, then iteratively sampling from the conditional densities on each node for which all the parents nodes already have sampled values to condition on.}
 Directed graphical models are a natural way of specifying \emph{generative models} - i.e. probabilistic models which can be used to generate simulated observable quantities. Typically the factorisation specified by a directed graphical model gives a straightforward method to generate values from the joint density via \emph{ancestral sampling}.
 
 An alternative formalism for graphically representing probabilistic models is that of \emph{undirected graphical models} \citep{kindermann1980markov}, which are also known as \emph{Markov random fields}. As with directed graphical models, each node in the graph represents a random variable, but here the edges connecting nodes are undirected. Rather than describing a factorisation of a joint density into conditional and marginal densities, an undirected graphical model indicates the factorisation of a joint density into a product of clique potentials on each of the maximal cliques in the graph. A \emph{clique} is a fully connected component of the graph - i.e. a subset of nodes in the graph such that all pairs of nodes in the subset are connected by an edge. A \emph{maximal clique} is a clique which is not a strict subset of any other clique. A \emph{clique potential} is a non-negative function of the values of the random variables in the clique; it does necessarily correspond to any conditional or marginal probabilty density. 
@@ -1260,6 +1003,7 @@ A key difference of simulator models from more typical probabilistic models is t
 % reverse mode-automatic differentiation
 % reparametrisation
 % partial reparameterisation
+\newpage
 
 \section{Inference}
 
@@ -1730,11 +1474,11 @@ In the \emph{Observing Dark Worlds} example it was possible to analytically inte
 \label{fig:example-non-bijective-transform-factor-graph}
 \end{figure}
 
-If the observed variables had instead been the output of a deterministic factor where there was no bijective dependence on any of the parent variables (inputs to the deterministic factor), the simplified form of the change of variables formula \eqref{eq:change-of-variables-vector-bijective} would no longer have applied and instead the more general form \eqref{eq:change-of-variables-vector} would have been required. Generally in such cases it will not be possible to analytically marginalise out a parent variable to give an explicit conditional density on the observed variable(s). Models which do not admit explicit conditional densities on the observed variables are sometimes described as \emph{implicit models} \citep{diggle1984monte}, with simulator models being a common case.
+If the observed variables had instead been the output of a deterministic factor where there was no bijective dependence on any of the parent variables (inputs to the deterministic factor), the change of variables formula \eqref{eq:change-of-variables-vector-bijective} would no longer have applied. Generally in such cases it will not be possible to analytically marginalise out a parent variable to give an explicit conditional density on the observed variable(s). Models which do not admit explicit conditional densities on the observed variables are sometimes described as \emph{implicit models} \citep{diggle1984monte}, with simulator models being a common case.
 
 An illustration of such a case for a simple three variable model is shown in Figure \ref{fig:example-non-bijective-transform-factor-graph}. Here the observed variable $\rvar{x}$ is a deterministic function of two latent (unobserved) variables $\rvar{u}$ and $\rvar{v}$. There is no analytic solution in terms of elementary functions for $\rvar{u}$ as a function of $\rvar{x}$ and $\rvar{v}$ or for $\rvar{v}$ as a function of $\rvar{x}$ and $\rvar{u}$. This means the Dirac delta term corresponding to the deterministic factor cannot be integrated out. Due to the presence of the Dirac delta the joint density $\pden{\rvar{x},\rvar{u},\rvar{v}}$ is not well defined (the joint probability $\prob{\rvar{x},\rvar{u},\rvar{m}}$ is not absolutely continuous with respect to any measure) which complicates evaluations of conditional expectations such as $\expc{f(\rvar{u},\rvar{v}) \gvn \rvar{x} = 1}$. 
 
-In particular the set of $\rvar{u}$ and $\rvar{v}$ values corresponding to solutions to $\rvar{x} = 1$ (illustrated as the green curve in Figure \ref{sfig:example-directed-graphical-model}) has zero Lebesgue measure. Therefore even though the dimensionality is low in this case we can not use simple quadrature to evaluate conditional expectations without some further form of approximation. We will revisit methods for performing inference in implicit models later in the thesis.
+In particular the set of $\rvar{u}$ and $\rvar{v}$ values corresponding to solutions to $\rvar{x} = 1$ (illustrated as the green curve in Figure \ref{sfig:example-directed-graphical-model}) has zero Lebesgue measure. Therefore even though the dimensionality is low in this case we can not use simple quadrature to evaluate conditional expectations without some further form of approximation. We will revisit methods for performing inference in implicit models in Chapter \ref{ch:differentiable-generative-models}.
 
 \subsection{Conjugacy and exact inference}\label{subsec:conjugacy-and-exact-inference}
 

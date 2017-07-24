@@ -17,7 +17,8 @@
 \renewcommand{\left}{\mathopen{}\mathclose\bgroup\originalleft}
 \renewcommand{\right}{\aftergroup\egroup\originalright}
 
-\newcommand{\jacobproddet}[2]{J_{#1}\lpa #2 \rpa}
+\newcommand{\jacobianproddet}[1]{D_{#1}}
+\newcommand{\jacobproddet}[2]{\jacobianproddet{#1}\lpa #2 \rpa}
 \newcommand{\probdens}{\mathsf{p}}
 \newcommand{\probability}{\mathsf{P}}
 %\newcommand{\probdens}{\vvmathbb{p}}
@@ -35,7 +36,7 @@
 \newcommand{\jacob}[2]{\mathbf{J}_{#1}\kern-1pt\lpa #2 \rpa}
 
 \newcommand{\lebesgue}{\lambda}
-\newcommand{\hausdorff}{\mathcal{H}}
+\newcommand{\hausdorff}{\hslash}
 \newcommand{\lebm}[1]{
   \ifthenelse { \equal {#1} {1} }
     { \lebesgue }   % if #1 == blank
@@ -111,6 +112,7 @@
 \newcommand{\tgtdens}{p}
 \newcommand{\tgtprob}{P}
 \newcommand{\utgtdens}{\tilde{p}}
+\newcommand{\esttgtdens}{\varepsilon}
 
 
 \newcommand{\rharp}[1]{\mathpalette\rharpoonvec{#1}}
