@@ -467,7 +467,7 @@ If we define $\hatf_N = \hat{\rvar{g}}_N / \hat{\rvar{Z}}_N$, then this is a bia
 \label{fig:importance-sampling}
 \end{figure}
 
-The $w(\rvar{x}_n)$ values are typically termed the \emph{importance weights}. If a few of the weights are very large, the weighted sums in \eqref{eq:importance-sampling-mc-estimates} will be dominated by those few values, reducing the effective number of samples in the Monte Carlo estimates. This can particularly be a problem if the are regions of $\set{X}$ with low probability under $q$ where $\tgtdens(\vct{x}) \gg q(\vct{x})$. As sampling points in these regions will be a rare event, a large number of samples may be needed to diagnose the issue adding further difficulty. A general recommendation is to use densities $q$ with tails as least as heavy of thos of $\tgtdens$, and in general the closer the match between $q$ and $\tgtdens$ the better \citep{mackay2003information,owen2013importance}. Figure \ref{fig:importance-sampling} shows a visualisation of the effect of the choice of $q$ on the importance weights.
+The $w(\rvar{x}_n)$ values are typically termed the \emph{importance weights}. If a few of the weights are very large, the weighted sums in \eqref{eq:importance-sampling-mc-estimates} will be dominated by those few values, reducing the effective number of samples in the Monte Carlo estimates. This can particularly be a problem if the are regions of $\set{X}$ with low probability under $q$ where $\tgtdens(\vct{x}) \gg q(\vct{x})$. As sampling points in these regions will be a rare event, a large number of samples may be needed to diagnose the issue adding further difficulty. A general recommendation is to use densities $q$ with tails as least as heavy of those of $\tgtdens$, and in general the closer the match between $q$ and $\tgtdens$ the better \citep{mackay2003information,owen2013importance}. Figure \ref{fig:importance-sampling} shows a visualisation of the effect of the choice of $q$ on the importance weights.
 
 A heuristic that can be used to help assess the quality of importance sampling estimates is what is sometimes termed the \emph{effective sample size} \citep{kong1992note,owen2013importance}. It approximately quantifies how many independent samples from the target $\tgtdens$ would be required to get a Monte Carlo estimate with a similar variance to that achieved using an importance sampling estimator with weights $\lbrace w(\rvct{x}_n) \rbrace_{n=1}^N$ given \ac{iid} $\lbrace \rvct{x}_n\rbrace_{n=1}^N$ generated from $q$. It can be calculated as
 \begin{equation}\label{eq:is-effective-sample-size}
@@ -516,7 +516,7 @@ A \emph{Markov chain} is an ordered sequence of random variables $\lbrace\rvct{x
 
 For a Markov chain defined on a general measurable state space $(\set{X}, \sset{F})$, the probability distribution of a state $\rvct{x}_n$ given the state $\rvct{x}_{n-1}$ is specified for each $n \in \fset{1\dots N}$ by a \emph{transition operator}, $\fwdtransop_n : \sset{F} \times \set{X} \to [0, 1]$. In particular the transition operators define a series of regular conditional distributions for each $n \in \fset{1 \dots N}$
 \begin{equation}\label{eq:markov-kernel-definition}
-  \prob{\rvct{x}_n}(\set{A} \gvn \rvct{x}_{n-1} = \vct{x}) =
+  \prob{\rvct{x}_n|\rvct{x}_{n-1}}(\set{A} \gvn \vct{x}) =
   \fwdtransop_n\lpa\set{A} \gvn \vct{x}\rpa
   \quad 
   \forall \set{A} \in \sset{F},~
@@ -546,7 +546,7 @@ To have a unique invariant distribution, a chain must be \emph{irreducible} and 
 \begin{split}
   \forall \vct{x} \in \set{X},\, \set{A} \in \sset{F} : \nu(\set{A}) > 0
   ~~\exists\, m \in \integers^+ :
-  \prob{\rvct{x}_m}(\set{A} \gvn \rvct{x}_0 = \vct{x}) > 0. 
+  \prob{\rvct{x}_m|\rvct{x}_0}(\set{A} \gvn \vct{x}) > 0. 
 \end{split}
 \end{equation}  
 A chain with invariant distribution $\tgtprob$ is periodic if disjoint regions of the state space are visited cyclically, i.e. there exists an integer $r > 1$ and an ordered set of $r$ disjoint $\tgtprob$-positive subsets of $\set{X}$, $\lbrace \set{A}_i \rbrace_{i=1}^r$ such that $\fwdtransop(\set{A}_{j} \gvn \vct{x}) = 1 ~\forall \vct{x} \in \set{A}_i,~ i \in \fset{1 \dots r}, ~j = (i + 1) \kern-2pt\mod r$.
@@ -558,10 +558,10 @@ Although irreducibility and aperiodicity of a Markov chain which leaves the targ
 \begin{equation}\label{eq:total-variation-measures}
   \left\Vert \mu - \nu \right\Vert_{\textsc{tv}} = \sup_{\set{A} \in \sset{F}} \left| \mu(\set{A}) - \nu(\set{A}) \right|.
 \end{equation}
-For a $\nu$-irreducible and aperiodic chain with invariant distribution $P$ our earlier vague statement that the distribution on the chain state converges to $P$ can now be restated more precisely as that for $\nu$-almost all initial states $\rvct{x}_0 = \vct{x}$, $\lim_{n\to\infty} \left\Vert \prob{\rvar{x}^{(n)}}\lpa \cdot \gvn \rvct{x}_0 = \vct{x}\rpa - \tgtprob \right\Vert_{\textsc{tv}} = 0$. Geometric ergodicity makes a stronger statement that the convergence in total variation distance conditioned is geometric in $n$, i.e. that
+For a $\nu$-irreducible and aperiodic chain with invariant distribution $P$ our earlier vague statement that the distribution on the chain state converges to $P$ can now be restated more precisely as that for $\nu$-almost all initial states $\rvct{x}_0 = \vct{x}$, $\lim_{n\to\infty} \left\Vert \prob{\rvct{x}_n|\rvct{x}_0}\lpa \cdot \gvn \vct{x}\rpa - \tgtprob \right\Vert_{\textsc{tv}} = 0$. Geometric ergodicity makes a stronger statement that the convergence in total variation distance conditioned is geometric in $n$, i.e. that
 \vspace{-2mm}
 \begin{equation}\label{eq:geometric-ergodicity}
-  \left\Vert \prob{\rvar{x}^{(n)}}\lpa \cdot \gvn \rvct{x}_0 = \vct{x}\rpa - \tgtprob \right\Vert_{\textsc{tv}} \leq M(\vct{x}) r^n
+  \left\Vert \prob{\rvct{x}_n|\rvct{x}_0}\lpa \cdot \gvn \vct{x}\rpa - \tgtprob \right\Vert_{\textsc{tv}} \leq M(\vct{x}) r^n
 \end{equation}
 for a positive measurable function $M$ which depends on the initial chain state $\vct{x}$ and rate constant $r \in [0, 1)$. For chains which are geometrically ergodic, we can derive an expression for the \emph{asymptoptic variance} of an \ac{MCMC} estimator $\hatf_N$ related to the variance of a simple Monte Carlo estimator previously considered in Section \ref{subsec:monte-carlo-method}.
 
@@ -634,7 +634,7 @@ and so that \eqref{eq:invariant-density} is satisfied, with the last inequality 
 \end{equation}
 This is often termed the \emph{detailed balance} condition. Importantly both the detailed balance \eqref{eq:detailed-balance} and \emph{generalised balance} \eqref{eq:foward-backward-transition-density-balance} conditions can also be written in terms of the unormalised density $\utgtdens$ by multiplying both sides by $Z$, and so can be checked even when $Z$ is unknown.
 
-The restriction to reversible transition operators in detailed balance, while sufficient for \eqref{eq:invariant-density} to hold is not necessary. Markov chains which satisfy the generalised balance condition but not detailed balance are termed \emph{non-reversible}, and there are theoretical results suggesting that non-reversible Markov chains can sometimes achieve significantly improved convergence compared to related reversible chains \citep{diaconis2000analysis,neal2004improving,ichiki2013violation} (a criticism made of some of these results is that choice of `reference' reversible chain to compare to can be somewhat arbitrary\citep{mira2000non}).
+The restriction to reversible transition operators in detailed balance, while sufficient for \eqref{eq:invariant-density} to hold is not necessary. Markov chains which satisfy the generalised balance condition but not detailed balance are termed \emph{non-reversible}, and there are theoretical results suggesting that non-reversible Markov chains can sometimes achieve significantly improved convergence compared to related reversible chains \citep{diaconis2000analysis,neal2004improving,ichiki2013violation} (a criticism made of some of these results is that choice of `reference' reversible chain to compare to can be somewhat arbitrary \citep{mira2000non}).
 
 While there are several general purpose frameworks for specifying reversible transition operators which leave a target distribution invariant, developing methods for constructing irreversible transition operators with a desired invariant distribution has proven more challenging. The approaches proposed to date are generally limited in practice to special cases such as finite state spaces \citep{suwa2010markov,turitsyn2011irreversible,sun2010improving} or chains with tractable invariant distributions such as multivariate normal \citep{bierkens2016non}. 
 
@@ -816,7 +816,7 @@ The original Rosenbluth--Teller--Metropolis algorithm used a symmetric proposal 
 \end{equation}
 Note that importantly in both \eqref{eq:metropolis-hastings-acceptance-probability} and \eqref{eq:metropolis-acceptance-probability} the target density only appears as a ratio and so the density need only be known up to a proportionality constant.
 
-An important special case for chains on a Euclidean state space with a Borel $\sigma$-algebra i.e. $(\set{X},\,\sset{F}) = (\reals^D, \, \borel(\reals^D))$, is when the proposal transition operator is deterministic and corresponds to a differentiable involution of the current state. Let $\vct{\phi} : \set{X} \to \set{X}$ be an involution, i.e. $\vct{\phi} \circ \vct{\phi}(\vct{x}) = \vct{x} ~\forall \set{X}$ with Jacobian determinant $J_{\vct{\phi}}(\vct{x}) = \left|\pd{\vct{\phi}(\vct{x})}{\vct{x}}\right|$ which is defined and non-zero $\tgtprob$-almost everywhere. Then if we define a transition operator via the transition density
+An important special case for chains on a Euclidean state space with a Borel $\sigma$-algebra i.e. $(\set{X},\,\sset{F}) = (\reals^D, \, \borel(\reals^D))$, is when the proposal transition operator is deterministic and corresponds to a differentiable involution of the current state. Let $\vct{\phi} : \set{X} \to \set{X}$ be an involution, i.e. $\vct{\phi} \circ \vct{\phi}(\vct{x}) = \vct{x} ~\forall \set{X}$ with Jacobian determinant $\jacobproddet{\vct{\phi}}{\vct{x}} = \left|\pd{\vct{\phi}(\vct{x})}{\vct{x}}\right|$ which is defined and non-zero $\tgtprob$-almost everywhere. Then if we define a transition operator via the transition density
 \begin{equation}\label{eq:metropolis-hastings-transition-deterministic-proposal}
 \begin{split}
   \trans(\vct{x}' \gvn \vct{x}) &=
@@ -825,7 +825,7 @@ An important special case for chains on a Euclidean state space with a Borel $\s
   \\
   \alpha(\vct{x}) &=
   \min\lbr 
-    1,\,\frac{\tgtdens \circ \vct{\phi}(\vct{x})}{\tgtdens(\vct{x})} J_{\vct{\phi}}(\vct{x})
+    1,\,\frac{\tgtdens \circ \vct{\phi}(\vct{x})}{\tgtdens(\vct{x})} \jacobproddet{\vct{\phi}}{\vct{x}}
   \rbr,
 \end{split}
 \end{equation}
@@ -845,23 +845,23 @@ then this transition operator will leave the target distribution $\tgtprob$ inva
   &=
   \int_{\set{X}} 
     \delta\lpa\vct{x}' - \vct{y}\rpa \,\alpha\circ\vct{\phi}(\vct{y}) \, 
-    \tgtdens\circ\vct{\phi}(\vct{y}) \, J_{\vct{\phi}}(\vct{y}) \,\dr\vct{y} +
+    \tgtdens\circ\vct{\phi}(\vct{y}) \, \jacobproddet{\vct{\phi}}{\vct{y}} \,\dr\vct{y} +
   \lpa 1 - \alpha(\vct{x}') \rpa \, \tgtdens(\vct{x}')
   \\
   \label{eq:mh-det-proposal-derivation-4}
   &=
   p(\vct{x}') +
   \alpha\circ\vct{\phi}(\vct{x}') \, \tgtdens\circ\vct{\phi}(\vct{x}') \, 
-  J_{\vct{\phi}}(\vct{x}') -
+  \jacobproddet{\vct{\phi}}{\vct{x}'} -
   \alpha(\vct{x}') \, \tgtdens(\vct{x}').
 \end{align}
-In going from \eqref{eq:mh-det-proposal-derivation-2} to \eqref{eq:mh-det-proposal-derivation-3} we use a change of variables $\vct{y} = \vct{\phi}(\vct{x})$ in the integral. As $\vct{\phi}$ is an involution we have that $\vct{\phi}\circ\vct{\phi}(\vct{x}') = \vct{x}'$ and $J_{\vct{\phi}}\circ\vct{\phi}(\vct{x}') = J_{\vct{\phi}}(\vct{x}')^{-1}$ and so
+In going from \eqref{eq:mh-det-proposal-derivation-2} to \eqref{eq:mh-det-proposal-derivation-3} we use a change of variables $\vct{y} = \vct{\phi}(\vct{x})$ in the integral. As $\vct{\phi}$ is an involution we have that $\vct{\phi}\circ\vct{\phi}(\vct{x}') = \vct{x}'$ and $\jacobianproddet{\vct{\phi}}\circ\vct{\phi}(\vct{x}') = \jacobproddet{\vct{\phi}}{\vct{x}'}^{-1}$ and so
 \begin{equation}\label{eq:mh-det-proposal-derivation-5}
 \begin{split}
   \alpha\circ\vct{\phi}(\vct{x}') \, \tgtdens\circ\vct{\phi}(\vct{x}') \, 
-  J_{\vct{\phi}}(\vct{x}') &=
+  \jacobproddet{\vct{\phi}}{\vct{x}'} &=
   \min\lbr 
-    \tgtdens\circ\vct{\phi}(\vct{x}') \, J_{\vct{\phi}}(\vct{x}'),\,
+    \tgtdens\circ\vct{\phi}(\vct{x}') \, \jacobproddet{\vct{\phi}}{\vct{x}'},\,
     p(\vct{x}')
   \rbr 
   \\
@@ -1165,7 +1165,7 @@ Compound constructions such as \emph{Metropolis-within-Gibbs} are sometimes used
       \State \Return $\vct{x}^*$
     \EndIf
   \EndWhile
-  \Function{LinearStepOut}{$\vct{x}_n,\,b_l,\,b_u,\,M$}
+  \Function{LinearStepOut}{$\vct{x}_n,\,b_l,\,b_u,\,M$} \label{algline:slice-sample-step-out-start}
     \State $L \sim \textrm{UniInt}(0, M)$ \Comment{Sample integer uniformly from $[0, M]$}
     \State $U \gets M - L$
     \While{$L > 0$ \textbf{and}\xspace $\utgtdens(\vct{x}_n + b_l \vct{v}) > h$} \Comment{Step out lower bracket edge}
@@ -1177,13 +1177,13 @@ Compound constructions such as \emph{Metropolis-within-Gibbs} are sometimes used
       \State $U \gets U - 1$
     \EndWhile
     \State\Return $b_l$, $b_u$
-  \EndFunction
+  \EndFunction \label{algline:slice-sample-step-out-end}
 \end{algorithmic}
 \end{algorithm}
 
-The final general class of \ac{MCMC} methods we will consider is \emph{slice sampling}. Slice sampling is a family of auxiliary variable methods which exploit the same observation as used to motivate rejection sampling - to sample from a target distribution, it is sufficient to uniformly sample from the volume beneath a graph of the target density function. Rather than attempt to generate independent points from this volume as in rejection sampling, slice sampling instead constructs a transition operator which leaves the uniform distribution on this volume invariant.
+The final general class of \ac{MCMC} methods we will consider is \emph{slice sampling}. Slice sampling is a family of auxiliary variable methods which exploit the same observation as used to motivate rejection sampling - to sample from a target distribution it is sufficient to uniformly sample from the volume beneath a graph of the target density function. Rather than attempt to generate independent points from this volume as in rejection sampling, slice sampling instead constructs a transition operator which leaves the uniform distribution on this volume invariant.
 
-The method we will concentrate on here was proposed by Neal \citep{neal1997markov,neal2003slice} with a related algorithm which uses per data-point auxiliary variables in Bayesian inference problems developed concurrently by Damien, Wakefield and Walker \citep{damien1999gibbs}. Murray, Adams and Mackay later proposed \emph{elliptical slice sampling} \citep{murray2010elliptical}, a variant on the original linear slice sampling construct which leverages the ellipsoidal geometry of the typical set of multivariate normal distributions to construct a slice sampling transition operator which is particularly effective for target distributions which are well approximated by a multivariate normal.
+The method we will concentrate on here was proposed by Neal \citep{neal1997markov,neal2003slice} with a related algorithm which uses per data-point auxiliary variables in Bayesian inference problems developed concurrently by Damien, Wakefield and Walker \citep{damien1999gibbs}. Murray, Adams and Mackay later proposed \emph{elliptical slice sampling} \citep{murray2010elliptical}, a variant of the original slice sampling construct which leverages the ellipsoidal geometry of the typical set of multivariate normal distributions to construct a slice sampling transition operator which is particularly effective for target distributions which are well approximated by a multivariate normal.
 
 Slice sampling defines a Markov chain on an augmented state space by introducing an auxiliary \emph{height} variable $\rvar{h} \in [0, \infty)$ in addition to the original target state $\rvct{x} \in \set{X}$. The conditional density on the height variable is $\pden{\rvar{h}|\rvct{x}}(h\gvn\rvct{x}) = \frac{1}{\utgtdens(\vct{x})} \ind{[0,\utgtdens(\vct{x}))}(h) $, i.e. uniform over the interval between zero and the unnormalised target density value. The joint density on the augmented space is then
 \begin{equation}\label{eq:slice-sampling-augmented-target}
@@ -1197,11 +1197,11 @@ The overall slice sampling transition is then formed of the sequential compositi
 
 The conditional density $\pden{\rvct{x}|\rvar{h}}(\vct{x}\gvn h)$ is also locally uniform, equal to a positive constant whenever $\utgtdens(\vct{x}) > h$ and zero elsewhere. However we can only evaluate the density up to an unknown constant as we cannot compute the Lebesgue measure of the set $\set{S}_h = \fset{\vct{x} \in \set{X} : \utgtdens(\vct{x}) > h}$ that the density is non-zero over. In general $\set{S}_h$, which is the eponymous \emph{slice} of slice sampling (so called as it represents a slice through the volume under the density curve at a fixed height $h$), will have a complex geometry including potentially consisting of several disconnected components in the case of multimodal densities. The complexity of the slices generally prevents us therefore from independently sampling a new value for $\rvct{x}$ uniformly from $\set{S}_h$ and so we cannot use a full Gibbs sampling scheme corresponding to sequentially independently sampling from $\pden{\rvar{h}|\rvct{x}}$ and $\pden{\rvct{x}|\rvar{h}}$.
 
-A key contribution of \citep{neal2003slice} was to introduce an elegant method for constructing a transition operator which leaves $\pden{\rvct{x}|\rvar{h}}$ invariant. In particular the method proposed has few free parameters to tune, has an efficiency which is relatively robust to the choices of the couple of free choices that are introduced, and will for non-degenerate target densities always move the target state by some amount (in contrast to the potential for rejected updates in Metropolis--Hastings methods). This method is summarised in Algorithm \ref{alg:linear-slice-sampling} and a schematic visualisation of the process shown in Figure \ref{fig:slice-sampling}.
+A key contribution of \citep{neal2003slice} was to introduce an elegant method for constructing a transition operator which leaves $\pden{\rvct{x}|\rvar{h}}$ invariant. In particular the method proposed has few free parameters to tune, has an efficiency which is relatively robust to the choices of the couple of free choices that are introduced, and will for smooth target densities always move the target state by some amount (in contrast to the potential for rejected updates in Metropolis--Hastings methods). This method is summarised in Algorithm \ref{alg:linear-slice-sampling} and a schematic visualisation of the process shown in Figure \ref{fig:slice-sampling}.
 
 An important first step in the algorithm is reducing the problem of generating a point uniformly on the multidimensional slice $\set{S}_h$ to making a move on a one-dimensional linear subspace of this slice  (motivating our naming of this algorithm \emph{linear slice sampling}) which includes the current $\rvct{x}$ state. In the original description of the algorithm in \citep{neal2003slice} the one-dimensional subspace is chosen to be axis-aligned, correponding to updating a single component of the target state. 
 
-In this case the restriction of the slice on to the one-dimensional subspace is entirely specified by the conditional density on the chosen variable component given the current values of the remaining components in the state. Slice sampling transitions for each variable in the target state can then be applied sequentially akin to Gibb sampling, but with the advantage over Gibbs of not requiring the complete conditionals to be of a tractable form we can generate exact samples from. If conditional independency structure in the target density means the complete conditionals depend only on local subsets of variables in the target state using updates of this form has the advantage of exploiting this locality. As with Gibbs sampling however applying slice sampling in this manner makes performance strongly dependent on the parameterisation of the target density, with large correlations likely to lead to slow exploration of the space. 
+In this case the restriction of the slice on to the one-dimensional subspace is entirely specified by the conditional density on the chosen variable component given the current values of the remaining components in the state. Slice sampling transitions for each variable in the target state can then be applied sequentially akin to Gibb sampling, but with the advantage over Gibbs of not requiring the complete conditionals to be of a tractable form we can generate exact samples from. If conditional independency structure in the target density means the complete conditionals depend only on local subsets of variables in the target state using updates of this form has the advantage of exploiting this locality. As with Gibbs sampling however applying slice sampling in this manner makes performance strongly dependent on the parameterisation of the target density, with large magnitude correlations likely to lead to slow exploration of the space. 
 
 \begin{figure}
 \centering
@@ -1224,7 +1224,7 @@ In this case the restriction of the slice on to the one-dimensional subspace is 
   \label{fig:linear-slice-sampler-comparison}
 \end{figure}
 
-In \citep{neal2003slice} various specifically multivariate extensions of the algorithm are suggested which could help counter this issue, however they add significant implementation complexity compared to the original algorithm. A simple alternative is to define the one-dimensional subspace as being the line defined by a randomly chosen vector and passing through the current value of $\rvct{x}$. If this vector is generated independently of the current state this is sufficient to ensure the overall transition retains the correct invariant distribution. 
+In \citep{neal2003slice} various specifically multivariate extensions of the algorithm are suggested which could help counter this issue, however they add significant implementation complexity compared to the basic algorithm. A simple alternative is to define the one-dimensional subspace as being the line defined by a randomly chosen vector and passing through the current value of $\rvct{x}$. If this vector is generated independently of the current state this is sufficient to ensure the overall transition retains the correct invariant distribution. 
 
 If little is known about the target distribution a reasonable default choice is to sample a unit vector of the required dimensionality by generating a random zero-mean isotropic covariance multivariate normal vector and then scaling it to unit norm; if an approximate covariance matrix $\hat{\mtx{\Sigma}}$ is known for the target density then instead generating the vector from $\nrm{\vct{0},\mtx{\Sigma}}$ prior to normalising might be a better choice (as it favours moves aligned with the principle eigenvectors of $\mtx{\Sigma}$) however in this case elliptical slice sampling will often be a better choice. 
 
@@ -1232,7 +1232,19 @@ This random-direction slice sampling variant is discussed in comparison to ellip
 
 The generation of the vector $\vct{v}$ determining the one-dimensional sub-space of the slice the update is performed on is represented in Algorithm \ref{alg:linear-slice-sampling} by Line \ref{algline:slice-sample-direction} by $\vct{v}$ being generated from a density $q$. As well as specifying the \emph{direction} of the slice line, the vector $\vct{v}$ also specifies a scale along this line. In Neal's description of the algorithm this is represented by the explicit \emph{bracket width} parameter $w$. Here instead we assume this parameter is implicitly defined by the Euclidean norm of the vector $\vct{v}$, through suitable choice of $q$ this allowing for direction dependent scales and also the possibility of randomisation of the scale; as we will see shortly however compared to for example random-walk Metropolis updates with a normal proposal, linear slice sampling is much less sensitive to the choice of scale parameters, therefore a single fixed scale will often be sufficient.
 
-Once the slice line direction and scale has been chosen, the remainder of the algorithm can be roughly split into two stages: selection of an initial \emph{bracket} on the slice line and including the point corresponding to the current state; iteratively uniformly sampling points within the current bracket, accepting the point if it is within the slice $\set{S}_h$ otherwise shrinking the bracket and repeating. The algorithm proposed by Neal ensures both these stages are performed reversibly such that there is an equal probability of choosing
+Once the slice line direction and scale has been chosen, the remainder of the algorithm can be split into two stages: selection of an initial bracket on the slice line and including the point corresponding to the current state; iteratively uniformly sampling points within the current bracket, accepting the point if it is within the slice $\set{S}_h$ otherwise shrinking the bracket and repeating. The algorithm proposed by Neal ensures both these stages are performed reversibly such that the detailed balance condition \eqref{eq:detailed-balance} is maintained.
+
+The \emph{slice bracket} defines a contiguous interval $\lambda \in [b_l,b_u]$ on the slice line $\vct{x}^*(\lambda) = \vct{x}_n + \lambda \vct{v}$ and always includes the point $\lambda = 0$ corresponding to the current state. The initial bracket is chosen by sampling a upper bound $b_u$ uniformly from $[0, 1]$ and then setting $b_l \gets b_u - 1$; in the $\lambda$ slice line coordinate system this corresponds to a bracket width of one, however in general the slice line vector $\vct{v}$ can have non-unit length and so defines the initial bracket width in the target variable space. Randomising the positioning of the current state within the bracket ensures reversibility as the resulting bracket would have an equal probability (density) of being selected from any other point in the bracket (which the final accepted point will be within).
+
+In general only a subset of the points in the current slice bracket will be within the slice $\set{S}_h$. As new states are proposed by sampling a point uniformly from the current bracket, the probability of such a proposal being in the slice and so accepted will be equal to the proportion of the bracket that intersects with the slice $\set{S}_h$. In general therefore it is desirable for the bracket to include as much of the slice as possible while not making the proportion of the bracket intersecting with the slice too small such that many points need to be proposed before one on the slice is found. The magnitude of $\vct{v}$ determines the initial bracket extents and so should generally chosren based on any knowledge of the typical `scale' of the target density. Often however we will have little prior knowledge about such scaling however and the typical scale will often vary signifcantly across the target space, and so we may choose an initial bracket which includes only a small proportion of the intersection of the slice with the slice line.
+
+The stepping out routine proposed by \citep{neal2003slice} and detailed in Lines \ref{algline:slice-sample-step-out-start} to \ref{algline:slice-sample-step-out-end} in Algorithm \ref{alg:linear-slice-sampling} is designed to counter this issue. The initial slice bracket $[b_l, b_u]$ is iteratively `stepped-out' by incrementing / decrementing the upper / lower bracket bounds until the corresponding endpoint of the bracket lies outside the slice or a pre-determined maximum number of steps out have been performed. Ideally the step out routine will return a bracket which contains all of the intersection of the slice with slice line while not also including too great a proportion of off slice points; in general the the constant density surfaces of the target density may be non-convex or consist of multiple disconnected components and so the intersection of the slice line with the slice may consist of multiple disconnected intervals in which case the stepping out routine is likely to expand the slice to include only a subset of these. The adaptivity provided by the stepping out routine will still however generally help to make the performance of the sampler much less sensitive to the choice of the bracket scale in contrast to for example random-walk Metropolis algorithms which typically use a single fixed scale. 
+
+Analagously to the randomisation of the initial bracket positioning, in the stepping out routine if a maximum number of step out iterations $M$ is set, the resulting step `budget' is randomly allocated between increments of the upper bound $b_u$ and decrements of the lower bound $b_l$ such that final extended bracket generated by the step out routine would have an equal probability of being generated from any point within the generated bracket interval. If $M$ is set to zero this correponds to not performing any stepping out and simply using the initial sampled bracket; although reducing the robustness of the algorithm to the choice of the initial bracket width this option has the advantage of minimising the number of target density evaluations by not requiring additional density evaluations at the bracket endpoints during the step-out routine. An alternative `doubling' step-out routine was also proposed in \citep{neal2003slice}. This has the advantage of exponentially expanding the slice bracket compared to the linear growth of the step-out routine described in Algorithm \ref{alg:linear-slice-sampling} and so can be more efficient in target distributions where the typical scales of the density varies across several orders of magnitude. The doubling procedure requires a more complex subsequent procedure for sampling points in the resulting bracket however to ensure reversibility. 
+
+Once the initial bracket has been generated and potentially stepped out, the remainder of the algorithm consists of sampling a point within the slice bracket which is within the slice $\set{S}_h$. This is done in an iterative manner by first sampling a point uniformly from the current bracket and checking if it is within the slice or not. If the proposed point is in the slice, the corresponding value for the target variables is returned at the new state. Otherwise the proposed point is set as the new upper or lower bound of the bracket such that the point corresponding to the current state remains within the bracket. This shrinks the bracket by removing an interval where it is known at least some regions of are not within the slice. A new point is then sampled uniformly from the new smaller bracket and the procedure repeats until an acceptable point in the slice is found.
+
+The iterative shrinking of the slice bracket implemented by this procedure introduces a further level of adaptivity in to the slice sampling algorithm, meaning that even if only a small proportion of the initial bracket lies within the slice only relatively few iterations will be needed still till the bracket is shrunk sufficiently for there to be a high probability of proposing a point within the bracket. By ensuring the point corresponding to the current state always remains within the current bracket, reversibility is maintained.
 
 \begin{algorithm}[!t]
 \caption{Elliptical slice sampling transition.}
@@ -1242,21 +1254,21 @@ Once the slice line direction and scale has been chosen, the remainder of the al
     \Require
     $\vct{x}_n$ : current chain state,~
     $\utgtdens$ : unnormalised target density,\\
-    $\mtx{\Sigma}$ : covariance of normal approximation to target.
+    $\vct{\mu},\mtx{\Sigma}$ : mean and covariance of normal approximation to target.
     \Ensure\raggedright
     $\vct{x}_{n+1}$ : next chain state with $\vct{x}_n \sim \tgtdens \implies \vct{x}_{n+1} \sim \tgtdens$.
 \end{algorithmic}
 \hrule
 \small
 \begin{algorithmic}[1]
-  \State $h \sim \mathcal{U}\lpa 0,\utgtdens(\vct{x}_n) / \nrm{\vct{x}_n \gvn \vct{0}, \mtx{\Sigma}}\rpa$ \Comment{Sample slice height}
-  \State $\vct{v} \sim \nrm{\vct{0}, \mtx{\Sigma}}$ \Comment{Sample vector setting slice ellipse}
+  \State $h \sim \mathcal{U}\lpa 0,\utgtdens(\vct{x}_n) / \nrm{\vct{x}_n \gvn \vct{\mu}, \mtx{\Sigma}}\rpa$ \Comment{Sample slice height}
+  \State $\vct{v} \sim \nrm{\vct{\mu}, \mtx{\Sigma}}$ \Comment{Sample vector setting slice ellipse}
   \State $\theta_u \sim \mathcal{U}(0,2\uppi)$ \Comment{Uniformly sample bracket around current state}
   \State $\theta_l \gets \theta_u - 2\uppi$
   \State $\theta \gets \theta_u$
   \While{\textsc{True}}
-    \State $\vct{x}^* \gets \vct{x}_n \cos\theta + \vct{v} \sin\theta$  \Comment{Update proposed state}
-    \If{$\utgtdens(\vct{x}^*) / \nrm{\vct{x}^* \gvn \vct{0}, \mtx{\Sigma}} \leq h$} \Comment{Proposed point not on slice}
+    \State $\vct{x}^* \gets (\vct{x}_n - \vct{\mu}) \cos\theta + (\vct{v} - \vct{\mu}) \sin\theta + \vct{\mu}$  \Comment{Update proposed state}
+    \If{$\utgtdens(\vct{x}^*) / \nrm{\vct{x}^* \gvn \vct{\mu}, \mtx{\Sigma}} \leq h$} \Comment{Proposed point not on slice}
       \IfThenElse{$\theta < 0$}{$\theta_l \gets \theta$}{$\theta_u \gets \theta$} \Comment{Shrink slice bracket}
       \State $\theta \sim \mathcal{U}(\theta_l, \theta_u)$ \Comment{Sample uniformly from new bracket}
     \Else
@@ -1265,6 +1277,32 @@ Once the slice line direction and scale has been chosen, the remainder of the al
   \EndWhile
 \end{algorithmic}
 \end{algorithm}
+
+An alternative to the linear slice sampling procedure just described, is the \emph{elliptical slice sampling} method proposed in \citep{murray2010elliptical} and described in Algorithm \ref{alg:elliptical-slice-sampling}. As suggested by the name, in elliptical slice sampling rather than proposing points on a line instead an elliptical path in the target space is defined and new points proposed on this ellipse. 
+
+Elliptical slice sampling is intended for use in target distributions which are reasonably well approximated by a known Gaussian distribution with density $\nrm{\vct{\mu},\mtx{\Sigma}}$. This Gaussian density might correspond to a Gaussian prior distribution on model latent variables where the dependence between the latent and observed variables in only weak and so the posterior remains well approximated by the prior or a Gaussian approximation fitted directly to the target distribution using one of the optimisation based approximate inference strategies we will discuss in the following section \citep{nishihara2014parallel}. 
+
+In each elliptical slice sampling transition an auxiliary vector $\vct{v}$ is independently sampled from this Gaussian distribution. If the target distribution was exactly described by the Gaussian density $\nrm{\vct{\mu},\mtx{\Sigma}}$ we could use this independent draw directly as the new chain state (though obviously in this case there would be no advantage in formulating as an \ac{MCMC} method). In reality the target distribution will only approximately described by the Gaussian density $\nrm{\vct{\mu},\mtx{\Sigma}}$ and so we wish to instead use this independent draw to define a Markov transition operator that will potentially move the state to a point nearly independent of the current state, but is also able to back off to more conservative proposals closer to the current chain state. This is achieved by defining an elliptical path in target space centred at $\vct{\mu}$, passing through the current chain state $\vct{x}_n$ and the auxiliary vector $\vct{v}$ and parameterised by an angular variable $\theta$
+\begin{equation}\label{eq:elliptical-path}
+  \vct{x}^*(\theta) = (\vct{x}_n - \vct{\mu}) \cos\theta + (\vct{v} - \vct{\mu}) \sin\theta + \vct{\mu}
+\end{equation}
+If we generated $\theta$ uniformly from $\mathcal{U}(0,2\pi)$ then the corresponding proposed transition $\vct{x}^*(\theta)$ would exactly leave a distribution with density $\nrm{\vct{\mu},\mtx{\Sigma}}$ invariant. As we instead wish to leave the target distribution invariant, a slice sampling algorithm is used to find a $\theta$  which accounts for the difference between the target distribution and Gaussian approximation. An auxiliary slice height variable $h$ is sampled uniformly from $\mathcal{U}\lpa 0,\utgtdens(\vct{x}_n) / \nrm{\vct{x}_n \gvn \vct{\mu}, \mtx{\Sigma}}\rpa$ and used to define a slice $S_h = \lbr \vct{x} \in \set{X} : \utgtdens(\vct{x}_n) / \nrm{\vct{x}_n \gvn \vct{\mu}, \mtx{\Sigma}} < h \rbr$. Similar to the linear slice sampling algorithm, a bracket $[\theta_l, \theta_u]$ on the elliptical path is randomly placed around $\theta = 0$ corresponding to the current state $\vct{x}_n$. Unlike the requirement to choose a suitable initial bracket width in linear slice sampling however, we can define the initial bracket in elliptical slice sampling to include the entire elliptical path i.e. $\theta_l = \theta_u - 2\pi$; we only need to randomise the `cut-point' defining the initial end-points of the bracket to ensure reversibility. This removes the need to choose an initial bracket width (defined by the magnitude of the slice line vector $\vct{v}$ in our description of the linear slice algorithm) and for any step out procedure, and so beyond choosing the Gaussian approximation elliptical slice sampling does not have any free settings which need to be tuned.
+
+Once the initial bracket is defined, a directly analagous iterative procedure to that used in the linear slice sampling algorithm is used to find a $\theta$ value corresponding to a point in the slice while using rejected proposed points to shrink the bracket. As with linear slice sampling, providing the target density is a smooth function and so the intersection of the elliptical path with the slice is a non-zero measure set, then the state moved to by the elliptical slice sampling transition operator will never be equal to the previous state.
+
+\subsection{Discussion}
+
+The sampling approaches to approximate inference described in this section allow tractable estimation of the integrals involved in many inference problems. The basic Monte Carlo method and 
+
+Although the discussed approaches 
+
+%A slice sampling algorithm is then used to find a $\theta$ value where the corresponding point on the ellipse lies within a slice $\set{S}_h$ defined by a further auxiliary draw $h$. Unlike the linear slice sampling algorithm, the slice is defined by the set of points whereby the ratio of the (unnormalised) target density $\utgtdens(\vct{x})$ to the Gaussian density $\nrm{\vct{x}\gvn\vct{0},\mtx{\Sigma}}$ is 
+
+
+% The elliptical slice sampling algorithm 
+
+
+% An intuition behind this choice is that the isopotential surfaces and so slices of a multivariate Gaussian distribution are ellipsoidal. If the target distribution is well approximated by a Gaussian distribution elliptical paths
 
 
 
@@ -1310,7 +1348,7 @@ Once the slice line direction and scale has been chosen, the remainder of the al
 %\end{equation}
 %where $\tgtdens$ is the density on a space $\set{X}$ of a probability measure with respect to a base measure $\mu$ and $f$ is a measurable function. For instance in the case of computing the \emph{posterior mean} in a Bayesian inference problem with observed variables $\rvct{y}$ and latent variables $\rvct{x}$ where the posterior density $\pden{\rvct{x}|\rvct{y}}$ is defined with respect to the $D$-dimensional Lebesgue measure, we would have  $\tgtdens(\vct{x}) = \pden{\rvct{x}|\rvct{y}}(\vct{x}\gvn\vct{y})$ for an observed $\vct{y}$, $\mu(\vct{x}) = \lebm{D}(\vct{x})$ and $f(\rvct{x}) = \vct{x}$. Often we will only be able to evaluate $\tgtdens$ up to an unknown unnormalising constant i.e. $\tgtdens(\vct{x}) = \frac{1}{Z}\utgtdens(\vct{x})$ with we able to evaluate $\utgtdens$ pointwise but $Z$ intractable to compute. For example in a Bayesian inference setting $\utgtdens(\vct{x})$ would be the joint density $\pden{\rvct{x},\rvct{y}}(\vct{x},\vct{y})$ and $Z$ the model evidence $\pden{\rvct{y}}(\vct{y})$. When peforming inference in undirected graphical models, we would instead have that $\utgtdens$ is the product of clique potentials and $Z$ the corresponding normaliser.
 
-The central idea of the methods we will review in this section is to try to find a normalised probability density $q(\vct{x})$ from a `simple' family that in some sense approximates the target density, i.e. $\tgtdens(\vct{x}) \approx q(\vct{x})$. Depending on the family chosen for $q$, integrals of some functions $f$ against the target density $\tgtdens$, can be approximated by analytic solutions to integrals of $f$ against $q$ e.g. if $q(\vct{x}) = \nrm{\vct{x} \gvn \vct{\mu},\mtx{\Sigma}}$ then we can approximate the mean of the target density as $\vct{\mu}$ and the covariance as $\mtx{\Sigma}$. To compute integrals of more general functions $f$ we will generally need to resort to using one of the sampling approaches we will review in the next section; generally it will be possible to directly generate independent samples from $q$ while often this will not be the case for $\tgtdens$ hence this two-step approach still offers (computational) advantages over directly applying a sampling approach. Often the approaches we will discuss also allow estimation of the normalising constant $Z$ which may be needed for model comparison.
+The central idea of the methods we will review in this section is to try to find a normalised probability density $q(\vct{x})$ from a `simple' family that in some sense approximates the target density, i.e. $\tgtdens(\vct{x}) \approx q(\vct{x})$. Depending on the family chosen for $q$, integrals of some functions $f$ against the target density $\tgtdens$, can be approximated by analytic solutions to integrals of $f$ against $q$ e.g. if $q(\vct{x}) = \nrm{\vct{x} \gvn \vct{\mu},\mtx{\Sigma}}$ then we can approximate the mean of the target density as $\vct{\mu}$ and the covariance as $\mtx{\Sigma}$. To compute integrals of more general functions $f$ we will generally need to resort to using a Monte Carlo approach; generally it will be possible to directly generate independent samples from $q$ while often this will not be the case for $\tgtdens$ hence this two-step approach still offers (computational) advantages over directly applying a sampling approach. Often the approaches we will discuss also allow estimation of the normalising constant $Z$ which may be needed for model comparison.
 
 \subsection{Laplace's method}
 
