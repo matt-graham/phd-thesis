@@ -226,6 +226,11 @@
 \usetikzlibrary{external} 
 \tikzexternalize[prefix=tikz-figures/]
 
+\newcommand{\includetikz}[1]{%
+    \tikzsetnextfilename{#1}%
+    \input{tikz-source/#1.tikz}%
+}
+
 % Necessary for correct hyperlinks (to index, bib, etc.)                                  
 \newcounter{dummy} 
 
