@@ -18,6 +18,7 @@
 
 %\hyphenation{put special hyphenation here}
 
+\hyphenation{Metro-oplis--Hast-ings}
 \hyphenation{Metro-polis}
 \hyphenation{Hast-ings}
 
@@ -78,9 +79,10 @@
 
 \pagestyle{scrheadings}
 \cleardoublepage
+\acresetall
 \include{chapters/chapter-1}
 \include{chapters/chapter-2}
-\include{chapters/chapter-3}
+%\include{chapters/chapter-3}
 %\include{chapters/chapter-4}
 %\include{chapters/chapter-5}
 \include{chapters/chapter-6}
@@ -91,10 +93,12 @@
 \appendix
 \cleardoublepage
 \include{chapters/appendix-standard-densities}
+\include{chapters/appendix-graphical-models}
 
 % Back matter
 
 \cleardoublepage
+\refstepcounter{dummy}
 \include{front-back-matter/bibliography}
 %\cleardoublepage
 %\include{front-back-matter/colophon}
