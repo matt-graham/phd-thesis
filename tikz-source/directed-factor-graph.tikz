@@ -1,0 +1,8 @@
+\begin{tikzpicture}
+  \node[latent] (x3) {$\rvar{x}_3$} ; %
+  \node[latent, above=of x3, xshift=-10mm, yshift=-5mm,] (x1) {$\rvar{x}_1$} ; %
+  \node[latent, above=of x3,  xshift=10mm, yshift=-5mm] (x2) {$\rvar{x}_2$} ; %
+  \factor[above=of x1] {pr-x1} {} {} {x1} ; %
+  \factor[above=of x2] {pr-x2} {} {} {x2} ; %
+  \factor[above=of x3] {f} {} {x1,x2} {x3} ; %
+\end{tikzpicture}

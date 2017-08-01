@@ -1,0 +1,59 @@
+\pgfplotsset{cycle list/Dark2-5}
+\begin{tikzpicture}[
+    declare function={gamma(\z)=
+    (2.506628274631*sqrt(1/\z) + 0.20888568*(1/\z)^(1.5) + 0.00870357*(1/\z)^(2.5) - (174.2106599*(1/\z)^(3.5))/25920 - (715.6423511*(1/\z)^(4.5))/1244160)*exp((-ln(1/\z)-1)*\z);},
+    declare function={chipdf(\x,\d) = \x^(\d-1)*exp(-\x^2/2) / (2^(0.5*\d-1)*gamma(0.5*\d));}
+]
+  \begin{axis}[
+    name=dens,
+    cycle list name={Dark2-5},
+    domain=0:13,
+    xmin=0, xmax=13,
+    ymin=0, ymax=1.,
+    samples=200,
+    width=10cm,
+    height=4cm,
+    every tick label/.append style={font=\tiny},
+    %hide y axis,
+    %axis x line=bottom,
+    ytick={0.2, 0.4, 0.6, 0.8},
+    axis y line=center,
+    axis x line=middle,
+    xlabel={\small $r$}, 
+    ylabel={\small $\pden{\rvar{r}}$},
+    %every axis y label/.style={
+    %  at={(ticklabel* cs:0.5)},
+    %  anchor=east,
+    %  xshift=-1mm
+    %},
+    %every axis x label/.style={
+    %  at={(ticklabel* cs:0.5)},
+    %  anchor=north,
+    %  yshift=-4mm
+    %},
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.5,-0.2)},
+      anchor=north,
+      draw=none, 
+      legend columns=-1, 
+      column sep=1ex,
+      /tikz/nodes={anchor=base},
+      /tikz/every odd column/.style={yshift=2pt},
+      font=\scriptsize,
+    }
+  ]
+    \addplot+[smooth, mark=none, thick, domain=0.001:5, fill, fill opacity=0.1] 
+      {chipdf(x, 1)} \closedcycle;
+    \addlegendentry{$D=1$};
+    \addplot+[smooth, mark=none, thick, domain=1:7, fill, fill opacity=0.1, densely dashed] 
+      {chipdf(x, 16)};
+    \addlegendentry{$D=16$};
+    \addplot+[smooth, mark=none, thick, domain=4:10, fill, fill opacity=0.1, densely dotted]
+      {chipdf(x, 49)};
+    \addlegendentry{$D=49$};
+    \addplot+[smooth, mark=none, thick, domain=7:13, fill, fill opacity=0.1, densely dashdotted] 
+      {chipdf(x, 100)};
+    \addlegendentry{$D=100$};
+  \end{axis}
+\end{tikzpicture}

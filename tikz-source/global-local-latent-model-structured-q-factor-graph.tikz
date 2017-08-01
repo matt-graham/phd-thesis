@@ -1,0 +1,9 @@
+\begin{tikzpicture}
+  \node[latent] (gj) {$\rvar{g}_j$} ; %
+  \node[latent, below=1.5 of gj] (zi) {$\rvct{z}^{(i)}$} ; %
+  \factor[right=of gj] {q-gj} {} {} {gj} ; %
+  \factor[above=of zi] {q-gj-zi} {} {} {zi} ; %
+  \draw[-] (gj) to[bend right=45] (q-gj-zi) ; %
+  \plate {global} {(gj)(q-gj)} {$j \in \fset{1 \,...\, D}$} ; %
+  \plate {data} {(zi)(q-gj-zi)} {$i \in \fset{1 \,...\, N}$} ; %
+\end{tikzpicture}

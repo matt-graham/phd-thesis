@@ -1,0 +1,56 @@
+\begin{tikzpicture}[point/.style={circle,draw=Maroon,fill=white!80!black,inner sep=0pt}]
+  \begin{axis}[
+    name=uaxis,
+    xmin=0,xmax=1,
+    ymin=0,ymax=1,
+    xshift=-0.2mm,
+    width=66mm,height=66mm,
+    x label style={at={(axis description cs:0.5,-0.025)},anchor=north},
+    y label style={at={(axis description cs:-0.025,0.5)},anchor=south},
+    xlabel={\small $u_1$},
+    ylabel={\small $u_2$},
+    every tick label/.append style={font=\small},
+    ytick={0,1},
+    xtick={0,1},
+    ]
+  \end{axis}
+  \begin{axis}[
+    name=xaxis,
+    at=(uaxis.right of south east),
+    xshift=1.5mm,
+    anchor=left of south west,
+    xmin=-3,xmax=3,
+    ymin=-3,ymax=3,
+    width=66mm,height=66mm,
+    x label style={at={(axis description cs:0.5,-0.025)},anchor=north},
+    y label style={at={(axis description cs:-0.025,0.5)},anchor=south},
+    xlabel={\small $x_1$},
+    ylabel={\small $x_2$},
+    every tick label/.append style={font=\small},
+    ytick={-3,3},
+    xtick={-3,3},
+    ]
+  \end{axis}
+
+  \foreach \i in {0,...,\numgrid} 
+  {
+    \foreach \j in {0,...,\numgrid} 
+    {
+      \pgfmathsetmacro{\u}{0.0455 + (0.909 * \i) / \numgrid};
+      \pgfmathsetmacro{\v}{0.0455 + (0.909 * \j) / \numgrid};
+      \pgfmathsetmacro{\x}{sqrt(-2 * ln(\u)) * cos(deg(2 * pi * \v))};
+      \pgfmathsetmacro{\y}{sqrt(-2 * ln(\u)) * sin(deg(2 * pi * \v))};
+      \pgfmathsetmacro{\c}{mod(\j,2)*80}
+      \node[point,minimum size=0.8mm, fill=black!\c] (uv_\i_\j) at (5*\u,5*\v) {};
+      \node[point,minimum size=0.8mm, fill=black!\c] (xy_\i_\j) at (8.5 + 0.9*\x,2.5+0.9*\y) {};
+    }
+  }
+  %\node (label) at (5.65, 2.5) {$\underset{\vct{h}}{\stackrel{\vct{g}}{\rightleftharpoons}}$} ; %
+  \pgfmathsetmacro{\numgridm}{\numgrid - 1}
+  \foreach \i in {0,...,\numgrid}
+    \foreach \j [count=\k] in {0,...,\numgridm}  
+      \draw[densely dashed, draw=white!50!black] (uv_\i_\j)--(uv_\i_\k) (uv_\j_\i)--(uv_\k_\i) ;
+  \foreach \i in {0,...,\numgrid}
+    \foreach \j [count=\k] in {0,...,\numgridm}  
+      \draw[densely dashed, draw=white!50!black] (xy_\i_\j)--(xy_\i_\k) (xy_\j_\i)--(xy_\k_\i) ;
+\end{tikzpicture}

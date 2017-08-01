@@ -1,0 +1,16 @@
+\begin{tikzpicture}
+  \node[latent] (z) {$\rvct{z}$} ; %
+  \op[above=of z] {uz-z} {right: $\vctfunc{g}_{\rvct{z}}$} {} {z} ; %
+  \node[latent, left=0.3 of uz-z] (uz) {$\rvct{u}_1$} ; %
+  \factor[left=of uz] {pr-uz} {below: $\rho_{\scriptscriptstyle 1}$} {} {uz} ; %
+  \draw (uz) -- (uz-z) ; %
+  \node[obs, below=1.2 of z] (xi) {$\rvct{x}_i$} ; %
+  \op[above=of xi] {uxi_z-xi} {right:$\vctfunc{g}_{ \rvct{x}_i|\rvct{z}}$} {z} {xi} ; %
+  \node[latent, left=0.3 of uxi_z-xi] (uxi)  {$\rvct{u}_{2,i}$} ; %
+  \factor[left=of uxi] {pr-uxi} {below: $\rho_{\scriptscriptstyle 2,i}$} {} {uxi} ; %
+  \draw (uxi) -- (uxi_z-xi) ; %
+  \node[below=0.0 of xi, yshift=0.5mm] (dummy) {} ; %
+  \plate {obs} 
+    {(xi)(uxi)(uxi_z-xi)(uxi_z-xi-caption)(pr-uxi)(pr-uxi-caption)(dummy)} 
+    {\footnotesize $i \in \fset{1 \,...\, N}$} ; %
+\end{tikzpicture}

@@ -1,0 +1,20 @@
+\begin{tikzpicture}
+  \node[latent] (y0) {$\rvct{y}_{0}$} ; %
+  \factor[above=of y0] {pr-y0} {right:$\nrm{\vct{\nu},\mtx{\Psi}}$} {} {y0} ; %
+  \def\T{3}
+  \foreach \t in {1,...,\T} {
+    \pgfmathtruncatemacro{\s}{\t-1}
+    \node[latent, right=of y\s, xshift=15mm] (y\t) {$\rvct{y}_{\t}$} ; %
+    \op[left=of y\t] {y\s-y\t} 
+      {below left:$\begin{aligned}\rvct{y}_{\s} + h \vct{m}(\rvct{y}_{\s},\rvct{z})\\ + \sqrt{h} \mtx{S}(\rvct{y}_{\s},\rvct{z}) \vct{n}_{\s} \end{aligned}$} {y\s} {y\t} ; %
+    \node[latent, below=of y\s-y\t, yshift=2mm] (n\s) {$\rvct{n}_{\s}$} ; %
+    \factor[left=of n\s] {pr-n\s} {left:$\nrm{\vct{0},\idmtx}$} {} {n\s} ; %
+    \draw[-] (n\s) -- (y\s-y\t) ; %
+  }
+  \node[latent, above=of y1-y2, yshift=-5mm] (z) {$\rvct{z}$} ; %
+  \factor[left=of z] {pr-z} {left:$\nrm{\vct{\mu},\mtx{\Sigma}}$} {} {z} ; %
+  \foreach \t in {1,...,\T} {
+    \pgfmathtruncatemacro{\s}{\t-1}
+    \draw[-] (z) -- ($(y\s-y\t) + (0,0.3)$) -- (y\s-y\t) ; %
+  }  
+\end{tikzpicture}

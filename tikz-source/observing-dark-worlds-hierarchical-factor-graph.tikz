@@ -1,0 +1,87 @@
+\begin{tikzpicture}
+  \node[latent] (mi) {$\rvct{m}^{(i)}$} ;
+  \node[latent, below=0.3 of mi] (ti) {$\rvct{t}^{(i)}$} ;
+  \node[factor, left=2.5 of mi] (mum_sigmam-mi) {} ; %
+  \node[align=left, anchor=south west, xshift=-1mm] (label-mum-sigmam-mi)
+    at (mum_sigmam-mi.north) {\tiny $\textrm{LogNorm}(\upmu_{\rvar{m}},\upsigma_{\rvar{m}})$} ; %
+  \node[factor, left=of ti] (mut_sigmat-ti) {} ; %
+  \node[align=left, anchor=south, xshift=-3mm] (label-mut-sigmat-ti)
+    at (mut_sigmat-ti.north) {\tiny $\textrm{LogNorm}(\upmu_{\rvar{t}},\upsigma_{\rvar{t}})$} ; %
+  \node[const, above=0.3 of mi] (xi) {$\vct{x}^{(i)}$}; % 
+  \node[const, above=0.3 of mi, xshift=12mm, yshift=-1mm] (yi) {$\vct{y}^{(i)}$}; % 
+  \node[latent, right=2.5 of mi] (d1i) {$\rvct{d}_1^{(i)}$} ; %
+  \node[latent, right=2.5 of ti] (d2i) {$\rvct{d}_2^{(i)}$} ; %
+  \op[left= of d1i, xshift=-3mm] {xi_yi_mi_ti-d1i} {} {xi,yi,mi,ti} {d1i} ; %
+  \node[anchor=south west, xshift=-2mm, yshift=2mm] (lab-xi_yi_mi_ti-d1i)
+    at (xi_yi_mi_ti-d1i.north) 
+    {\tiny $\vct{d}_1(\vct{x}^{(i)}\kern-2pt,\vct{y}^{(i)}\kern-2pt,\rvct{m}^{(i)}\kern-2pt,\rvct{t}^{(i)})$} ; %
+  \op[left= of d2i, xshift=-3mm] {xi_yi_mi_ti-d2i} {} {xi,yi,mi,ti} {d2i} ; %
+  \node[anchor=north, xshift=-3mm] (lab-xi_yi_mi_ti-d2i)
+    at (xi_yi_mi_ti-d2i.south) 
+    {\tiny $\vct{d}_2(\vct{x}^{(i)}\kern-2pt,\vct{y}^{(i)}\kern-2pt,\rvct{m}^{(i)}\kern-2pt,\rvct{t}^{(i)})$} ; %
+  \node[obs, right=2.5 of d1i] (e1i) {$\rvct{e}_1^{(i)}$} ; %
+  \node[obs, right=2.5 of d2i] (e2i) {$\rvct{e}_2^{(i)}$} ; %
+  \node[factor, left=of e1i, xshift=-7mm] (d1i_sigma-e1i) {} ; %
+  \node[align=left, anchor=south west, xshift=-2mm, yshift=-1mm] (lab-d1i_sigma-e1i) 
+    at (d1i_sigma-e1i.north) {\tiny $\nrm{\rvct{d}_1^{(i)}\kern-2pt,\upsigma^2\idmtx}$}; %
+  \node[factor, left=of e2i, xshift=-7mm] (d2i_sigma-e2i) {} ; %
+  \node[align=left, anchor=south west, xshift=-2mm, yshift=-1mm] (lab-d2i_sigma-e2i) 
+    at (d2i_sigma-e2i.north) {\tiny $\nrm{\rvct{d}_2^{(i)}\kern-2pt,\upsigma^2\idmtx}$}; %
+  \node[const, above=0 of yi, yshift=-2mm] (dummyyi) {} ; %
+  \plate {training} {(mi)(ti)(mum_sigmam-mi)(mut_sigmat-ti)(xi)(dummyyi)(d1i)(d2i)(e1i)(e2i)} {$i \in \fset{1 \,...\, N_{\textrm{train}}}$} ; %
+  
+  \node[latent, below=3.8 of mi] (tj) {$\rvct{t}^{(j)}$} ;
+  \node[latent, below=0.3 of tj] (mj) {$\rvct{m}^{(j)}$} ;
+  \node[factor, left=2.5 of mj] (mum_sigmam-mj) {} ; %
+  \node[align=left, anchor=north west, xshift=-1mm] (label-mum-sigmam-mj)
+    at (mum_sigmam-mj.south) {\tiny $\textrm{LogNorm}(\upmu_{\rvar{m}},\upsigma_{\rvar{m}})$} ; %
+  \node[factor, left=of tj] (mut_sigmat-tj) {} ; %
+  \node[align=left, anchor=north, xshift=-3mm] (label-mut-sigmat-tj)
+    at (mut_sigmat-tj.south) {\tiny $\textrm{LogNorm}(\upmu_{\rvar{t}},\upsigma_{\rvar{t}})$} ; %
+  \node[latent, below=0.3 of mj] (xj) {$\rvct{x}^{(j)}$}; % 
+  \node[latent, below=0.3 of mj, xshift=12mm] (yj) {$\rvct{y}^{(j)}$}; %
+  \factor[left=of xj] {pr-xj} {left:$\mathcal{U}(0,x_{\rm max})$} {} {xj} ; %
+  \factor[right=of yj] {pr-yj} {right:$\mathcal{U}(0,y_{\rm max})$} {} {yj} ; %
+  \node[latent, right=2.5 of mj] (d1j) {$\rvct{d}_1^{(j)}$} ; %
+  \node[latent, right=2.5 of tj] (d2j) {$\rvct{d}_2^{(j)}$} ; %
+  \op[left= of d1j, xshift=-3mm] {xj_yj_mj_tj-d1j} {} {xj,yj,mj,tj} {d1j} ; %
+  \node[anchor=north west, xshift=-2mm, yshift=-2mm] (lab-xj_yj_mj_tj-d1j)
+    at (xj_yj_mj_tj-d1j.south) 
+    {\tiny $\vct{d}_1(\rvct{x}^{(j)}\kern-2pt,\rvct{y}^{(j)}\kern-2pt,\rvct{m}^{(j)}\kern-2pt,\rvct{t}^{(j)})$} ; %
+  \op[left= of d2j, xshift=-3mm] {xj_yj_mj_tj-d2j} {} {xj,yj,mj,tj} {d2j} ; %
+  \node[anchor=south, xshift=-3mm] (lab-xj-yj_mj_tj-d2j)
+    at (xj_yj_mj_tj-d2j.north) 
+    {\tiny $\vct{d}_2(\rvct{x}^{(j)}\kern-2pt,\rvct{y}^{(j)}\kern-2pt,\rvct{m}^{(j)}\kern-2pt,\rvct{t}^{(j)})$} ; %
+  \node[obs, right=2.5 of d1j] (e1j) {$\rvct{e}_1^{(j)}$} ; %
+  \node[obs, right=2.5 of d2j] (e2j) {$\rvct{e}_2^{(j)}$} ; %
+  \node[factor, left=of e1j, xshift=-7mm] (d1j_sigma-e1j) {} ; %
+  \node[align=left, anchor=north west, xshift=-2mm, yshift=1mm] (lab-d1j_sigma-e1j) 
+    at (d1j_sigma-e1j.south) {\tiny $\nrm{\rvct{d}_1^{(j)}\kern-2pt,\upsigma^2\idmtx}$}; %
+  \node[factor, left=of e2j, xshift=-7mm] (d2j_sigma-e2j) {} ; %
+  \node[align=left, anchor=north west, xshift=-2mm, yshift=1mm] (lab-d2j_sigma-e2j) 
+    at (d2j_sigma-e2j.south) {\tiny $\nrm{\rvct{d}_2^{(j)}\kern-2pt,\upsigma^2\idmtx}$}; %
+  \node[const, above=0 of yj, yshift=-4mm] (dummyyj) {} ; %
+  \plate {training} {(mj)(tj)(mum_sigmam-mj)(mut_sigmat-tj)(dummyyj)(d1j)(d2j)(e1j)(e2j)(lab-xj-yj_mj_tj-d2j)(lab-d2j_sigma-e2j)} {$j \in \fset{N_{\textrm{train}} + 1 \,...\, N_{\textrm{train}} + N_{\textrm{test}}}$} ; %
+  
+  \node[latent, below=1 of d2i, xshift=10mm] (sigma) {$\upsfsigma$} ; %
+  \factor[left=of sigma] {pr-sigma} {below:$\mathrm{Gamma}(2, 0.1)~~~~$} {} {sigma} ;%
+  \node[latent, xshift=15mm] (mut) at (sigma-|mut_sigmat-ti) {$\upsfmu_{\rvar{t}}$} ; %
+  \factor[left=of mut] {pr-mut} {$\nrm{0,5}$} {} {mut} ;%
+  \node[latent, right=0.3 of mut] (sigmat) {$\upsfsigma_{\rvar{t}}$} ; %
+  \factor[right=of sigmat] {pr-sigmat} {$\mathcal{C}_{\geq 0}(2)$} {} {sigmat} ;%
+  \node[latent] (mum) at (sigma-|mum_sigmam-mi) {$\upsfmu_{\rvar{m}}$} ; %
+  \factor[right=of mum] {pr-mum} {above:$\nrm{0,5}$} {} {mum} ;%
+  \node[latent, right=1.3 of mum] (sigmam) {$\upsfsigma_{\rvar{m}}$} ; %
+  \factor[left=of sigmam] {pr-sigmam} {below:$\mathcal{C}_{\geq 0}(2)$} {} {sigmam} ;%
+  
+  \factoredge {mut,sigmat} {mut_sigmat-ti} {ti} ; %
+  \factoredge {mum,sigmam} {mum_sigmam-mi} {mi} ; %
+  \factoredge {d1i,sigma} {d1i_sigma-e1i} {e1i} ; %
+  \factoredge {d2i,sigma} {d2i_sigma-e2i} {e2i} ; %
+  
+  \factoredge {mut,sigmat} {mut_sigmat-tj} {tj} ; %
+  \factoredge {mum,sigmam} {mum_sigmam-mj} {mj} ; %
+  \factoredge {d1j,sigma} {d1j_sigma-e1j} {e1j} ; %
+  \factoredge {d2j,sigma} {d2j_sigma-e2j} {e2j} ; %
+
+\end{tikzpicture}

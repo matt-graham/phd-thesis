@@ -1,0 +1,12 @@
+\begin{tikzpicture}
+  \node[latent] (h) {$\rvct{h}$} ; %
+  \factor[left=of h] {pr-h} {$\nrm{\vct{0},\idmtx}$} {} {h} ; %
+  \node[latent, right=1.5 of h, yshift=8mm] (m) {$\rvct{m}$} ; %
+  \node[latent, right=1.5 of h] (s) {$\rvct{s}$} ; %
+  \op[left=of s] {h-s} {$\vctfunc{s}_{\vct{\theta}}(\rvct{h})$} {h} {s} ; %
+  \op[left=of m] {h-m} {$\vctfunc{m}_{\vct{\theta}}(\rvct{h})$} {h} {m} ; %
+  \node[latent, right=1.5 of h, yshift=-8mm] (n) {$\rvct{n}$} ; %
+  \factor[left=of n] {pr-n} {$\nrm{\vct{0},\idmtx}$} {} {n} ; %
+  \node[latent, right=1.5 of s] (y) {$\rvct{y}$} ; %
+  \op[left=of y] {n_m_s-y} {$~~~\rvct{m} + \rvct{s}\odot\rvct{n}$} {n,m,s} {y} ; %
+\end{tikzpicture}

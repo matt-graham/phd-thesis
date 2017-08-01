@@ -1,0 +1,6 @@
+\begin{tikzpicture}
+  \node[latent] (h) {$\rvct{h}$} ; %
+  \factor[left=of h] {pr-h} {$\nrm{\vct{0},\idmtx}$} {} {h} ; %
+  \node[latent, right=1 of h] (y) {$\rvct{y}$} ; %
+  \op[right=of h] {h-y} {$\vctfunc{g}_{\vct{\theta}}$} {h} {y} ; %
+\end{tikzpicture}

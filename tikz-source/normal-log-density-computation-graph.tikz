@@ -1,0 +1,17 @@
+\begin{tikzpicture}
+  \node[latent] (x) {$\rvar{x}$} ; %
+  \node[latent, below= of x] (m) {$\rvar{m}$} ; %
+  \node[latent] (y) at ($(x)!0.5!(m)+(2,0)$) {$\rvar{y}$} ; %
+  \node[latent, below= of y] (s) {$\rvar{s}$} ; %
+  \op[left=of y] {x_m-y} {$\rvar{x} - \rvar{m}$} {x,m} {y} ; %
+  \node[latent] (z) at ($(y)!0.5!(s)+(2,0)$) {$\rvar{z}$} ; %
+  \node[latent, below= of z] (u) {$\rvar{u}$} ; %
+  \op[left=of u] {s-u} {$\log\rvar{s}$} {s} {u} ; %
+  \op[left=of z] {y_s-z} {$\frac{\rvar{y}}{\rvar{s}}$} {y,s} {z} ; %
+  \node[latent, right=1.5 of z] (a) {$\rvar{a}$} ; %
+  \op[left=of a] {z-a} {$\frac{1}{2}\rvar{z}^2$} {z} {a} ; %
+  \node[latent, below=of a] (b) {$\rvar{b}$} ; %
+  \op[left=of b] {u-b} {$\rvar{u} + \frac{1}{2}\log(2\uppi)$} {u} {b} ; %
+  \node[latent] (c) at ($(a)!0.5!(b)+(2,0)$) {$\rvar{c}$} ; %
+  \op[left=of c] {a_b-c} {$\rvar{a} + \rvar{b}$} {a,b} {c} ; %
+\end{tikzpicture}

@@ -1,0 +1,8 @@
+\begin{tikzpicture}
+  \node[latent] (a) {$\rvar{a}$} ; %
+  \node[latent, left=3 of a, yshift=5mm] (x) {$\rvct{x}$} ; %
+  \node[latent, left=3 of a, yshift=-5mm] (u) {$\rvar{u}$} ; %
+  \factor[left=of x] {pr-z} {$q$} {} {x} ; %
+  \factor[left=of u] {pr-u} {$\mathcal{U}(0,1)$} {} {u} ; %
+  \op[left=of a, xshift=-10mm] {x_u-a} {\small $\ind{\lsb 0,\frac{\utgtdens(\rvct{x})}{Mq(\rvct{x})}\rsb}(\rvar{u})$} {x,u} {a} ; %
+\end{tikzpicture}

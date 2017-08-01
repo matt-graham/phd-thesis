@@ -1,0 +1,55 @@
+\begin{tikzpicture}
+  \node[latent] (x) {$\bar{\rvar{x}}$} ; %
+  \node[latent, below= of x] (m) {$\bar{\rvar{m}}$} ; %
+  \node[latent] (y) at ($(x)!0.5!(m)+(2,0)$) {$\bar{\rvar{y}}$} ; %
+  \node[latent, below= of y] (s) {$\bar{\rvar{s}}$} ; %
+  \op[left=of y] {x_m-y} {} {y} {} ; %
+  \draw[-{Latex[length=2mm]}] (x_m-y) -- (x) 
+    node [midway, above right=-2mm] {\tiny $\pd{\rvar{y}}{\rvar{x}} =1$} ; %
+  \draw[-{Latex[length=2mm]}] (x_m-y) -- (m) 
+    node [midway, below right=-2mm] {\tiny $\pd{\rvar{y}}{\rvar{m}} =-1$} ; %
+  \node[latent] (z) at ($(y)!0.5!(s)+(2,0)$) {$\bar{\rvar{z}}$} ; %
+  \node[latent, below= of z] (u) {$\bar{\rvar{u}}$} ; %
+  \op[left=of u] {u-s} {} {u} {} ; %
+  \draw[-{Latex[length=2mm]}] (u-s) -- (s) 
+    node [midway, above right=-2mm] {\tiny $\pd{\rvar{u}}{\rvar{s}} = \frac{1}{\rvar{s}}$} ; %
+  \op[left=of z] {y_s-z} {} {z} {} ; %
+  \draw[-{Latex[length=2mm]}] (y_s-z) -- (y) 
+    node [midway, above right=-2mm] {\tiny $\pd{\rvar{z}}{\rvar{y}} = 1$} ; %
+  \draw[-{Latex[length=2mm]}] (y_s-z) -- (s) 
+    node [midway, below right=-2mm] {\tiny $\pd{\rvar{z}}{\rvar{s}} = -\frac{\rvar{y}}{\rvar{s}^{2}}$} ; %
+  \node[latent, right=1.5 of z] (a) {$\bar{\rvar{a}}$} ; %
+  \op[left=of a] {z-a} {} {a} {} ; %
+  \draw[-{Latex[length=2mm]}] (z-a) -- (z) 
+    node [midway, below] {\tiny $\pd{\rvar{a}}{\rvar{z}} = \rvar{z}$} ; %
+  \node[latent, below=of a] (b) {$\bar{\rvar{b}}$} ; %
+  \op[left= of b] {u-b} {} {b} {} ; %
+  \draw[-{Latex[length=2mm]}] (u-b) -- (u) 
+    node [midway, below] {\tiny $\pd{\rvar{b}}{\rvar{u}} = 1$} ; %
+  \node[latent] (c) at ($(a)!0.5!(b)+(2,0)$) {$\bar{\rvar{c}}$} ; %
+  \op[left=of c] {a_b-c} {} {c} {} ; %
+  \draw[-{Latex[length=2mm]}] (a_b-c) -- (a) 
+    node [midway, above right=-2mm] {\tiny $\pd{\rvar{c}}{\rvar{a}} = 1$} ; %
+  \draw[-{Latex[length=2mm]}] (a_b-c) -- (b) 
+    node [midway, below right=-2mm] {\tiny $\pd{\rvar{c}}{\rvar{b}} = 1$} ; %
+    
+  \node[const, gray, above=0.5 of c] (dc) {\tiny $\bar{\rvar{c}} = 1$} ; %
+  \node[const, gray, above=0.5 of a] (da) {\tiny $\bar{\rvar{a}} = \pd{\rvar{c}}{\rvar{a}} \bar{\rvar{c}} = 1$} ; %
+  \node[const, gray, above=0.5 of z] (dz) {\tiny $\bar{\rvar{z}} = \pd{\rvar{a}}{\rvar{z}} \bar{\rvar{a}} = \rvar{z}$} ; %
+  \node[const, gray, above=0.5 of y] (dy) {\tiny $\bar{\rvar{y}} = \pd{\rvar{z}}{\rvar{y}} \bar{\rvar{z}} = \rvar{z}$} ; %
+  \node[const, gray, above=0.5 of x] (dx) {\tiny $\bar{\rvar{x}} = \pd{\rvar{y}}{\rvar{x}} \bar{\rvar{y}} = \rvar{z}$} ; %
+  \draw[-{latex[length=1.5mm]}, shorten >=5pt, shorten <=5pt, gray] ($(a_b-c)+(0.6,1)$) -- ($(a)+(0.6,1)$) ; %
+  \draw[-{latex[length=1.5mm]}, shorten >=5pt, shorten <=5pt, gray] (da) -- (dz) ; %
+  \draw[-{latex[length=1.5mm]}, shorten >=5pt, shorten <=5pt, gray] ($(y_s-z)+(0.3,1)$) -- ($(y)+(0.3,1)$) ; %
+  \draw[-{latex[length=1.5mm]}, shorten >=5pt, shorten <=5pt, gray] ($(x_m-y)+(0.3,1)$) -- ($(x)+(0.3,1)$) ; %
+  
+  \node[const, gray, below=0.5 of b] (db) {\tiny $\bar{\rvar{b}} = \pd{\rvar{c}}{\rvar{b}} \bar{\rvar{c}} = 1$} ; %
+  \node[const, gray, below=0.5 of u] (du) {\tiny $\bar{\rvar{u}} = \pd{\rvar{b}}{\rvar{u}} \bar{\rvar{b}} = 1$} ; %
+  \node[const, gray, below=0.5 of s, align=left] (ds) {\tiny $\bar{\rvar{s}} = \pd{\rvar{u}}{\rvar{s}} \bar{\rvar{u}} + \pd{\rvar{z}}{\rvar{s}} \bar{\rvar{z}}$ \\ \tiny \phantom{$\rvar{s}$} $= \frac{\rvar{s} - \rvar{z} \rvar{y}}{\rvar{s}^2}$} ; %
+  \node[const, gray, below=0.5 of m] (dm) {\tiny $\bar{\rvar{m}} = \pd{\rvar{y}}{\rvar{m}} \bar{\rvar{y}} = -\rvar{z}$} ; %
+  
+  \draw[-{latex[length=1.5mm]}, shorten >=5pt, shorten <=5pt, gray] ($(a_b-c)+(0.6,-1)$) -- ($(b)+(0.6,-1)$) ; %
+  \draw[-{latex[length=1.5mm]}, shorten >=5pt, shorten <=5pt, gray] (db) -- (du) ; %
+  \draw[-{latex[length=1.5mm]}, shorten >=12pt, shorten <=2pt, gray] ($(u-s)+(0.3,-1)$) -- ($(s)+(0.3,-1)$) ; %
+  
+\end{tikzpicture}

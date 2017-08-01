@@ -1,0 +1,64 @@
+\pgfplotsset{cycle list/Dark2-3}
+\begin{tikzpicture}
+  \begin{axis}[
+    name=dens,
+    cycle list name={Dark2-3},
+    domain=-5:5,
+    xmin=-5, xmax=5,
+    ymin=0, ymax=0.7,
+    ytick={0.5},
+    samples=200,
+    width=6.5cm,
+    height=4cm,
+    xlabel={\small $u$},
+    ylabel={\small $\pden{\rvar{u}}$},
+    every tick label/.append style={font=\tiny},
+    axis y line=center,
+    axis x line=middle,
+    legend image post style={scale=0.75},
+    legend style={
+      at={(0.5,-0.2)},
+      anchor=north west,
+      draw=none, 
+      legend columns=-1, 
+      column sep=2ex,
+      /tikz/nodes={anchor=base},
+      /tikz/every odd column/.style={yshift=2pt},
+      font=\scriptsize,
+      legend to name=grouplegend
+    }
+  ]
+    \addplot+[mark=none, thick] {exp(-0.5 * x^2) / sqrt(2 * pi)};
+    \addlegendentry{$\nrm{u \gvn 0,1}$};
+    \addplot+[mark=none, densely dashed, thick] 
+      {pi / (4 * sqrt(3) * cosh(pi * x / (2 * sqrt(3)))^2)};
+    \addlegendentry{$\textrm{Logistic}(u \gvn 0, \sqrt{3}/\uppi)$};
+    \addplot+[mark=none, densely dotted, thick] {0.5 / cosh(pi * x / 2)};
+    \addlegendentry{$\textrm{InvCosh}(u \gvn 0, 1)$};
+  \end{axis}
+  \begin{axis}[
+    name=logdens,
+    cycle list name={Dark2-3},
+    at=(dens.right of south east),
+    xshift=4mm,
+    anchor=left of south west,
+    domain=-5:5,
+    xmin=-5, xmax=5,
+    ymin=0, ymax=8,
+    ytick={2,4,6},
+    samples=200,
+    width=6.5cm,
+    height=4cm,
+    xlabel={\small $u$},
+    ylabel={\small $-\log\pden{\rvar{u}}$},
+    every tick label/.append style={font=\tiny},
+    axis y line=center,
+    axis x line=middle,
+  ]
+    \addplot+[mark=none, solid, thick] {0.5 * x^2 + 0.5 * ln(2 * pi)};
+    \addplot+[mark=none, densely dashed, thick] 
+      {ln(4 * sqrt(3)) - ln(pi) + 2 * ln(cosh(pi * x / (2 * sqrt(3))))};
+    \addplot+[mark=none, densely dotted, thick] {ln(2) + ln(cosh(pi * x / 2))};
+  \end{axis}
+  \node[anchor=north] at ($(dens.south east) + (2mm,-3mm)$) {\ref*{grouplegend}}; 
+\end{tikzpicture}

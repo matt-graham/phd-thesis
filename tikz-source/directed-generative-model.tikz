@@ -1,0 +1,11 @@
+\begin{tikzpicture}
+  \node[latent] (uz) {$\rvct{u}_1$} ; %
+  \factor[left=of uz] {pr-uz} {below: $\rho_{\scriptscriptstyle 1}$} {} {uz} ; %
+  \node[latent, right=0.8 of uz] (z) {$\rvct{z}$} ; %
+  \op[left=of z, xshift=1mm] {uz-z} {below: $\vctfunc{g}_{ \rvct{z}}$} {uz} {z} ; %
+  \node[obs, right=0.8 of uz, yshift=-16mm] (y) {$\rvct{x}$} ; %
+  \op[above=of y, yshift=-1mm] {uy_z-y} {right:$\vctfunc{g}_{ \rvct{x}|\rvct{z}}$} {z} {y} ; %
+  \node[latent] (uy) at (uy_z-y -| uz) {$\rvct{u}_2$} ; %
+  \factor[left=of uy] {pr-uy} {below: $\rho_{\scriptscriptstyle 2}$} {} {uy} ; %
+  \draw (uy) -- (uy_z-y) ; %
+\end{tikzpicture}

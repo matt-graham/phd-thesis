@@ -1,0 +1,7 @@
+\begin{tikzpicture}
+  \node[latent] (x3) {$\rvar{x}_3$} ; %
+  \node[latent, above=of x3, xshift=-1cm] (x1) {$\rvar{x}_1$} ; %
+  \node[latent, above=of x3,  xshift=1cm] (x2) {$\rvar{x}_2$} ; %
+  \edge {x1} {x3} ; %
+  \edge {x2} {x3} ; %
+\end{tikzpicture}

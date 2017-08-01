@@ -1,0 +1,35 @@
+\begin{tikzpicture}
+
+  \node[obs] (y) {$\rvar{y}^{(i)}$} ; %
+  \node[latent, left=of y, yshift=10mm] (s) {$\rvar{s}$} ; %
+  \node[latent, left=of y] (yhat) {$\hat{\rvar{y}}^{(i)}$} ; %
+  \factor[left=of y] {s_yhat-y} 
+	{below:$\nrm{\hat{\rvar{y}}^{(i)}\kern-.25em,\rvar{s}^2}$} {s,yhat} {y}; %
+  \factor[left=of s] {pr-s} {$\mathcal{C}_{\geq 0}(2.5)$} {} {s}; %
+
+  \node[latent, left=of yhat, xshift=-15mm, yshift=15mm] (a) {$\rvct{a}$} ; %
+  \node[latent, left=of yhat, xshift=-15mm, yshift=-15mm] (b) {$\rvct{b}$} ; %
+  \node[const, left=of yhat, xshift=-5mm, yshift=3mm] (x) {\tiny $\vct{x}^{(i)}$} ; %
+  \node[const, left=of yhat, xshift=-5mm, yshift=0mm] (c) {\tiny $c^{(i)}$} ; %
+	
+  \op[left=of yhat, xshift=-4mm] {a_b-yhat}
+    {below:$\rvct{a}[c^{(i)}] + \rvct{b}\tr\vct{x}^{(i)}$} {a,x,c} {yhat}; %
+  \draw[-] (b) to[bend left=20] (a_b-yhat);
+  \node[const, left=of yhat, xshift=-10mm, yshift=-6mm] (dummy) {} ; %
+  \plate {platedata} {(y)(yhat)(a_b-yhat)(dummy)} {$i\in\fset{1\dots N}$}; %
+
+  \node[latent, left=of a, xshift=-5mm, yshift=5mm] (sa) {$\rvar{s}_{\rvar{a}}$} ; %
+  \node[latent, left=of a, xshift=-5mm, yshift=-5mm] (ma) {$\rvar{m}_{\rvar{a}}$} ; %
+  \factor[left=of sa] {pr-sa} {\tiny $\mathcal{C}_{\geq 0}(2.5)$} {} {sa} ; %
+  \factor[left=of ma] {pr-ma} {\tiny $\nrm{0,1}$} {} {ma} ; %
+  \factor[left=of a, xshift=-1mm] {sa_ma-a} 
+    {$\nrm{\rvar{m}_{\rvar{a}}\vct{1},\rvar{s}_{\rvar{a}}^2\idmtx}$} {sa,ma} {a} ; %
+
+  \node[latent, left=of b, xshift=-5mm, yshift=5mm] (sb) {$\rvar{s}_\rvar{b}$} ; %
+  \node[latent, left=of b, xshift=-5mm, yshift=-5mm] (mb) {$\rvar{m}_\rvar{b}$} ; %
+  \factor[left=of sb] {pr-sb} {\tiny $\mathcal{C}_{\geq 0}(2.5)$} {} {sb} ; %
+  \factor[left=of mb] {pr-mb} {\tiny $\nrm{0,1}$} {} {mb} ; %
+  \factor[left=of b, xshift=-1mm] {sb_mb-b} 
+    {$\nrm{\rvar{m}_{\rvar{b}}\vct{1},\rvar{s}_{\rvar{b}}^2\idmtx}$} {sb,mb} {b} ; %
+
+\end{tikzpicture}

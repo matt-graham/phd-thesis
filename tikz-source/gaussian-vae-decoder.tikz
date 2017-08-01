@@ -1,0 +1,6 @@
+\begin{tikzpicture}
+  \node[latent] (h) {$\rvct{h}$} ; %
+  \factor[left=of h] {pr-n} {$\nrm{\vct{0},\idmtx}$} {} {h} ; %
+  \node[latent, right=2.5 of h] (y) {$\rvct{y}$} ; %
+  \factor[left=of y, xshift=-7mm] {h-y} {$\nrm{\vctfunc{m}_{\vct{\theta}}(\rvct{h}), \diag\vctfunc{s}_{\vct{\theta}}(\rvct{h})^2}$} {h} {y} ; %
+\end{tikzpicture}

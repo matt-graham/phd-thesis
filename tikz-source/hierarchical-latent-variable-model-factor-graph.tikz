@@ -1,0 +1,9 @@
+\begin{tikzpicture}
+  \node[latent] (x) {$\rvct{x}$} ; %
+  \node[latent, right=1 of x] (z) {$\rvct{z}$} ; %
+  \node[obs, right=1 of z] (y) {$\rvct{y}$} ; %
+  \factor[left=of x] {pr-x} {} {} {x} ; %
+  \factor[left=of z] {x-z} {} {x} {z} ; %
+  \factor[left=of y] {x_z-y} {} {z} {y} ; %
+  \draw[-] (x) to[bend left=45] (x_z-y);
+\end{tikzpicture}

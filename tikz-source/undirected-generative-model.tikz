@@ -1,0 +1,9 @@
+\begin{tikzpicture}
+  \node[latent] (u) {$\rvct{u}$} ; %
+  \factor[left=of u] {pr-u} {$\rho$} {} {u} ; %
+  \node[latent, right=1 of u, yshift=8mm] (z) {$\rvct{z}$} ; %
+  \node[obs, right=1 of u, yshift=-8mm] (x) {$\rvct{x}$} ; %
+%  \op[right=of u] {u-z_y} {$\vctfunc{g}_{\rvct{x},\rvct{z}}$} {u} {y,z} ; %
+  \op[left=of x] {u-x} {above:$\vctfunc{g}_{\rvct{x}}$} {u} {x} ; %
+  \op[left=of z] {u-z} {below:$\vctfunc{g}_{\rvct{z}}$} {u} {z} ; %
+\end{tikzpicture}

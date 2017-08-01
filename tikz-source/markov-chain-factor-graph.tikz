@@ -1,0 +1,11 @@
+\begin{tikzpicture}
+  \node[latent] (x0) {$\rvct{x}_0$} ; %
+  \factor[left=of x0] {pr-x0} {above:\footnotesize $q$} {} {x0} ; %
+  \def\T{4}
+  \foreach \t in {1,...,\T} {
+    \pgfmathtruncatemacro{\s}{\t-1}
+    \node[latent, right=1.5 of x\s] (x\t) {$\rvct{x}_{\t}$} ; %
+    \factor[left=of x\t, xshift=-3mm] {x\s-x\t} 
+      {above:\footnotesize $\fwdtrans_\t\lpa\rvct{x}_{\s}\rpa$} {x\s} {x\t} ; %
+  }
+\end{tikzpicture}

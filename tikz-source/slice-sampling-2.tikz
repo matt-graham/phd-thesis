@@ -1,0 +1,57 @@
+\pgfplotsset{cycle list/Dark2-3}
+\begin{tikzpicture}[
+    declare function={
+      tgtdens(\x)=
+      0.6 * exp(-0.5 * ((\x - 0.5) / 0.5)^2) / sqrt(2 * pi * 0.5^2) +
+      0.4 * exp(-0.5 * ((\x + 0.5) / 0.25)^2) / sqrt(2 * pi * 0.25^2);
+    },
+  ]
+  \begin{axis}[
+    axis on top=true,
+    cycle list name={Dark2-3},
+    xmin=-1.5, xmax=2.5,
+    domain=-1.5:2.5,
+    samples=200,
+    width=65mm,
+    height=40mm,
+    xlabel={\small $\lambda$},
+    clip=false,
+    hide y axis,
+    axis x line=middle,
+    ticks=none,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.5,0.9)},
+      fill=none,
+      anchor=north west,
+      draw=none, 
+      font=\scriptsize,
+    }
+  ]
+    \addplot+[mark=none, thick, draw=cbgreen, fill=cbgreen!20] {tgtdens(x)};
+    \addlegendentry{$\utgtdens(\vct{x} + \lambda\vct{v})$};
+    \pgfmathsetmacro{\xr}{-0.25}; %
+    \pgfmathsetmacro{\ur}{0.6}; %
+    \pgfmathsetmacro{\yr}{tgtdens(\xr)} ; %
+    \pgfmathsetmacro{\hr}{tgtdens(\xr) * \ur} ; %
+    \pgfmathsetmacro{\bl}{-1.3} ; %
+    \pgfmathsetmacro{\bu}{1.8} ;%
+    \draw[densely dotted] (axis cs: \xr, 0.) -- (axis cs: \xr, \hr); %
+    \draw[->] (axis cs: \xr+0.4, 0.) -- 
+      node[pos=0.5, anchor=center, right] {\small $h$} 
+      (axis cs: \xr+0.4, \hr); %
+    \draw[densely dotted] (axis cs: \bl, 0.) -- (axis cs: \bl, \hr); %
+    \draw[densely dotted] (axis cs: \bu, 0.) -- (axis cs: \bu, \hr); %
+    \draw[very thick, cborange] (axis cs: -0.84, \hr) -- (axis cs: 0.955, \hr) ; %
+    \draw[densely dashed] (axis cs: \bl, \hr) -- (axis cs: \bu, \hr) ; %
+    \node[draw=black, fill=black, inner sep=1pt, outer sep=0] 
+      (xn) at (axis cs:\xr, \hr) [anchor=center] {} ; %
+    \node[draw=Maroon, fill=Maroon, circle, inner sep=1pt, outer sep=0, circle] 
+      (xr) at (axis cs:1.3, \hr) [anchor=center] {} ; %
+    \node[draw=cbviolet, fill=cbviolet, circle, inner sep=1pt, outer sep=0, circle] 
+      (xa) at (axis cs:0.5, \hr) [anchor=center] {} ; %
+    \node at (axis cs: \xr, -0.1) {0};
+    \node at (axis cs: \bl, -0.1) {$b_l$};
+    \node at (axis cs: \bu, -0.1) {$b_u$};
+\end{axis}
+\end{tikzpicture}

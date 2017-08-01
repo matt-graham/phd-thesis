@@ -1,0 +1,74 @@
+\begin{tikzpicture}[
+    declare function={
+      target(\x) = 
+      0.5 * exp(-0.5 * ((\x - 0.5) / 0.4)^2) / sqrt(2 * pi * 0.4^2) +
+      0.5 * exp(-0.5 * ((\x + 0.5) / 0.2)^2) / sqrt(2 * pi * 0.2^2);
+    },
+    declare function={
+      proposal(\x,\y,\s)=exp(-0.5 * ((\x-\y) / \s)^2) / sqrt(2 * pi * \s^2);
+    }
+    ]
+  \begin{axis}[
+    domain=-2:2,
+    name=narrowerprop,
+    xmin=-2, xmax=2,
+    samples=200,
+    width=65mm,
+    height=40mm,
+    xlabel={\small $x$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    ticks=none,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(1.1,0.9)},
+      fill=none,
+      anchor=north,
+      draw=none, 
+      font=\scriptsize,
+      %legend columns=-1, 
+      %column sep=1ex,
+    }
+  ]
+    \addplot+[mark=none, thick, draw=cborange, fill=cborange!20, densely dashed] {(
+      0.75 * proposal(x, -0.75, 0.3)
+    )};
+    \addlegendentry{$q(x\gvn x_{n})$};
+    \addplot+[mark=none, thick, draw=cbviolet, fill=cbviolet!20, densely dotted] {(
+      0.75 * proposal(x, -0.75, 0.3) * min(1, target(x) / target(-0.75))
+    )};
+    \addlegendentry{$\alpha(x\gvn x_{n})\,q(x\gvn x_{n})$};
+    \addplot+[mark=none, thick, draw=cbgreen] {target(x)};
+    \addlegendentry{$\utgtdens(x_n)$};
+    %\draw (axis cs: -2,1) -- (axis cs: 2, 1);
+    \draw[->] (axis cs: -0.72,0.1) --(axis cs: -0.72, 0);
+    \node[anchor=south west, xshift=-2mm] at (axis cs: -0.72,0.1) {$x_{n}$};
+\end{axis}
+\begin{axis}[
+    at=(narrowerprop.right of south east),
+    xshift=-8mm,
+    anchor=left of south west,
+    domain=-2.5:2,
+    xmin=-2, xmax=2,
+    samples=200,
+    width=65mm,
+    height=40mm,
+    xlabel={\small $x$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    ticks=none,
+  ]
+    \addplot+[mark=none, thick, draw=cborange, fill=cborange!20, densely dashed] {(
+      0.75 * proposal(x, -0.75, 0.5)
+    )};
+    \addplot+[mark=none, thick, draw=cbviolet, fill=cbviolet!20, densely dotted] {(
+      0.75 * proposal(x, -0.75, 0.5) * min(1, target(x) / target(-0.75))
+    )};
+    \addplot+[mark=none, thick, draw=cbgreen] {target(x)};
+    %\draw (axis cs: -2,1) -- (axis cs: 2, 1);
+    \draw[->] (axis cs: -0.72,0.1) --(axis cs: -0.72, 0);
+    \node[anchor=south west, xshift=-2mm] at (axis cs: -0.72,0.1) {$x_{n}$};
+\end{axis}
+\end{tikzpicture}

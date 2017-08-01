@@ -1,0 +1,42 @@
+\begin{tikzpicture}
+  \begin{axis}[
+    cycle list name={Dark2-3},
+    xmin=-2, xmax=2.5,
+    ymin=0, ymax=2,
+    samples=200,
+    width=65mm,
+    height=40mm,
+    xlabel={\small $x$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    ticks=none,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.75,0.9)},
+      fill=none,
+      anchor=north west,
+      draw=none, 
+      font=\scriptsize,
+    }
+  ]
+    \addplot+[mark=none, thick, draw=cbgreen] {0.75 * (
+      0.6 * exp(-0.5 * ((x - 0.5) / 0.5)^2) / sqrt(2 * pi * 0.5^2) +
+      0.4 * exp(-0.5 * ((x + 0.5) / 0.25)^2) / sqrt(2 * pi * 0.25^2)
+    )};
+    \addlegendentry{$\utgtdens(x)$};
+    \addplot+[mark=none, thick, draw=cborange, densely dashed] {(
+      exp(-0.5 * ((x-0.1) / 0.52)^2) / sqrt(2 * pi * 0.52^2)
+    )};
+    \addlegendentry{$q(x)$};
+    \addplot+[mark=none, thick, densely dotted, draw=cbviolet] {0.75 * (
+      0.6 * exp(-0.5 * ((x - 0.5) / 0.5)^2) / sqrt(2 * pi * 0.5^2) +
+      0.4 * exp(-0.5 * ((x + 0.5) / 0.25)^2) / sqrt(2 * pi * 0.25^2)
+    ) /
+    (
+      exp(-0.5 * ((x-0.1) / 0.52)^2) / sqrt(2 * pi * 0.52^2)
+    )
+    };
+    \addlegendentry{$w(x)$};
+\end{axis}
+\end{tikzpicture}

@@ -1,0 +1,9 @@
+\begin{tikzpicture}
+  \node[latent] (gj) {$\rvar{g}_j$} ; %
+  \node[latent, below=1 of gj] (zik) {$\rvar{z}_k^{(i)}$} ; %
+  \factor[left=of gj] {q-gj} {} {} {gj} ; %
+  \factor[left=of zik] {q-zik} {} {} {zik} ; %
+  \plate {global} {(gj)(q-gj)(q-gj-caption)} {$j \in \fset{1 \,...\, D}$} ; %
+  \plate {local} {(zik)(q-zik)(q-zik-caption)} {$k \in \fset{1 \,...\, M_i}$} ; %
+  \plate {data} {(local)} {$i \in \fset{1 \,...\, N}$} ; %
+\end{tikzpicture}

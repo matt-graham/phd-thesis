@@ -1,0 +1,8 @@
+\begin{tikzpicture}
+  \node[latent] (g) {$\rvct{g}$} ; %
+  \node[latent, below=1 of g, xshift=-8mm] (zi) {$\rvct{z}^{(i)}$} ; %
+  \node[latent, below=1 of g, xshift=8mm] (yi) {$\rvct{y}^{(i)}$} ; %
+  \factor[above=of g] {pr-g} {} {} {g} ; %
+  \factor[below=of g] {g-zi_yi} {} {g} {zi,yi} ; %
+  \plate {data} {(zi)(yi)(g-zi_yi)} {$i \in \fset{1 \,...\, N}$} ; %
+\end{tikzpicture}

@@ -1,0 +1,6 @@
+\begin{tikzpicture}
+  \node (dummy) {};%
+  \node[latent, right=0.2 of dummy, yshift=8mm] (z) {$\rvct{z}$} ; %
+  \node[obs, right=0.2 of dummy, yshift=-8mm] (y) {$\rvct{x}$} ; %
+  \factor[above=of y, yshift=-0.5mm] {z-y} {right: $\mathsf{p}_{\rvct{x},\rvct{z}}$} {} {y,z} ; %
+\end{tikzpicture}

@@ -1,0 +1,34 @@
+\begin{tikzpicture}
+  \node[latent] (z) {$\rvct{z}$} ; %
+  \op[above=of z] {uz-z} {right: $\vctfunc{g}_{\rvct{z}}$} {} {z} ; %
+  \node[latent, left=0.3 of uz-z] (uz) {$\rvct{u}_1$} ; %
+  \factor[left=of uz] {pr-uz} {below: $\rho_{\scriptscriptstyle 1}$} {} {uz} ; %
+  \draw (uz) -- (uz-z) ; %
+  \node[latent, below=1.2 of z] (uone) {$\rvct{u}_{2,1}$} ; %
+  \factor[below=of uone] {pr-uone} {right:$\rho_{2,1}$} {} {uone} ; %
+  \op[above=of uone] {xzero_uone_z-xone} {below right:$\vctfunc{f}_1$} {} {} ; %
+  \node[obs, left=0.3 of xzero_uone_z-xone] (xzero)  {$\rvct{x}_{0}$} ; %
+  \op[left=of xzero] {uzero-xzero} {below right: $\vctfunc{f}_0$} {} {xzero} ; %
+  \node[latent] (uzero) at (uone-|uzero-xzero) {$\rvct{u}_{2,0}$} ; %
+  \factor[below=of uzero] {pr-uzero} {right:$\rho_{2,0}$} {} {uzero} ; %
+  \draw (uzero) -- (uzero-xzero) ; %
+  \draw (z) -- (uzero-xzero) ; %
+  \node[obs, right=0.3 of xzero_uone_z-xone] (xone)  {$\rvct{x}_{1}$} ; %
+  \factoredge {xzero,uone,z} {xzero_uone_z-xone} {xone} ; %
+  \op[right=0.3 of xone] {xone_utwo_z-xtwo} {below right:$\vctfunc{f}_2$} {} {} ; %  
+  \node[latent] (utwo) at (uone-|xone_utwo_z-xtwo) {$\rvct{u}_{2,2}$} ; %
+  \factor[below=of utwo] {pr-utwo} {right:$\rho_{2,2}$} {} {utwo} ; %
+  \node[obs, right=0.3 of xone_utwo_z-xtwo] (xtwo) {$\rvct{x}_2$} ; %
+  \factoredge {z,xone,utwo} {xone_utwo_z-xtwo} {xtwo} ; %
+  \node[right=0.1 of xtwo] (dummy) {} ; %
+  \draw[densely dotted] (xtwo) -- (dummy) ; %
+  \op[right=0.5 of xtwo] {ufinal-xfinal} {below right:$\vctfunc{f}_T$} {} {} ; %  
+  \node[latent] (ufinal) at (uone-|ufinal-xfinal) {$\rvct{u}_{2,T}$} ; %
+  \factor[below=of ufinal] {pr-ufinal} {right:$\rho_{2,T}$} {} {ufinal} ; %
+  \node[obs, right=0.3 of ufinal-xfinal] (xfinal) {$\rvct{x}_T$} ; %
+  \factoredge {ufinal} {ufinal-xfinal} {xfinal} ; %
+  \node[left=0.1 of ufinal-xfinal] (dummy2) {} ; %
+  \draw[densely dotted] (dummy2) -- (ufinal-xfinal) ; %
+  \node[above left=0.1 and 0.2 of ufinal-xfinal] (dummy3) {} ; %
+  \draw[densely dotted] (dummy3) -- (ufinal-xfinal) ; %
+\end{tikzpicture}

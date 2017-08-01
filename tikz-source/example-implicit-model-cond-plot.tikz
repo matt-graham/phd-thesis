@@ -1,0 +1,38 @@
+\pgfplotsset{cycle list/Dark2-3}
+\begin{tikzpicture}
+  \begin{axis}[
+    cycle list name={Dark2-3},
+    domain=-5:5,
+    xmin=-5, xmax=5,
+    ymin=-5, ymax=5,
+    width=48mm,
+    height=48mm,
+    xlabel={\small $u$},
+    ylabel={\small $v$},
+    every tick label/.append style={font=\tiny},
+    axis y line=center,
+    axis x line=middle,
+    ytick={-5,5},
+    xtick={-5,5},
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.55,0.2)},
+      fill=none,
+      anchor=north west,
+      draw=none, 
+      font=\scriptsize,
+    }
+  ]
+    \draw[gray] (axis cs:0,0) circle [radius=2.15];
+    \draw[gray] (axis cs:0,0) circle [radius=1.55];
+    \draw[gray] (axis cs:0,0) circle [radius=1.18];
+    \draw[gray] (axis cs:0,0) circle [radius=0.84];
+    \draw[gray] (axis cs:0,0) circle [radius=0.46];
+    \addlegendimage{no markers,gray}
+    \addlegendentry{$\pden{\rvar{u},\rvar{v}}$};
+    \addplot+[mark=none, thick] table [x=u, y=v, col sep=comma] 
+      {data/example-implicit-model-curve-1.csv};
+    \addlegendentry{$\rvar{x} = 1$};
+    
+\end{axis}
+\end{tikzpicture}

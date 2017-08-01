@@ -1,0 +1,35 @@
+\begin{tikzpicture}
+
+  \node[latent] (s1) {$\rvar{s}_1$} ; %
+  \node[latent, right=of s1] (s2) {$\rvar{s}_2$} ; %
+  \node[latent, right=of s2] (s3) {$\rvar{s}_3$} ; %
+  \node[latent, right=of s3] (s4) {$\rvar{s}_4$} ; %
+  \node[latent, right=of s4] (s5) {$\rvar{s}_5$} ; %
+  
+  \factor[below= of s1] {b1} {below:$\exp(b_1 \rvar{s}_1)$} {s1} {} ; %
+  \factor[below= of s2] {b2} {below:$\exp(b_2 \rvar{s}_2)$} {s2} {} ; %
+  \factor[below= of s3] {b3} {below:$\exp(b_3 \rvar{s}_3)$} {s3} {} ; %
+  \factor[below= of s4] {b4} {below:$\exp(b_4 \rvar{s}_4)$} {s4} {} ; %
+  \factor[below= of s5] {b5} {below:$\exp(b_5 \rvar{s}_5)$} {s5} {} ; %
+  
+  \factor[above= of s1, xshift=-17mm] {W12} {} {s1,s2} {} ; %
+  \node[align=left, anchor=south, xshift=3mm] (lab-W12) at (W12.north) {\tiny $\exp(\rvar{s}_1 W_{12} \rvar{s}_2)$} ; %
+  \factor[above= of s1] {W13} {above:$\exp(\rvar{s}_1 W_{13} \rvar{s}_3)$} {s1,s3} {} ; %
+  \factor[above= of s2] {W23} {above:$\exp(\rvar{s}_2 W_{23} \rvar{s}_3)$} {s2,s3} {} ; %
+  \factor[above= of s3] {W24} {above:$\exp(\rvar{s}_2 W_{24} \rvar{s}_4)$} {s2,s4} {} ; %
+  \factor[above= of s4] {W34} {above:$\exp(\rvar{s}_3 W_{34} \rvar{s}_4)$} {s3,s4} {} ; %
+  \factor[above= of s5] {W35} {above:$\exp(\rvar{s}_3 W_{35} \rvar{s}_5)$} {s3,s5} {} ; %
+  \factor[above= of s5, xshift=17mm] {W45} {} {s4,s5} {} ; %
+  \node[align=right, anchor=south, xshift=-3mm] (lab-W45) at (W45.north) {\tiny $\exp(\rvar{s}_4 W_{45} \rvar{s}_5)$} ; %
+  
+  \factor[above=14mm of W23] {W14} {above:$\exp(\rvar{s}_1 W_{14} \rvar{s}_4)$} {} {} ; %
+  \draw[-] (W14) to[bend right=5] (s1); %
+  \draw[-] (W14) to[bend left=25] (s4); %
+  \factor[above=14mm of W24] {W15} {above:$\exp(\rvar{s}_1 W_{15} \rvar{s}_5)$} {} {} ; %
+  \draw[-] (W15) to[bend right=25] (s1); %
+  \draw[-] (W15) to[bend left=25] (s5); %
+  \factor[above=14mm of W34] {W25} {above:$\exp(\rvar{s}_2 W_{25} \rvar{s}_5)$} {} {} ; %
+  \draw[-] (W25) to[bend left=5] (s5); %
+  \draw[-] (W25) to[bend right=25] (s2); %
+ 
+\end{tikzpicture}

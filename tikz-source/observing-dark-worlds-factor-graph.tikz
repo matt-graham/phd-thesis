@@ -1,0 +1,67 @@
+\begin{tikzpicture}
+
+  \node[latent] (xh) {$\rvar{x}_h$} ; %
+  \factor[above left=of xh] {pr-xh} {right:$\mathcal{U}(0, x_{\textrm{max}})$} {} {xh} ; %
+  \node[latent, below=of xh, yshift=5mm] (yh) {$\rvar{y}_h$} ; %
+  \factor[below left=of yh] {pr-yh} {right:$\mathcal{U}(0, y_{\textrm{max}})$} {} {yh} ; %
+  \node[const, right=5.4 of xh] (ug) {$u_g$} ; %
+  \node[const] (vg) at (yh -| ug) {$v_g$} ; %
+  \node[latent] (ahg) at ($(yh)!0.5!(vg)+(0,-1.5)$) {$\rvar{a}_{h,g}$} ; %
+  \node[latent, left=0.5 of ahg] (rhg) {$\rvar{r}_{h,g}$} ; %
+  \node[op, label={above:$\sqrt{(\rvar{x}_h - u_g)^2 + (\rvar{y}_h - v_g)^2}$}] 
+    (xh_yh_ug_vg-rhg) at (xh -| ahg) {} ; %
+  \factoredge {xh,ug,yh,vg} {xh_yh_ug_vg-rhg} {rhg} ; %
+  \node[op, label={below right:$\textrm{atan2}\lpa v_g - \rvar{y}_h, u_g - \rvar{x}_h\rpa$}]
+    (xh_yh_ug_vg-ahg) at (yh -| ahg) {} ; %
+  \factoredge {xh,ug,yh,vg} {xh_yh_ug_vg-ahg} {ahg} ; %
+  \op[below=1.1 of rhg] {rhg_mh_th-fhg} 
+    {below:$\qquad\frac{\rvar{m}_{\scalebox{0.75}{$h$}}}{\max(\rvar{r}_{\scalebox{0.75}{$h,g$}}, \rvar{t}_{\scalebox{0.75}{$h$}})}$} {} {} ; %
+
+  \node[latent, yshift=6mm] (mh) at (rhg_mh_th-fhg -| yh) {$\rvar{m}_h$} ; %
+  \factor[above=of mh] {pr-mh} {above:$\mathrm{LogNorm}(\mu_m, \sigma_m)$} {} {mh} ; %
+  \node[latent, yshift=-6mm] (th) at (rhg_mh_th-fhg -| yh) {$\rvar{t}_h$} ; %
+  \factor[below=of th] {pr-th} {below:$\mathrm{LogNorm}(\mu_t, \sigma_t)$} {} {th} ; %
+  \node[latent] (fhg) at (rhg_mh_th-fhg -| ahg) {$\rvar{f}_{h,g}$} ; %
+  
+  \factoredge {mh,th,rhg} {rhg_mh_th-fhg} {fhg} ; %
+  %\draw[-{Latex[length=2mm]}] (rhg_mh_th-fhg) -- (fhg) ; %
+  \node[latent, right=1.4 of ahg] (bhg) {$\rvar{b}_{h,g}$} ; %
+  \node[latent, right=1.4 of fhg] (chg) {$\rvar{c}_{h,g}$} ; %
+  \op[left=of bhg, xshift=-1mm] {ahg_fhg-bhg} 
+    {$\rvar{f}_{h,g} \cos(2\rvar{a}_{h,g})$} {ahg,fhg} {bhg} ; %
+  \op[left=of chg, xshift=-1mm] {ahg_fhg-chg} 
+    {below:$\rvar{f}_{h,g} \sin(2\rvar{a}_{h,g})$} {ahg,fhg} {chg} ; %
+  \node[latent, right=1.4 of bhg] (d1g) {$\rvar{d}_{1,g}$} ; %
+  \node[latent, right=1.4 of chg] (d2g) {$\rvar{d}_{2,g}$} ; %
+  \op[left=of d1g] {bhg-d1g} {$-\sum_{h=1}^H \rvar{b}_{h,g}$} {bhg} {d1g} ; %
+  \op[left=of d2g] {chg-d2g} {$-\sum_{h=1}^H \rvar{c}_{h,g}$} {chg} {d2g} ; %
+  \node[obs, right=1.4 of d1g] (e1g) {$\rvar{e}_{1,g}$} ; %
+  \node[obs, right=1.4 of d2g] (e2g) {$\rvar{e}_{2,g}$} ; %
+  \op[left=of e1g, xshift=-0mm] {e1gi_d1g-e1g} 
+    {below:$\rvar{e}^\star_{1,g} + \rvar{d}_{1,g}$} {d1g} {e1g} ; %
+  \op[left=of e2g, xshift=-0mm] {e2gi_d2g-e2g} 
+    {$\rvar{e}^\star_{2,g} + \rvar{d}_{2,g}$} {d2g} {e2g} ; %
+  \node[latent, above= of e1gi_d1g-e1g, yshift=-4mm] (e1gi) {$\rvar{e}^\star_{1,g}$} ;
+  \draw[-] (e1gi) -- (e1gi_d1g-e1g) ; %
+  \factor[left=of e1gi] {pr-e1gi} {above:$\nrm{0,\sigma^2}$} {} {e1gi} ; %
+  \node[latent, below= of e2gi_d2g-e2g, yshift=4mm] (e2gi) {$\rvar{e}^\star_{2,g}$} ;
+  \draw[-] (e2gi) -- (e2gi_d2g-e2g) ; %
+  \factor[left=of e2gi] {pr-e2gi} {below:$\nrm{0,\sigma^2}$} {} {e2gi} ; %
+  
+  %\node[latent, below=of dhg_s-e2g] (s) {$\rvar{s}$} ; %
+  %\draw[-] (s) -- (dhg_s-e2g) ; %
+  %\draw[-] (s) to[bend left=42] (chg_s-e1g) ; %
+  %\factor[right=of s, xshift=2mm] {pr-s} {above:$\textrm{Gamma}(\alpha,\beta)$} {} {s} ; %
+  
+  \node[const, right=8.5 of xh] (dummy1) {} ; %
+  \node[const, above left=of xh, xshift=1.5mm, yshift=-2mm] (dummy2) {} ; %
+  \node[const, right=5 of dummy2] (dummy3) {} ; %
+  \node[const, below=6.6 of dummy2] (dummy4) {} ; %
+  \node[const, right=5 of dummy4, yshift=0.1mm] (dummy5) {} ; %
+  \plate {platehalo} 
+    {(xh)(pr-xh)(yh)(pr-yh)(mh)(pr-mh)(th)(pr-th)(rhg)(ahg)(fhg)(bhg)(chg)(xh_yh_ug_vg-rhg)(dummy2)(dummy4)} 
+    {$h\in\fset{1 \,...\, H}$}; %
+  \plate {plategalaxy} 
+    {(rhg)(ahg)(fhg)(bhg)(chg)(xh_yh_ug_vg-rhg)(ug)(vg)(e1g)(e2g)(e1gi)(pr-e1gi)(e2gi)(pr-e2gi)(dummy3)(dummy5)} 
+    {$g\in\fset{1 \,...\, G}$}; %
+\end{tikzpicture}

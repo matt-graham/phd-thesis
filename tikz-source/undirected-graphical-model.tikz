@@ -1,0 +1,10 @@
+\begin{tikzpicture}
+  \node[latent] (x1) {$\rvar{x}_1$} ; %
+  \node[latent, right=of x1] (x2) {$\rvar{x}_2$} ; %
+  \node[latent, below=of x1] (x3) {$\rvar{x}_3$} ; %
+  \node[latent, right=of x3] (x4) {$\rvar{x}_4$} ; %
+  \edge[-] {x1} {x2} ; %
+  \edge[-] {x1} {x3} ; %
+  \edge[-] {x2} {x4} ; %
+  \edge[-] {x3} {x4} ; %
+\end{tikzpicture}

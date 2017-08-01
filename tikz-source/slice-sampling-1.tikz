@@ -1,0 +1,19 @@
+\pgfplotsset{cycle list/Dark2-3}
+\begin{tikzpicture}[rotate=30, scale=1.5]
+    \pgfmathsetmacro{\xr}{-0.25}; %
+    \pgfmathsetmacro{\yr}{1} ; %
+    \pgfmathsetmacro{\bl}{-1.3} ; %
+    \pgfmathsetmacro{\bu}{1.8} ; %
+    \pgfmathsetmacro{\sl}{-0.84} ; %
+    \pgfmathsetmacro{\su}{0.955} ; %
+    \draw [cborange, thick] plot [smooth cycle, tension=0.7] coordinates 
+      {(\sl,\yr) (\sl+0.23,\yr+0.39) (\sl+0.8, \yr+0.31) (\sl+1.45,\yr+0.51) (\su,\yr) (\sl+1.32,\yr-0.46) (\sl+0.82,\yr-0.27) (\sl+0.22,\yr-0.3)};
+    \draw[densely dashed] (\bl, \yr) -- (\bu, \yr) ; %
+    \draw[->] (\xr, \yr) -- node[pos=0.5, anchor=center, above] {\small $\vct{v}$}  (\xr+0.5, \yr) ; %
+    \node[draw=black, fill=black, inner sep=1pt, outer sep=0, label={[label distance=-1mm]120: \small $\vct{x}$}]
+      (xn) at (\xr, \yr) [anchor=center] {} ; %
+    \node[draw=Maroon, fill=Maroon, circle, inner sep=1pt, outer sep=0, circle] 
+      (xr) at (1.3, \yr) [anchor=center] {} ; %
+    \node[draw=cbviolet, fill=cbviolet, circle, inner sep=1pt, outer sep=0, circle] 
+      (xa) at (0.5, \yr) [anchor=center] {} ; %
+\end{tikzpicture}

@@ -1,0 +1,10 @@
+\begin{tikzpicture}[text height=1ex]
+  \node[latent] (x1) {$\rvar{x}_1$} ; %
+  \node[latent, right=of x1] (x2) {$\rvar{x}_2$} ; %
+  \node[latent, below=of x1] (x3) {$\rvar{x}_3$} ; %
+  \node[latent, right=of x3] (x4) {$\rvar{x}_4$} ; %
+  \factor[right=of x1] {x1_x2} {} {x1,x2} {} ; %
+  \factor[above=of x3] {x1_x3} {} {x1,x3} {} ; %
+  \factor[right=of x3] {x3_x4} {} {x3,x4} {} ; %
+  \factor[above=of x4] {x2_x4} {} {x2,x4} {} ; %
+\end{tikzpicture}

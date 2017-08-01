@@ -1,0 +1,46 @@
+\begin{tikzpicture}
+  \node[latent] (uah) {$\rvct{u}_{h}$} ; %
+  \factor[left= of uah] {pr-uah} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {uah} ; %
+  \node[latent, right=1. of uah, yshift=12mm] (ms) {$\rvct{m}_1$} ; %
+  \node[latent, right=1. of uah, yshift=4mm] (ks) {$\rvct{k}_1$} ; %
+  \node[latent, right=1. of uah, yshift=-4mm] (mc) {$\rvct{m}_2$} ; %
+  \node[latent, right=1. of uah, yshift=-12mm] (kc) {$\rvct{k}_2$} ; %
+  \op[right=of uah, xshift=-1mm, yshift=8mm] {uah-ms_ks} {} {uah} {ms,ks} ; %
+  \op[right=of uah, xshift=-1mm, yshift=-8mm] {uah-mc_kc} {} {uah} {mc,kc} ; %
+  \node[latent, right= of ms, yshift=-4mm] (s) {$\rvct{r}_1$} ; %
+  \op[left= of s] {ms_ks_uas-s}
+    %{\tiny $\exp(\rvct{k}_s)\odot \rvct{u}_{a,s} + \rvct{m}_s$} 
+    {} {ms,ks} {s} ; %
+  \node[latent, right=1. of uah, yshift=20mm] (uas) {$\rvct{u}_{1}$} ; %
+  \factor[left= of uas] {pr-uas} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {uas} ; %
+  \draw (uas) -- (ms_ks_uas-s) ; %
+  \node[latent, right= of mc, yshift=-4mm] (c) {$\rvct{r}_2$} ; %
+  \op[left= of c] {mc_kc_uac-c}
+    %{\tiny $\exp(\rvct{k}_s)\odot \rvct{u}_{a,s} + \rvct{m}_\sin$} 
+    {} {mc,kc} {c} ; %
+  \node[latent, right=1. of uah, yshift=-20mm] (uac) {$\rvct{u}_{2	}$} ; %
+  \factor[left= of uac] {pr-uac} {below: \tiny $\nrm{\vct{0}, \idmtx}$} {} {uac} ; %
+  \draw (uac) -- (mc_kc_uac-c) ; %
+  \node[latent, right= of s, yshift=-8mm] (a) {$\rvct{z}_a$} ; %
+  \op[left= of a] {s-c_a} {} {s,c} {a} ; %
+  \node[latent, below=0.5 of c] (ub) {$\rvct{u}_b$} ; %
+  \factor[left=of ub] {pr-ub} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {ub} ; %
+  \node[latent, right= of ub] (b) {$\rvct{z}_b$} ; %
+  \op[left= of b] {ub-b} {} {ub} {b} ; %
+  \node[latent, right=of a, yshift=-10mm] (p) {$\rvct{p}$} ; %
+  \op[left=of p] {a_b-p} {} {a,b} {p} ; %
+  \node[latent] (un) at (b-|p) {$\rvct{u}_x$} ; %
+  \factor[left= of un] {pr-un} {below: \tiny $\nrm{\vct{0},\idmtx}$} {} {un} ; %
+  \node[obs, right=of un] (x) {$\rvct{x}$} ; %
+  \node[latent, below=0.3 of ub] (uc) {$\rvct{u}_c$} ; %
+%  \node[latent, right= of uc] (cxy) {$\rvct{z}_{c,:2}$} ; %
+  \node[latent, right= of uc] (cxy) {$\rvct{z}_{c}$} ; %
+  \op[left= of cxy] {uc-cxy} {} {uc} {cxy} ; %
+  \factor[left=of uc] {pr-uc} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {uc} ; % 
+%  \node[latent, below=0.3 of cxy] (cz) {$\rvar{z}_{c,2}$} ; %
+%  \op[left= of cz] {uc-cz} {} {uc} {cz} ; %
+  \node[latent, right= of cxy, yshift=-0.15] (cm) {$\rvct{C}$} ; %
+%  \op[left= of cm] {cxy_cz-cm} {} {cxy,cz} {cm} ;
+  \op[left= of cm] {cxy-cm} {} {cxy} {cm}
+  \op[left=of x] {un_cm_p-x} {} {un,cm,p} {x} ; %
+\end{tikzpicture}

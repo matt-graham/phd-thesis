@@ -1,0 +1,8 @@
+\begin{tikzpicture}
+  \node[obs] (x) {$\rvar{x}$} ; %
+  \node[latent, above left=0.75 and 1.5 of x] (u) {$\rvar{u}$} ; %
+  \node[latent, below left=0.75 and 1.5 of x] (v) {$\rvar{v}$} ; %
+  \factor[left=of u] {pr-u} {below:$\nrm{0,1}$} {} {u} ; %
+  \factor[left=of v] {pr-v} {$\nrm{0,1}$} {} {v} ; %
+  \op[left=of x] {u_v-x} {left:$\displaystyle\frac{\rvar{u}\rvar{v}}{\lpa 1+\exp\rvar{u}\rpa\lpa1+\exp\rvar{v}\rpa}$} {u,v} {x} ; %
+\end{tikzpicture}

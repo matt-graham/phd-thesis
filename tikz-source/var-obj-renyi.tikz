@@ -1,0 +1,30 @@
+\pgfplotsset{cycle list/Dark2-3}
+\begin{tikzpicture}
+  \begin{axis}[
+    cycle list name={Dark2-3},
+    xmin=-8, xmax=8,
+    width=48mm,
+    height=35mm,
+    xlabel={\small $x$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    ticks=none,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.55,1)},
+      fill=none,
+      anchor=north west,
+      draw=none, 
+      font=\scriptsize,
+      axis on top
+    }
+  ]
+    \addplot+[mark=none, thick] table [x=x, y=p, col sep=comma] 
+      {data/variational-objective-comparison.csv};
+    \addlegendentry{$\tgtdens(x)$};
+    \addplot+[mark=none, thick, densely dashed] table [x=x, y=q_renyi, col sep=comma] 
+      {data/variational-objective-comparison.csv};
+    \addlegendentry{$q(x)$};
+\end{axis}
+\end{tikzpicture}

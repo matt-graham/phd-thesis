@@ -1,0 +1,51 @@
+\pgfplotsset{cycle list/Dark2-3}
+\begin{tikzpicture}
+  \begin{axis}[
+    cycle list name={Dark2-3},
+    xmin=-2, xmax=2,
+    samples=200,
+    width=100mm,
+    height=50mm,
+    xlabel={\small $x$},
+    every tick label/.append style={font=\tiny},
+    hide y axis,
+    axis x line=bottom,
+    ticks=none,
+    legend image post style={scale=0.5},
+    legend style={
+      at={(0.75,0.9)},
+      fill=none,
+      anchor=north west,
+      draw=none, 
+      font=\scriptsize,
+    }
+  ]
+    \addplot+[mark=none, thick, draw=cborange, densely dashed, fill=cborange!10] {(
+      1.9 * exp(-0.5 * ((x-0.1) / 0.6)^2) / sqrt(2 * pi * 0.6^2)
+    )};
+    \addlegendentry{$M q(x)$};
+    \addplot+[mark=none, thick, draw=cbgreen, fill=cbgreen!20] {(
+      0.6 * exp(-0.5 * ((x - 0.5) / 0.5)^2) / sqrt(2 * pi * 0.5^2) +
+      0.4 * exp(-0.5 * ((x + 0.5) / 0.25)^2) / sqrt(2 * pi * 0.25^2)
+    )};
+    \addlegendentry{$\utgtdens(x)$};
+    \pgfmathsetmacro{\xr}{-0.25}
+    \pgfmathsetmacro{\ur}{0.6}
+    \pgfmathsetmacro{\yr}{1.9 * exp(-0.5 * ((\xr-0.1)/0.6)^2) / sqrt(2 * pi * 0.6^2)} ; %
+    \node[inner sep=0, outer sep=0, label={[label distance=-1mm]30:\tiny $\lpa x^*\kern-2pt, h^*\rpa$}] (rej) at (axis cs:\xr, \ur * \yr) [anchor=center] {$*$} ; %
+    \draw[densely dotted] (axis cs: \xr, 0.) -- (axis cs: \xr, \yr); %
+    \draw[densely dotted] (axis cs: \xr-0.55, \yr) -- (axis cs: \xr, \yr); %
+    \draw[->] (axis cs: \xr-0.5, 0.) -- 
+      node[sloped, pos=0.75, anchor=center, above] {\tiny $M q(x^*)$} 
+     (axis cs: \xr-0.5, \yr); %
+    \pgfmathsetmacro{\xa}{0.9}
+    \pgfmathsetmacro{\ua}{0.3}
+    \pgfmathsetmacro{\ya}{1.9 * exp(-0.5 * ((\xa-0.1)/0.6)^2) / sqrt(2 * pi * 0.6^2)} ; %
+    \node[inner sep=0, outer sep=0, label={[label distance=-1mm]180:\tiny $\lpa x^\diamond\kern-2pt, h^\diamond\rpa$}] (rej) at (axis cs:\xa, \ua * \ya) [anchor=center] {$\diamond$} ; %
+    \draw[densely dotted] (axis cs: \xa, 0.) -- (axis cs: \xa, \ya); %
+    \draw[densely dotted] (axis cs: \xa+0.55, \ya) -- (axis cs: \xa, \ya); %
+    \draw[->] (axis cs: \xa+0.5, 0.) -- 
+      node[sloped, pos=0.6, anchor=center, below] {\tiny $M q(x^\diamond)$} 
+     (axis cs: \xa+0.5, \ya); %
+\end{axis}
+\end{tikzpicture}

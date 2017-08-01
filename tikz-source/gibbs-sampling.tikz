@@ -1,0 +1,41 @@
+\pgfplotsset{cycle list/Dark2-5}
+\begin{tikzpicture}[
+    declare function={normpdf(\x,\m,\s) = exp(-0.5*((\x-\m)/\s)^2) / (2*pi*\s^2)^0.5;}
+  ]
+  \draw[rotate=45, densely dotted] (0, 0) ellipse (3 and 1);
+  \draw[rotate=45, densely dotted] (0, 0) ellipse (1.5 and 0.5);
+  \draw[gray] (-2.2, -1) -- (0.6, -1) ; %
+  \draw[gray] (-0.1, -1.6) -- (-0.1, 1.4) ; %
+  \node[draw=Maroon, fill=white, circle, inner sep=1pt, outer sep=0pt] (xs) at (-1.3, -1) {} ; %
+  \node[below=0.01 of xs] {\small $(x_1, x_2)$};
+  \node[draw=Maroon, fill=white, inner sep=1pt, outer sep=0pt] (ys) at (-0.1, -1) {} ; %
+  \node[below right=0.05 of ys] {\small $(x_1^*, x_2)$};
+  \node[draw=Maroon, fill=Maroon, circle, inner sep=1pt, outer sep=0pt] (zs) at (-0.1, 0.3) {} ; %
+  \node[left=0.01 of zs] {\small $(x_1^*, x_2^*)$};
+  \draw[->] (xs) -- (ys) ; %
+  \draw[->] (ys) -- (zs) ; %
+  \node (sx) at (-2.2, -1) {} ; %
+  \node (sy) at (-0.1, -1.6) {} ; %
+  \begin{axis}[
+    width=28mm, height=8mm, inner sep=0pt,
+    enlargelimits=false,
+    clip=false,
+    hide y axis, hide x axis, 
+    at=(sx.center), 
+    scale only axis,
+  ]
+    \addplot[domain=-3:3, samples=100, thick, draw=cborange] {normpdf(x,0,1)};
+  \end{axis}
+  \begin{axis}[
+    width=30mm, height=7mm, inner sep=0pt,
+    rotate=270,
+    enlargelimits=false,
+    clip=false,
+    hide y axis, hide x axis, 
+    at=(sy.center), 
+    scale only axis,
+  ]
+    \addplot[domain=-3:3, samples=100, thick, draw=cbgreen] {normpdf(x,0,1)};
+  \end{axis}
+  \node[fit=(current bounding box),inner sep=1.2mm]{};
+\end{tikzpicture}
