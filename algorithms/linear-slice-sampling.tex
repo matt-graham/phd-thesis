@@ -1,0 +1,46 @@
+\begin{algorithmic}
+\small
+    \Require
+    $\vct{x}_n$ : current chain state,~
+    $\utgtdens$ : unnormalised target density,\\
+    $q$ : slice vector density,~
+    $M$ : maximum number of step out iterations.
+    \Ensure\raggedright
+    $\vct{x}_{n+1}$ : next chain state with $\vct{x}_n \sim \tgtdens \implies \vct{x}_{n+1} \sim \tgtdens$.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $h \sim \mathcal{U}\lpa 0,\utgtdens(\vct{x}_n)\rpa$ \Comment{Sample slice height}
+  \State $\vct{v} \sim q$ \Comment{Sample vector setting slice line and initial bracket width}\label{algline:slice-sample-direction}
+  \State $b_u \sim \mathcal{U}(0,1)$  \Comment{Uniformly sample bracket around current state}
+  \State $b_l \gets b_u - 1$
+  \If{$M > 0$} $(b_l,\,b_u) \gets $ \Call{LinearStepOut}{$\vct{x}_n$, $b_l$, $b_u$, $M$}\EndIf
+  \State $\lambda \sim \mathcal{U}(b_l, b_u)$
+  \While{\textsc{True}}
+    \State $\vct{x}^* \gets \vct{x}_n + \lambda \vct{v}$  
+    \Comment{Update proposed state}
+    \If{$\utgtdens(\vct{x}^*) \leq h$} 
+    \Comment{Proposed point not on slice}
+      \IfThenElse{$\lambda < 0$}{$b_l \gets \lambda$}{$b_u \gets \lambda$} 
+      \Comment{Shrink slice bracket}
+      \State $\lambda \sim \mathcal{U}(b_l, b_u)$  
+      \Comment{Sample uniformly from new bracket}
+    \Else \Comment{Proposed state on slice}
+      \State \Return $\vct{x}^*$
+    \EndIf
+  \EndWhile
+  \Function{LinearStepOut}{$\vct{x}_n,\,b_l,\,b_u,\,M$} \label{algline:slice-sample-step-out-start}
+    \State $L \sim \textrm{UniInt}(0, M)$ \Comment{Sample integer uniformly from $[0, M]$}
+    \State $U \gets M - L$
+    \While{$L > 0$ \textbf{and}\xspace $\utgtdens(\vct{x}_n + b_l \vct{v}) > h$} \Comment{Step out lower bracket edge}
+      \State $b_l \gets b_l - 1$
+      \State $L \gets L - 1$
+    \EndWhile
+    \While{$U > 0$ \textbf{and}\xspace$\utgtdens(\vct{x}_n + b_u \vct{v}) > h$} \Comment{Step out upper bracket edge}
+      \State $b_u \gets b_u + 1$
+      \State $U \gets U - 1$
+    \EndWhile
+    \State\Return $b_l$, $b_u$
+  \EndFunction \label{algline:slice-sample-step-out-end}
+\end{algorithmic}

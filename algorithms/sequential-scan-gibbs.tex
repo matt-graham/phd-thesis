@@ -1,0 +1,19 @@
+\begin{algorithmic}
+\small
+    \Require
+    $\vct{x}_n$ : current chain state,~
+    $\set{I}$ : ordered set of indices of all individual variables in chain state,~
+    $\lbrace \tgtdens_{i} \rbrace_{i\in\set{I}}$ : set of complete conditionals of target density $\tgtdens$ which can all be sampled from.
+    \Ensure\raggedright
+    $\vct{x}_{n+1}$ : next chain state with $\vct{x}_n \sim \tgtdens \implies \vct{x}_{n+1} \sim \tgtdens$.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $\vct{x} \gets \vct{x}_n$
+  \For{$i \in \set{I}$}
+    \State $x_i \sim \tgtdens_{i}(\vct{x}_{\backslash i})$ \Comment{Resample $x_i$ from $\tgtdens_i$ given \emph{current} $\vct{x}_{\backslash i}$.}
+  \EndFor
+  \State $\vct{x}_{n+1} \gets \vct{x}$
+  \State \Return $\vct{x}_{n+1}$
+\end{algorithmic}
