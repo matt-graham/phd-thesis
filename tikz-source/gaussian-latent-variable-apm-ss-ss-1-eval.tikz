@@ -5,7 +5,7 @@
 \definecolor{color0}{rgb}{0.105882352941176,0.619607843137255,0.466666666666667}
 
 \begin{axis}[
-  xlabel={\footnotesize Initial bracket width},
+  xlabel={\footnotesize Initial bracket width $w$},
   ylabel={\footnotesize ESS per eval. / $10^{-4}$},
   y label style={at={(axis description cs:-0.15,.5)},rotate=0,anchor=south},
   width=50mm,

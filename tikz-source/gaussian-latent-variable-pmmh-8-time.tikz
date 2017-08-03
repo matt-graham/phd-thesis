@@ -7,7 +7,7 @@
 \definecolor{color0}{rgb}{0.105882352941176,0.619607843137255,0.466666666666667}
 
 \begin{axis}[
-  xlabel={\footnotesize Proposal step size},
+  xlabel={\footnotesize Proposal step size $\lambda$},
   ylabel={\footnotesize\color{color0} ESS per run time / $\textrm{s}^{-1}$},
   y label style={at={(axis description cs:-0.15,.5)},rotate=0,anchor=south},
   width=45mm,
