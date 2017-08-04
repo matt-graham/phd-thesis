@@ -1,0 +1,300 @@
+% This file was created by matplotlib2tikz v0.6.11.
+\begin{tikzpicture}
+
+\definecolor{color1}{rgb}{0,0.619607843137255,0.450980392156863}
+\definecolor{color0}{rgb}{0,0.447058823529412,0.698039215686274}
+\definecolor{color3}{rgb}{0.8,0.474509803921569,0.654901960784314}
+\definecolor{color2}{rgb}{0.835294117647059,0.368627450980392,0}
+
+\begin{axis}[
+ylabel={\footnotesize ESS per $10^3$ cubic ops.},
+width=10cm,
+height=5cm,
+xmin=0, xmax=10,
+ymin=0, ymax=4,
+xtick={0.425,1.425,2.425,3.425,4.425,5.425,6.425,7.425,8.425,9.425},
+xticklabels={$x_{1}$,$x_{2}$,$x_{3}$,$x_{4}$,$x_{5}$,$x_{6}$,$x_{7}$,$x_{8}$,$x_{9}$,$x_{10}$},
+every tick label/.append style={font=\footnotesize},
+tick align=outside,
+tick pos=left,
+x grid style={white!80.0!black},
+y grid style={white!80.0!black},
+axis line style={lightgray!20.0!black},
+legend style={at={(0.5,0.95)}, anchor=north, draw=none,font=\scriptsize,/tikz/every even column/.append style={column sep=0.5cm}},
+legend image post style={scale=0.5},
+legend entries={{PM MH},{APM MI+MH},{APM SS+MH},{APM SS+SS}},
+legend cell align={left},
+legend columns=4
+]
+\addlegendimage{ybar,ybar legend,draw=black,fill=color0};
+\draw[draw=black,fill=color0] (axis cs:0.15,0) rectangle (axis cs:0.3,1.37060931805413);
+\draw[draw=black,fill=color0] (axis cs:1.15,0) rectangle (axis cs:1.3,1.83829450719846);
+\draw[draw=black,fill=color0] (axis cs:2.15,0) rectangle (axis cs:2.3,1.35695255592646);
+\draw[draw=black,fill=color0] (axis cs:3.15,0) rectangle (axis cs:3.3,1.51152515460339);
+\draw[draw=black,fill=color0] (axis cs:4.15,0) rectangle (axis cs:4.3,0.880493383224517);
+\draw[draw=black,fill=color0] (axis cs:5.15,0) rectangle (axis cs:5.3,1.64538749304517);
+\draw[draw=black,fill=color0] (axis cs:6.15,0) rectangle (axis cs:6.3,1.17019307643018);
+\draw[draw=black,fill=color0] (axis cs:7.15,0) rectangle (axis cs:7.3,1.68817671585393);
+\draw[draw=black,fill=color0] (axis cs:8.15,0) rectangle (axis cs:8.3,1.67486687387451);
+\draw[draw=black,fill=color0] (axis cs:9.15,0) rectangle (axis cs:9.3,1.76927137052142);
+\addlegendimage{ybar,ybar legend,draw=black,fill=color1};
+\draw[draw=black,fill=color1] (axis cs:0.3,0) rectangle (axis cs:0.45,2.1103770682037);
+\draw[draw=black,fill=color1] (axis cs:1.3,0) rectangle (axis cs:1.45,2.7020878773962);
+\draw[draw=black,fill=color1] (axis cs:2.3,0) rectangle (axis cs:2.45,2.05721353062661);
+\draw[draw=black,fill=color1] (axis cs:3.3,0) rectangle (axis cs:3.45,2.31688422099843);
+\draw[draw=black,fill=color1] (axis cs:4.3,0) rectangle (axis cs:4.45,1.39853277034129);
+\draw[draw=black,fill=color1] (axis cs:5.3,0) rectangle (axis cs:5.45,2.4894798958419);
+\draw[draw=black,fill=color1] (axis cs:6.3,0) rectangle (axis cs:6.45,1.65196964094257);
+\draw[draw=black,fill=color1] (axis cs:7.3,0) rectangle (axis cs:7.45,2.9012035377975);
+\draw[draw=black,fill=color1] (axis cs:8.3,0) rectangle (axis cs:8.45,2.23468648732514);
+\draw[draw=black,fill=color1] (axis cs:9.3,0) rectangle (axis cs:9.45,2.94838627951102);
+\addlegendimage{ybar,ybar legend,draw=black,fill=color2};
+\draw[draw=black,fill=color2] (axis cs:0.45,0) rectangle (axis cs:0.6,1.9212419478329);
+\draw[draw=black,fill=color2] (axis cs:1.45,0) rectangle (axis cs:1.6,2.51506860629886);
+\draw[draw=black,fill=color2] (axis cs:2.45,0) rectangle (axis cs:2.6,2.03291618612811);
+\draw[draw=black,fill=color2] (axis cs:3.45,0) rectangle (axis cs:3.6,2.19535627087848);
+\draw[draw=black,fill=color2] (axis cs:4.45,0) rectangle (axis cs:4.6,1.26396749893447);
+\draw[draw=black,fill=color2] (axis cs:5.45,0) rectangle (axis cs:5.6,2.42546399368542);
+\draw[draw=black,fill=color2] (axis cs:6.45,0) rectangle (axis cs:6.6,1.58897372404662);
+\draw[draw=black,fill=color2] (axis cs:7.45,0) rectangle (axis cs:7.6,2.8799428989247);
+\draw[draw=black,fill=color2] (axis cs:8.45,0) rectangle (axis cs:8.6,2.20306090541816);
+\draw[draw=black,fill=color2] (axis cs:9.45,0) rectangle (axis cs:9.6,2.6672439121089);
+\addlegendimage{ybar,ybar legend,draw=black,fill=color3};
+\draw[draw=black,fill=color3] (axis cs:0.6,0) rectangle (axis cs:0.75,0.933871673869519);
+\draw[draw=black,fill=color3] (axis cs:1.6,0) rectangle (axis cs:1.75,1.20691838462527);
+\draw[draw=black,fill=color3] (axis cs:2.6,0) rectangle (axis cs:2.75,0.966679206102526);
+\draw[draw=black,fill=color3] (axis cs:3.6,0) rectangle (axis cs:3.75,1.13479595147485);
+\draw[draw=black,fill=color3] (axis cs:4.6,0) rectangle (axis cs:4.75,0.661001071868354);
+\draw[draw=black,fill=color3] (axis cs:5.6,0) rectangle (axis cs:5.75,1.16373302128323);
+\draw[draw=black,fill=color3] (axis cs:6.6,0) rectangle (axis cs:6.75,0.68610014079279);
+\draw[draw=black,fill=color3] (axis cs:7.6,0) rectangle (axis cs:7.75,1.3761649879848);
+\draw[draw=black,fill=color3] (axis cs:8.6,0) rectangle (axis cs:8.75,1.20888715712143);
+\draw[draw=black,fill=color3] (axis cs:9.6,0) rectangle (axis cs:9.75,1.37334737230698);
+\path [draw=black, line width=0.3pt] (axis cs:0.225,1.23838269018523)
+--(axis cs:0.225,1.50283594592302);
+
+\path [draw=black, line width=0.3pt] (axis cs:1.225,1.69783354034376)
+--(axis cs:1.225,1.97875547405317);
+
+\path [draw=black, line width=0.3pt] (axis cs:2.225,1.27471485452638)
+--(axis cs:2.225,1.43919025732653);
+
+\path [draw=black, line width=0.3pt] (axis cs:3.225,1.38408210041222)
+--(axis cs:3.225,1.63896820879456);
+
+\path [draw=black, line width=0.3pt] (axis cs:4.225,0.791732678430351)
+--(axis cs:4.225,0.969254088018683);
+
+\path [draw=black, line width=0.3pt] (axis cs:5.225,1.52199347030141)
+--(axis cs:5.225,1.76878151578892);
+
+\path [draw=black, line width=0.3pt] (axis cs:6.225,1.04868203731479)
+--(axis cs:6.225,1.29170411554557);
+
+\path [draw=black, line width=0.3pt] (axis cs:7.225,1.4741107193937)
+--(axis cs:7.225,1.90224271231416);
+
+\path [draw=black, line width=0.3pt] (axis cs:8.225,1.51187918385206)
+--(axis cs:8.225,1.83785456389697);
+
+\path [draw=black, line width=0.3pt] (axis cs:9.225,1.59697045507827)
+--(axis cs:9.225,1.94157228596457);
+
+\path [draw=black, line width=0.3pt] (axis cs:0.375,2.02971673964854)
+--(axis cs:0.375,2.19103739675886);
+
+\path [draw=black, line width=0.3pt] (axis cs:1.375,2.63939948340575)
+--(axis cs:1.375,2.76477627138666);
+
+\path [draw=black, line width=0.3pt] (axis cs:2.375,2.00577748745853)
+--(axis cs:2.375,2.1086495737947);
+
+\path [draw=black, line width=0.3pt] (axis cs:3.375,2.26065140890057)
+--(axis cs:3.375,2.37311703309628);
+
+\path [draw=black, line width=0.3pt] (axis cs:4.375,1.31622616298849)
+--(axis cs:4.375,1.48083937769409);
+
+\path [draw=black, line width=0.3pt] (axis cs:5.375,2.40243288948092)
+--(axis cs:5.375,2.57652690220288);
+
+\path [draw=black, line width=0.3pt] (axis cs:6.375,1.58841576143969)
+--(axis cs:6.375,1.71552352044545);
+
+\path [draw=black, line width=0.3pt] (axis cs:7.375,2.86981557466911)
+--(axis cs:7.375,2.93259150092589);
+
+\path [draw=black, line width=0.3pt] (axis cs:8.375,2.06359585758845)
+--(axis cs:8.375,2.40577711706183);
+
+\path [draw=black, line width=0.3pt] (axis cs:9.375,2.83590026521173)
+--(axis cs:9.375,3.06087229381031);
+
+\path [draw=black, line width=0.3pt] (axis cs:0.525,1.78250801586231)
+--(axis cs:0.525,2.05997587980349);
+
+\path [draw=black, line width=0.3pt] (axis cs:1.525,2.37061354790778)
+--(axis cs:1.525,2.65952366468995);
+
+\path [draw=black, line width=0.3pt] (axis cs:2.525,1.93664410437)
+--(axis cs:2.525,2.12918826788623);
+
+\path [draw=black, line width=0.3pt] (axis cs:3.525,2.1269916017353)
+--(axis cs:3.525,2.26372094002167);
+
+\path [draw=black, line width=0.3pt] (axis cs:4.525,1.15653169831034)
+--(axis cs:4.525,1.3714032995586);
+
+\path [draw=black, line width=0.3pt] (axis cs:5.525,2.32597146142452)
+--(axis cs:5.525,2.52495652594632);
+
+\path [draw=black, line width=0.3pt] (axis cs:6.525,1.51316362427016)
+--(axis cs:6.525,1.66478382382309);
+
+\path [draw=black, line width=0.3pt] (axis cs:7.525,2.80118805179481)
+--(axis cs:7.525,2.9586977460546);
+
+\path [draw=black, line width=0.3pt] (axis cs:8.525,2.01449444630943)
+--(axis cs:8.525,2.39162736452689);
+
+\path [draw=black, line width=0.3pt] (axis cs:9.525,2.55541720039345)
+--(axis cs:9.525,2.77907062382434);
+
+\path [draw=black, line width=0.3pt] (axis cs:0.675,0.900061501647372)
+--(axis cs:0.675,0.967681846091665);
+
+\path [draw=black, line width=0.3pt] (axis cs:1.675,1.15964377363162)
+--(axis cs:1.675,1.25419299561893);
+
+\path [draw=black, line width=0.3pt] (axis cs:2.675,0.94354996103672)
+--(axis cs:2.675,0.989808451168331);
+
+\path [draw=black, line width=0.3pt] (axis cs:3.675,1.10579652701907)
+--(axis cs:3.675,1.16379537593064);
+
+\path [draw=black, line width=0.3pt] (axis cs:4.675,0.627594585788846)
+--(axis cs:4.675,0.694407557947862);
+
+\path [draw=black, line width=0.3pt] (axis cs:5.675,1.12511927294053)
+--(axis cs:5.675,1.20234676962592);
+
+\path [draw=black, line width=0.3pt] (axis cs:6.675,0.65700090066721)
+--(axis cs:6.675,0.71519938091837);
+
+\path [draw=black, line width=0.3pt] (axis cs:7.675,1.3422446608324)
+--(axis cs:7.675,1.41008531513721);
+
+\path [draw=black, line width=0.3pt] (axis cs:8.675,1.16265849146852)
+--(axis cs:8.675,1.25511582277434);
+
+\path [draw=black, line width=0.3pt] (axis cs:9.675,1.32511374361085)
+--(axis cs:9.675,1.4215810010031);
+
+\addplot [line width=0.3pt, black, mark=-, mark size=1, mark options={solid}, only marks, forget plot]
+table {%
+0.225 1.23838269018523
+1.225 1.69783354034376
+2.225 1.27471485452638
+3.225 1.38408210041222
+4.225 0.791732678430351
+5.225 1.52199347030141
+6.225 1.04868203731479
+7.225 1.4741107193937
+8.225 1.51187918385206
+9.225 1.59697045507827
+};
+\addplot [line width=0.3pt, black, mark=-, mark size=1, mark options={solid}, only marks, forget plot]
+table {%
+0.225 1.50283594592302
+1.225 1.97875547405317
+2.225 1.43919025732653
+3.225 1.63896820879456
+4.225 0.969254088018683
+5.225 1.76878151578892
+6.225 1.29170411554557
+7.225 1.90224271231416
+8.225 1.83785456389697
+9.225 1.94157228596457
+};
+\addplot [line width=0.3pt, black, mark=-, mark size=1, mark options={solid}, only marks, forget plot]
+table {%
+0.375 2.02971673964854
+1.375 2.63939948340575
+2.375 2.00577748745853
+3.375 2.26065140890057
+4.375 1.31622616298849
+5.375 2.40243288948092
+6.375 1.58841576143969
+7.375 2.86981557466911
+8.375 2.06359585758845
+9.375 2.83590026521173
+};
+\addplot [line width=0.3pt, black, mark=-, mark size=1, mark options={solid}, only marks, forget plot]
+table {%
+0.375 2.19103739675886
+1.375 2.76477627138666
+2.375 2.1086495737947
+3.375 2.37311703309628
+4.375 1.48083937769409
+5.375 2.57652690220288
+6.375 1.71552352044545
+7.375 2.93259150092589
+8.375 2.40577711706183
+9.375 3.06087229381031
+};
+\addplot [line width=0.3pt, black, mark=-, mark size=1, mark options={solid}, only marks, forget plot]
+table {%
+0.525 1.78250801586231
+1.525 2.37061354790778
+2.525 1.93664410437
+3.525 2.1269916017353
+4.525 1.15653169831034
+5.525 2.32597146142452
+6.525 1.51316362427016
+7.525 2.80118805179481
+8.525 2.01449444630943
+9.525 2.55541720039345
+};
+\addplot [line width=0.3pt, black, mark=-, mark size=1, mark options={solid}, only marks, forget plot]
+table {%
+0.525 2.05997587980349
+1.525 2.65952366468995
+2.525 2.12918826788623
+3.525 2.26372094002167
+4.525 1.3714032995586
+5.525 2.52495652594632
+6.525 1.66478382382309
+7.525 2.9586977460546
+8.525 2.39162736452689
+9.525 2.77907062382434
+};
+\addplot [line width=0.3pt, black, mark=-, mark size=1, mark options={solid}, only marks, forget plot]
+table {%
+0.675 0.900061501647372
+1.675 1.15964377363162
+2.675 0.94354996103672
+3.675 1.10579652701907
+4.675 0.627594585788846
+5.675 1.12511927294053
+6.675 0.65700090066721
+7.675 1.3422446608324
+8.675 1.16265849146852
+9.675 1.32511374361085
+};
+\addplot [line width=0.3pt, black, mark=-, mark size=1, mark options={solid}, only marks, forget plot]
+table {%
+0.675 0.967681846091665
+1.675 1.25419299561893
+2.675 0.989808451168331
+3.675 1.16379537593064
+4.675 0.694407557947862
+5.675 1.20234676962592
+6.675 0.71519938091837
+7.675 1.41008531513721
+8.675 1.25511582277434
+9.675 1.4215810010031
+};
+
+\end{axis}
+
+\end{tikzpicture}

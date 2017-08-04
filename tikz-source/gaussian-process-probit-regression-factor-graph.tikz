@@ -1,0 +1,14 @@
+\begin{tikzpicture}
+  \op {s_l_d-k} {\textsc{SqExpCov}} {} {} ; %
+  \node[latent, left=of s_l_d-k, yshift=8mm] (s) {$\rvar{s}$} ; %
+  \factor[left=of s, xshift=-3mm] {pr-s} {$\textrm{Gamma}(\nicefrac{11}{10}, \nicefrac{1}{10})$} {} {s} ; %
+  \node[latent, left=of s_l_d-k, yshift=0mm] (l) {$\rvct{\ell}$} ; %
+  \node[const, left=of s_l_d-k, yshift=-8mm] (d) {\small $\lbrace \vct{d}^{(m)} \rbrace_{m=1}^M$} ; %
+  \factor[left=of l, xshift=-3mm] {pr-l} {$\textrm{Gamma}(1, \nicefrac{1}{3})$} {} {l} ; %
+  \node[latent, right=of s_l_d-k] (k) {$\rvct{C}$} ; %
+  \factoredge {s,l,d} {s_l_d-k} {k} ; %
+  \node[latent, right=of k] (z) {$\rvct{z}$} ; %
+  \factor[left=of z] {k-z} {$\nrm{\vct{0},\rvct{C}}$} {k} {z} ; %
+  \node[obs, right=of z] (y) {$\rvct{y}$} ; %
+  \factor[left=of y] {z-y} {$\textrm{Ber}\lpa\Phi(\rvct{z})\rpa$} {z} {y} ; %
+\end{tikzpicture}
