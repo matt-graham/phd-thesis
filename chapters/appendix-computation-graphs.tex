@@ -1,0 +1,99 @@
+\chapter{Computation graphs}\label{ch:computation-graphs}
+
+In Chapter \ref{ch:probabilistic-modelling} we introduced graphical models as a compact way of representing the structure in probabilistic models. Directed factor graphs in particular offer a natural approach for representing generative models. A directed graph can be used to specify a generative process via \emph{ancestral sampling}, with values for the variables in the graph successively calculated in a forward pass consisting of a combination of deterministic operations, represented by deterministic factor nodes, and stochastic sampling operations, represented by probabilistic factor nodes. %, in both cases taking the values of parent variables as inputs. 
+
+\emph{Computation graphs} \citep{bauer1974computational}, sometimes insead termed a \emph{computational graph} or \emph{data flow graph}, are a directed graph based representation of the operations involved in evaluating a mathematical expression. Similarly to a directed factor graph, a computation graph can be consided as specifying a generative process - generation of the expression outputs  given inputs - computed via forward pass through the graph. The main difference of a forward pass through a computation graph compared to an ancestral sampling pass through a directed factor graph is that the inputs to a computation graph are assumed to be given rather than sampled from marginal densities and the intermediate operations are all deterministic. 
+
+In this appendix we briefly review the key concepts of computation graphs and in particular their application to perform automatic differentiation. The direct overlap in our notation to represent variable and operation nodes in computation graphs and that used to represent (random) variable nodes and deterministic factor nodes in factor graphs is intentional. Although often the operations associated with a deterministic node in a factor graph will be more complex than the operations usually represented by nodes in a computation graph, this is only a matter of granularity of reprensentation - fundamentally they perform the same role. Importantly this means we can treat subgraphs of a factor graphs consisting of only variable and deterministic factor nodes as computation graphs and if the operations performed by the deterministic nodes are differentiable, use reverse-mode automatic differentiation to efficiently propagate derivatives through these sub-graphs.
+
+Here we will distinguish between two types of nodes in a computation graph. \emph{Variable nodes} correspond to variables which hold either inputs to the computation or intermediate results corresponding to the outputs of sub-expressions. \emph{Operation nodes} describe how non-input variable nodes are computed as functions of other variable nodes. In other presentations of computation graphs often the operation nodes are instead implicitly represented by directed edges between variable nodes. However analagously to the more explicit factorisation afforded by directed factor graphs compared to directed graphical models, directly representing operations as nodes allows finer grained information about the decomposition of the operations associated with a computation graph to be included.
+
+As with directed factor graphs, computation graphs cannot contain directed cycles. This does not preclude recursive and recurrent computations however as these can always be unrolled to form a directed acyclic graph. The `mathematical expressions' a computation graph is constructed to evaluate can be arbitarily complex - a computation graph corresponding to the evaluation of any numerical algorithm can always be constructed including use of arbitrary nested flow control and branching statements.
+
+\begin{figure}[!t]
+\vskip 0pt
+\centering
+\includetikz{normal-log-density-computation-graph}
+\vskip 0pt
+\caption[Example computation graph.]{Example computation graph corresponding to calculation of the negative log density of a univariate normal distribution.
+%\\ 
+%$c = -\log\nrm{x \gvn m,\,\exp(u)^2} = \frac{1}{2}\lpa\frac{x - m}{\exp(u)}\rpa^2 + u + \frac{1}{2}\log(2\uppi)$.
+}
+\label{fig:gaussian-density-computation-graph}
+\end{figure}
+
+An example of a computation graph representing the calculation of the negative log density of a univariate normal distribution, i.e.
+\begin{equation}\label{eq:gaussian-nld-computation-graph-expression}
+  \rvar{c} =
+  \frac{1}{2}\lpa\frac{\rvar{x} - \rvar{m}}{\rvar{s}}\rpa^2 + \log\rvar{s} + \frac{1}{2}\log(2\uppi)
+\end{equation}
+is shown in Figure \ref{fig:gaussian-density-computation-graph}. The graph inputs have chosen to be the value of the random variable ($\rvar{x}$) to evaluate the density at and the mean ($\rvar{m}$) and the standard deviation ($\rvar{s}$) parameters of the density. %We could have equally chosen to parameterise the density in terms of its standard deviation or variance, but as we will see later when discussing inference it is often useful to work in terms of unconstrained variables (the standard deviation and variance both necessarily being non-negative).
+
+Variable nodes in the computation graph have been represented by labelled circles and operation nodes with labelled diamonds. Undirected edges connecting from a variable node to an operation node correspond to the inputs to the operation, and directed edges from an operation node to variable nodes to the outputs of the operation.
+
+The computation graph associated with a given expression is not uniquely defined. There will usually be multiple possible orderings in which operations can be applied to achieve the same result (up to differences due to non-exact floating point computation). Similarly what should be considered a single operation to be represented by a node in the computation graph as opposed to being split up into a sub-graph of multiple operations is a matter of choice. For example in Figure \ref{fig:gaussian-density-computation-graph} the addition of the constant $\frac{1}{2}\log(2\uppi)$ could have been included at various other points in the graph and the operation $\frac{1}{2}\rvar{z}^2$ could have been split in to separate multiplication and exponentation operations.
+
+\section{Automatic differentiation}\label{sec:automatic-differentiation}
+
+The main motivation for representing expressions as computation graphs is to formalise an efficient general procedure termed automatic differentiation for automatically calculating derivatives of the output of an expression with respect to its inputs \citep{nolan1953analytical,beda1959programs}. The key ideas in automatic differentiation are to use the chain rule to decompose the derivatives into products and sums of the partial derivatives of the output of each individual operation in the expression with respect to its input, and to use an efficient recursive accumulation of these partial derivative sum-products corresponding to a traversal of the computation graph such that multiple derivatives can be efficiently calculated together.
+
+Depending on how the computation graph is traversed to accumulate the derivative terms, different modes of automatic differentiation are possible. Of most use in this thesis will be \emph{reverse-mode accumulation} \citep{speelpenning1980compiling}, in which the derivatives of an output node with respect to all input nodes are accumulated by a reverse pass through the computation graph from the output node to inputs.
+
+\begin{figure}[!t]
+\vskip 0pt
+\centering
+\includetikz{normal-log-density-computation-graph-reverse-mode-ad}
+\vskip 0pt
+\caption[Reverse-mode automatic differentiation.]{Visualisation of applying reverse-mode automatic differentiation to the computation graph in Figure \ref{fig:gaussian-density-computation-graph} to calculate the derivatives of the negative log density of a univariate normal distribution.}
+\label{fig:gaussian-density-gradient-computation-graph}
+\end{figure}
+
+As an example the partial derivatives of the expression for univariate normal log density given in \eqref{eq:gaussian-nld-computation-graph-expression} with respect to $\rvar{x}$, $\rvar{m}$ and $\rvar{s}$ can be decomposed using the chain rule in terms of the intermediate variables in the computation graph shown in Figure \ref{fig:gaussian-density-computation-graph} as
+\begin{align}
+  \pd{\rvar{c}}{\rvar{x}} &=
+  \pd{\rvar{c}}{\rvar{a}} 
+  \pd{\rvar{a}}{\rvar{z}}
+  \pd{\rvar{z}}{\rvar{y}}
+  \pd{\rvar{y}}{\rvar{x}},
+  \\
+  \pd{\rvar{c}}{\rvar{m}} &=
+  \pd{\rvar{c}}{\rvar{a}} 
+  \pd{\rvar{a}}{\rvar{z}}
+  \pd{\rvar{z}}{\rvar{y}}
+  \pd{\rvar{y}}{\rvar{m}},
+  \\
+  \pd{\rvar{c}}{\rvar{s}} &=
+  \pd{\rvar{c}}{\rvar{a}} 
+  \pd{\rvar{a}}{\rvar{z}}
+  \pd{\rvar{z}}{\rvar{s}} +
+  \pd{\rvar{c}}{\rvar{b}} 
+  \pd{\rvar{b}}{\rvar{u}}
+  \pd{\rvar{u}}{\rvar{s}}.
+\end{align}
+We can immediately see that some of the chains of products of partial derivatives are repeated in the different derivative expressions - for example $\pd{\rvar{c}}{\rvar{a}} \pd{\rvar{a}}{\rvar{z}}$ appears in the expressions for all three derivatives. Reverse-mode accumulation is effectively an automatic way of exploiting these possibilities for reusing calculations.
+
+Figure \ref{fig:gaussian-density-gradient-computation-graph} shows a visualisation of reverse-mode accumulation applied to the computation graph in Figure \ref{fig:gaussian-density-computation-graph}. The first step is for a \emph{forward pass} through the graph to be performed, i.e. values are provided for each of the input variables and then each of the intermediate and output variables calculated from the incoming operation applied to their parent values. Importantly the values of all variables in the graph calculated during the forward pass must be maintained in memory. 
+
+\begin{algorithm}[!t]
+\caption{Reverse-mode automatic differentiation.}
+\label{alg:reverse-mode-ad}
+\input{algorithms/reverse-mode-automatic-differentiation}
+\end{algorithm}
+
+The \emph{reverse pass} recursively calculates the values of the partial derivatives of the relevant output node with respect to each variable node in the graph - we will term these intermediate derivatives \emph{accumulators} denoted with barred symbols in Figure \ref{fig:gaussian-density-gradient-computation-graph} e.g. $\bar{\rvar{a}} = \pd{\rvar{c}}{\rvar{a}}$. The reverse pass begins by seeding an accumulator for the output node to one (i.e. $\bar{\rvar{c}} = \pd{\rvar{c}}{\rvar{c}} = 1$ in Figure \ref{fig:gaussian-density-gradient-computation-graph}). 
+
+Accumulators for the input variables of an operation are calculated by multiplying the accumulator for the operation output by the partial derivatives of the operation output with respect to each input variable. For non-linear operations multiplying by the operator partial derivatives will require access to the value of the input variables calculated in the forward pass. If a variable is an input to multiple operations, the derivative terms from each operation are added together in the relevant accumulator, as for example shown for $\bar{\rvar{s}}$ in Figure \ref{fig:gaussian-density-gradient-computation-graph}. By recursively applying these product and sum operations, the derivatives of the output with respect to all variables in the graph can be calculated. A general description of the method for computation graphs with a single output node and multiple inputs is given in Algorithm \ref{alg:reverse-mode-ad}.
+
+This reverse accumulation method allows computation of numerically exact (up to floating point error) derivatives of a single output variable in a computation graph with respect to \emph{all input variables} with a computational cost, in terms of the number of atomic operations which need to be performed, that is a constant factor of the cost of the evaluation of the original expression represented by the computation graph in the forward pass. The constant factor is typically two to three and at most six \citep{baydin2015automatic}. This efficient computational cost is balanced by the requirement that the values of all intermediate variables in the computation graph evaluated in the forward pass through the graph must be stored in memory for the derivative accumulation in a reverse pass, which for large computational graphs can become a bottleneck.
+
+To calculate the full Jacobian from a computation graph representing a function with $M$ inputs $\fset{\rvar{x}_i}_{i=1}^M$ and $N$ outputs $\fset{\rvar{y}_i}_{i=1}^N$, i.e. the $N \times M$ matrix $\mtx{J}$ with entries $J_{i,j} = \pd{\rvar{y}_i}{\rvar{x}_j}$, we can do a single forward pass and $N$ reverse passes each time accumulating the derivatives of one output variable with respect to all inputs. This leads to an overall computational cost that is $\mathcal{O}(N)$ times the cost of a single (forward) function evalaution to evaluate the full Jacobian. As each of the reverse passes can trivially be run in parallel (in addition to any parallelisation of the operations in the forward and reverse passes themselves), this $\mathcal{O}(N)$ factor in the operation count need not corresponds to an equivalent increase in compute time.
+
+An alternative to reverse-mode accumulation is \emph{forward-mode accumulation} \citep{wengert1964simple}, which insteads accumulates partial derivatives with respect to a single input variable alongside the forward pass through the graph. In contrast to reverse-mode, this allows calculation of the partial derivatives of all output variables with respect to a single input variable at a computational cost that is a constant factor of the cost of the evaluation of the original expression in the forward pass. Forward-mode accumulation therefore allows evaluation of the Jacobian of a function with $M$ inputs and $N$ outputs at an overall computational cost that is $\mathcal{O}(M)$ times the cost of a single function evaluation. 
+
+For functions with $M \gg N$, e.g. scalar valued functions of multiple inputs, reverse-mode accumulation is generally therefore signficantly more efficient at computing the Jacobian. Forward-mode accumulation is however useful for evaluating the Jacobian of functions with $N \gg M$, and also has the advantage over reverse-mode accumulation of avoiding the requirement to store the values of intermediate variables from the forward pass for the reverse pass(es).
+
+%Implementations of mathematical software libraries providing reverse-mode automatic differentiation have two key additional requirements beyond the standard ability to evaluate the arithmetic operations and elementary functions provided - for each primitive operation provided by the library a method of evaluating the product of the 
+
+% static graph versus dynamic graph implementations
+% side advantages of graph compilation, device agnosticism
+% tensor based operations

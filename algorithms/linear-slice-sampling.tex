@@ -6,17 +6,17 @@
     $q$ : slice vector density,~
     $M$ : maximum number of step out iterations.
     \Ensure\raggedright
-    $\vct{x}_{n+1}$ : next chain state with $\vct{x}_n \sim \tgtdens \implies \vct{x}_{n+1} \sim \tgtdens$.
+    $\vct{x}_{n+1}$ : next chain state with $\vct{x}_n \sim \tgtdens(\cdot) \implies \vct{x}_{n+1} \sim \tgtdens(\cdot)$.
 \end{algorithmic}
 \hrule
 \small
 \begin{algorithmic}[1]
-  \State $h \sim \mathcal{U}\lpa 0,\utgtdens(\vct{x}_n)\rpa$ \Comment{Sample slice height}
-  \State $\vct{v} \sim q$ \Comment{Sample vector setting slice line and initial bracket width}\label{algline:slice-sample-direction}
-  \State $b_u \sim \mathcal{U}(0,1)$  \Comment{Uniformly sample bracket around current state}
+  \State $h \sim \mathcal{U}\lpa\cdot\gvn 0,\utgtdens(\vct{x}_n)\rpa$ \Comment{Sample slice height}
+  \State $\vct{v} \sim q(\cdot)$ \Comment{Sample vector setting slice line and initial bracket width}\label{algline:slice-sample-direction}
+  \State $b_u \sim \mathcal{U}(\cdot\gvn 0,1)$  \Comment{Uniformly sample bracket around current state}
   \State $b_l \gets b_u - 1$
   \If{$M > 0$} $(b_l,\,b_u) \gets $ \Call{LinearStepOut}{$\vct{x}_n$, $b_l$, $b_u$, $M$}\EndIf
-  \State $\lambda \sim \mathcal{U}(b_l, b_u)$
+  \State $\lambda \sim \mathcal{U}(\cdot\gvn b_l, b_u)$
   \While{\textsc{True}}
     \State $\vct{x}^* \gets \vct{x}_n + \lambda \vct{v}$  \label{algline:slice-line-1}
     \Comment{Update proposed state}
@@ -24,14 +24,14 @@
     \Comment{Proposed point not on slice}
       \IfThenElse{$\lambda < 0$}{$b_l \gets \lambda$}{$b_u \gets \lambda$} 
       \Comment{Shrink slice bracket}
-      \State $\lambda \sim \mathcal{U}(b_l, b_u)$  
+      \State $\lambda \sim \mathcal{U}(\cdot\gvn b_l, b_u)$  
       \Comment{Sample uniformly from new bracket}
     \Else \Comment{Proposed state on slice}
       \State \Return $\vct{x}^*$
     \EndIf
   \EndWhile
   \Function{LinearStepOut}{$\vct{x}_n,\,b_l,\,b_u,\,M$} \label{algline:slice-sample-step-out-start}
-    \State $L \sim \textrm{UniInt}(0, M)$ \Comment{Sample integer uniformly from $[0, M]$}
+    \State $L \sim \textrm{UniformInt}(\cdot\gvn 0, M)$ \Comment{Sample integer uniformly from $[0, M]$}
     \State $U \gets M - L$
     \While{$L > 0$ \textbf{and}\xspace $\utgtdens(\vct{x}_n + b_l \vct{v}) > h$} \Comment{Step out lower bracket edge} \label{algline:slice-line-2}
       \State $b_l \gets b_l - 1$

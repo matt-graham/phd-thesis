@@ -1,6 +1,36 @@
 \chapter{\mbox{Implicit generative models}}\label{ch:differentiable-generative-models}
 
-In the approximate inference methods considered in Chapters \ref{ch:approximate-inference} and \ref{ch:hamiltonian-monte-carlo} a unifying element was the requirement to be able to evaluate an explicit probability density function $\tgtdens$ for the target distribution of interest $\tgtprob$. In many inference problems $\tgtdens$ is only evaluable up to to an unknown normalising constant $Z$ however both sampling and optimisation based inference approaches are generally able to cope with this ambiguity, and in some cases such as importance sampling are able to estimate $Z$ itself. There are however many probabilistic models specified by a generative process in which the density of the model variables is defined only \emph{implicitly} \citep{beaumont2002approximate,gourieroux1993indirect,diggle1984monte} - that is we can generate sample values for the variables in the model, but we cannot tractably evaluate the probability distribution of those variables or more specifically its density with respect to an appropriate base measure. 
+%The approximate inference methods considered so far in Chapters \ref{ch:approximate-inference} and \ref{ch:pseudo-marginal-methods} have been aimed at dealing with various forms of computational intractability in probabilistic models. In Chapter \ref{ch:probabilistic-modelling}-modelling} we motivated that the key computational challenges in inference problems is generally the computation of integrals which do not have an analytic solution and which are intractable to compute using standard quadrature numerical integration methods. In Chapter \ref{ch:approximate-inference} we considered various methods which have been proposed for computing approximations to these intractable intractables, in particular focussing on \ac{MCMC} methods as a very generally applicable family of methods which are able to give asymptotically exact estimates in the limit of infinite computation.
+%
+%The sampling and optimisation
+%
+%In the preceding chapter we considered the pseudo-marginal framework, which allows \ac{MCMC} methods to be applied given only an unbiased estimator for the density function of the target distribution. This allows 
+%
+%
+%
+%In the preceding chapter we considered the pseudo-marginal framework, which allows \ac{MCMC} methods to be extended from the standard approximate inference case in which we can evaluate a generally unnormalised density function for the target distribution of interest, to problems in which we may only have access to a unbiased (and non-negative) estimator for this function. A key idea exploited in the previous chapter 
+%
+% applied to problems in which we only have access to an unbiased and non-negative estimator for a density function of the target distribution of interest.
+%
+%
+%In this chapter we will consider approximate inference methods for dealing with another form of intractability: probabilistic models specified by a generative process in which the density of the model variables is defined only \emph{implicitly} \citep{beaumont2002approximate,gourieroux1993indirect,diggle1984monte}. In such \emph{implicit generative models} we can generate sample values for the variables in the model, but we cannot tractably evaluate the probability distribution of those variables or more specifically its density with respect to an appropriate base measure. 
+%
+%
+% A further level of intractability arises for probabilistic models specified by a generative process in which the density of the model variables is defined only \emph{implicitly} \citep{beaumont2002approximate,gourieroux1993indirect,diggle1984monte} - that is we can generate sample values for the variables in the model, but we cannot tractably evaluate the probability distribution of those variables or more specifically its density with respect to an appropriate base measure. 
+%
+%
+%Probabilistic models can exhibit various forms of computational intractability.
+%
+%In many inference problems th
+%
+%
+%Probability density functions have played a central role in the approximate inference methods considered so far in this thesis. The approximate inference methods considered in Chapter \ref{ch:approximate-inference} required that we are able to evaluate an explicit probability density function for the target distribution of interest. In many inference problems the target density function is only evaluable up to to an unknown intractable normalising constant. Both the sampling and optimisation based inference approaches considered however are generally able to cope with this ambiguity. In the preceding chapter we considered the pseudo-marginal framework, which allows \ac{MCMC} methods to be applied given only an unbiased non-negative estimator of the target density of interest. One context in which pseudo-marginal methods are applied is in so-called `doubly-intractable' distributions \citep{murray2006mcmc} where the target distribution of interest involves
+%
+%The approximate inference methods considered so far in this thesis have been focussed on probabilistic models specified via an explicit joint probability density function on the model variables. Both the sampling and optimisation based inference approaches reviewed in Chapter \ref{ch:approximate-inference} required evaluation 
+%
+% A further level of intractability arises for probabilistic models specified by a generative process in which the density of the model variables is defined only \emph{implicitly} \citep{beaumont2002approximate,gourieroux1993indirect,diggle1984monte} - that is we can generate sample values for the variables in the model, but we cannot tractably evaluate the probability distribution of those variables or more specifically its density with respect to an appropriate base measure. 
+
+In the approximate inference methods considered in Chapter \ref{ch:approximate-inference} a unifying element was the requirement to be able to evaluate an explicit probability density function $\tgtdens$ for the target distribution of interest $\tgtprob$. In many inference problems $\tgtdens$ is only evaluable up to to an unknown normalising constant $Z$ however both sampling and optimisation based inference approaches are generally able to cope with this ambiguity, and in some cases such as importance sampling are able to estimate $Z$ itself. There are however many probabilistic models specified by a generative process in which the density of the model variables is defined only \emph{implicitly} \citep{beaumont2002approximate,gourieroux1993indirect,diggle1984monte} - that is we can generate sample values for the variables in the model, but we cannot tractably evaluate the probability distribution of those variables or more specifically its density with respect to an appropriate base measure. 
 
 Although models without an explicit density function are challenging to work with from an inferential perspective, they are ubiquitous in science and engineering in the form of probabilistic models defined by the computational simulation of a physical system. Typically simulator models are specified procedurally in code with any stochasticity introduced by drawing values from a pseudo-random number generator. %We previously briefly discussed an example of a simulator model based on the approximate integration of a set of \acp{SDE} when considering graphical models in Section \ref{subsec:simulators} of Chapter \ref{ch:probabilistic-modelling}. 
 The complexity of the function mapping from random inputs to simulated outputs typically makes calculating an explicity density on the outputs at best non-trivial. In the common case where the simulator outputs cannot be expressed as an injective function of (potentially a subset of) the random inputs the density on the model variables will usually not have a closed form expression.
@@ -25,6 +55,13 @@ We make two main contributions in this chapter. First we show that by reparamete
 
 Secondly for a restricted class of generative models we term differentiable generative models and which we define in a following section, we show that it is possible to express exact conditional expectations under the model as integrals against a density we can evaluate pointwise across an implicitly defined manifold. We use this to propose a novel constrained \ac{HMC} method for performing inference in differentiable generative models. Unlike \ac{ABC} approaches, this method allows inference to be performed by conditioning the observed variables in the model to be within arbitary small distances of the data values while remaining computationally tractable.
 
+The contributions described in this chapter have previously appeared in the published conference paper
+\begin{itemize}
+ \item Asymptotically exact inference in differentiable generative models. Matthew M. Graham and Amos J. Storkey. \emph{Proceedings of the 20th International Conference on Artificial Intelligence and Statistics, PMLR 54:499-508}, 2017.
+\end{itemize}
+I was the primary author of that work and contributed the main novel ideas, as well as performing and analysing the numerical experiments described in the paper, some of which are reproduced in this chapter in Section \ref{sec:dgm-experiments}.
+
+
 %across an implicitly defined manifold gainst a density we can evaluate pointwise with respect to the Hausdorff measure for an implicitly defined manifold
 
 %We will describe a novel \ac{HMC} method for performing inference in important sub-class of implicitly-defined generative models where the mapping from random inputs to the model to simulated observed and latent variables is differentiable. Unlike existing approaches, this method allows inference to be performed by conditioning the observed variables in the model to be within arbitary small distances of the data values while remaining computationally tractable. Further by exploiting gradient information the approach is able to perform efficient inference in models with large numbers of unobserved variables and conditioning on all observed data rather than low-dimensional summaries as is common in \ac{ABC} approaches.
@@ -38,39 +75,18 @@ Secondly for a restricted class of generative models we term differentiable gene
 \centering
 \begin{subfigure}[t]{.35\linewidth}
 \centering
-\begin{tikzpicture}
-  \node[latent] (h) {$\rvct{h}$} ; %
-  \factor[left=of h] {pr-h} {$\nrm{\vct{0},\idmtx}$} {} {h} ; %
-  \node[latent, right=1 of h] (y) {$\rvct{y}$} ; %
-  \op[right=of h] {h-y} {$\vctfunc{g}_{\vct{\theta}}$} {h} {y} ; %
-\end{tikzpicture}
+\includetikz{gan-generator}
 \caption{\acs{GAN} generator}\label{sfig:gan-generator}
 \end{subfigure}%
 \begin{subfigure}[t]{.55\linewidth}
 \centering
-\begin{tikzpicture}
-  \node[latent] (h) {$\rvct{h}$} ; %
-  \factor[left=of h] {pr-n} {$\nrm{\vct{0},\idmtx}$} {} {h} ; %
-  \node[latent, right=2.5 of h] (y) {$\rvct{y}$} ; %
-  \factor[left=of y, xshift=-7mm] {h-y} {$\nrm{\vctfunc{m}_{\vct{\theta}}(\rvct{h}), \diag\vctfunc{s}_{\vct{\theta}}(\rvct{h})^2}$} {h} {y} ; %
-\end{tikzpicture}
+\includetikz{gaussian-vae-decoder}
 \caption{Gaussian \acs{VAE} decoder}\label{sfig:vae-decoder-marginalised}
 \end{subfigure}%
 \\[3mm]
 \begin{subfigure}[t]{.8\linewidth}
 \centering
-\begin{tikzpicture}
-  \node[latent] (h) {$\rvct{h}$} ; %
-  \factor[left=of h] {pr-h} {$\nrm{\vct{0},\idmtx}$} {} {h} ; %
-  \node[latent, right=1.5 of h, yshift=8mm] (m) {$\rvct{m}$} ; %
-  \node[latent, right=1.5 of h] (s) {$\rvct{s}$} ; %
-  \op[left=of s] {h-s} {$\vctfunc{s}_{\vct{\theta}}(\rvct{h})$} {h} {s} ; %
-  \op[left=of m] {h-m} {$\vctfunc{m}_{\vct{\theta}}(\rvct{h})$} {h} {m} ; %
-  \node[latent, right=1.5 of h, yshift=-8mm] (n) {$\rvct{n}$} ; %
-  \factor[left=of n] {pr-n} {$\nrm{\vct{0},\idmtx}$} {} {n} ; %
-  \node[latent, right=1.5 of s] (y) {$\rvct{y}$} ; %
-  \op[left=of y] {n_m_s-y} {$~~~\rvct{m} + \rvct{s}\odot\rvct{n}$} {n,m,s} {y} ; %
-\end{tikzpicture}
+\includetikz{reparam-gaussian-vae-decoder}
 \caption{Reparameterised Gaussian \acs{VAE} decoder}\label{sfig:vae-decoder}
 \end{subfigure}%
 \caption[Differentiable generator network factor graphs.]{Example factor graphs for the generator of a \ac{GAN} and decoder of a \ac{VAE}. \subref{sfig:gan-generator} The generator for a \ac{GAN} with a standard normal distribution on the hidden code $\rvct{h}$, this mapped through a differentiable network $\vctfunc{g}_{\vct{\theta}}$, to generate the simulated output vector $\rvct{y}$. \subref{sfig:vae-decoder-marginalised} The decoder of a Gaussian \ac{VAE}. Again a hidden code vector $\rvct{h}$ with a standard normal distribution is used, differentiable network functions $\vctfunc{m}_{\vct{\theta}}$ and $\vctfunc{s}_{\vct{\theta}}$ then mapping from this code vector to mean and diagonal covariance parameters of a multivariate normal distribution on the output vector $\rvct{y}$. \subref{sfig:vae-decoder} The same \ac{VAE} decoder model as \subref{sfig:vae-decoder-marginalised}, with in this case the conditional factor on the outputs $\rvct{y}$ given hidden code $\rvct{h}$ reparameterised in terms of a deterministic transformation of a standard normal vector $\rvct{n}$.}
@@ -170,75 +186,13 @@ Although we only required the existence of the input density gradient $\pd{\rho}
 
 \begin{figure}[!t]
 \centering
-\pgfplotsset{cycle list/Dark2-3}
-\begin{tikzpicture}
-  \begin{axis}[
-    name=dens,
-    cycle list name={Dark2-3},
-    domain=-5:5,
-    xmin=-5, xmax=5,
-    ymin=0, ymax=0.7,
-    ytick={0.5},
-    samples=200,
-    width=6.5cm,
-    height=4cm,
-    xlabel={\small $u$},
-    ylabel={\small $\pden{\rvar{u}}$},
-    every tick label/.append style={font=\tiny},
-    axis y line=center,
-    axis x line=middle,
-    legend image post style={scale=0.75},
-    legend style={
-      at={(0.5,-0.2)},
-      anchor=north west,
-      draw=none, 
-      legend columns=-1, 
-      column sep=2ex,
-      /tikz/nodes={anchor=base},
-      /tikz/every odd column/.style={yshift=2pt},
-      font=\scriptsize,
-      legend to name=grouplegend
-    }
-  ]
-    \addplot+[mark=none, thick] {exp(-0.5 * x^2) / sqrt(2 * pi)};
-    \addlegendentry{$\nrm{u \gvn 0,1}$};
-    \addplot+[mark=none, densely dashed, thick] 
-      {pi / (4 * sqrt(3) * cosh(pi * x / (2 * sqrt(3)))^2)};
-    \addlegendentry{$\textrm{Logistic}(u \gvn 0, \sqrt{3}/\uppi)$};
-    \addplot+[mark=none, densely dotted, thick] {0.5 / cosh(pi * x / 2)};
-    \addlegendentry{$\textrm{InvCosh}(u \gvn 0, 1)$};
-  \end{axis}
-  \begin{axis}[
-    name=logdens,
-    cycle list name={Dark2-3},
-    at=(dens.right of south east),
-    xshift=4mm,
-    anchor=left of south west,
-    domain=-5:5,
-    xmin=-5, xmax=5,
-    ymin=0, ymax=8,
-    ytick={2,4,6},
-    samples=200,
-    width=6.5cm,
-    height=4cm,
-    xlabel={\small $u$},
-    ylabel={\small $-\log\pden{\rvar{u}}$},
-    every tick label/.append style={font=\tiny},
-    axis y line=center,
-    axis x line=middle,
-  ]
-    \addplot+[mark=none, solid, thick] {0.5 * x^2 + 0.5 * ln(2 * pi)};
-    \addplot+[mark=none, densely dashed, thick] 
-      {ln(4 * sqrt(3)) - ln(pi) + 2 * ln(cosh(pi * x / (2 * sqrt(3))))};
-    \addplot+[mark=none, densely dotted, thick] {ln(2) + ln(cosh(pi * x / 2))};
-  \end{axis}
-  \node[anchor=north] at ($(dens.south east) + (2mm,-3mm)$) {\ref*{grouplegend}}; 
-\end{tikzpicture}
+\includetikz{unbounded-unit-variance-densities}
 \vspace{-1mm}
 \caption[Unbounded unit variance densities.]{Unit variance densities with unbounded support.}
 \label{fig:unit-variance-densities}
 \end{figure}
 
+\tikzexternaldisable
 \begin{table}[!t]
 \centering
 \begin{tabular}{rr}
@@ -328,6 +282,7 @@ Although we only required the existence of the input density gradient $\pd{\rho}
 \caption[Standardisation reparametrisations.]{Reparameterisations of random variables with some common parametric distributions as deterministic transformations of unit-variance unbounded support random variables.}
 \label{tab:standardisation-reparametrisations}
 \end{table}
+\tikzexternalenable
 
 A generative model $(\set{U},\sset{F}\kern-2pt,\rho,\mu,\genfunc_{\rvct{x}},\genfunc_{\rvct{z}})$ for $\rvct{x}$ and $\rvct{z}$ will not uniquely define the resulting joint distribution $\prob{\rvct{x},\rvct{z}}$. As a simple example if $\set{F} = \borel(\set{U})$, $\mu=\lebm{M}$ and $\vctfunc{f} : \set{V} \to \set{U}$ is a diffeomorphism, then we can reparameterise the random inputs as $\rvct{v} = \vctfunc{f}^{-1}(\rvct{u})$, and if we define an input density $\tilde{\rho}(\vct{v}) = \left|\pd{\vctfunc{f}}{\vct{v}}\right|\, \rho\lpa \vctfunc{f}(\vct{v})\rpa$ 
  using the change of variables formula for a diffeomorphism \eqref{eq:change-of-variables-vector-bijective} then $(\set{V},\borel(\set{V}),\tilde{\rho},\mu,\genfunc_{\rvct{x}}\circ\vctfunc{f},\genfunc_{\rvct{z}}\circ\vctfunc{f})$ is also a generative model for $\rvct{x}$ and $\rvct{z}$.
@@ -352,51 +307,22 @@ In some cases using the outputs of higher-level random number generator routines
 \centering
 \begin{subfigure}[t]{.3\linewidth}
 \centering
-\begin{tikzpicture}
-  \node[latent] (u) {$\rvct{u}$} ; %
-  \factor[left=of u] {pr-u} {$\rho$} {} {u} ; %
-  \node[latent, right=1 of u, yshift=8mm] (z) {$\rvct{z}$} ; %
-  \node[obs, right=1 of u, yshift=-8mm] (x) {$\rvct{x}$} ; %
-%  \op[right=of u] {u-z_y} {$\vctfunc{g}_{\rvct{x},\rvct{z}}$} {u} {y,z} ; %
-  \op[left=of x] {u-x} {above:$\vctfunc{g}_{\rvct{x}}$} {u} {x} ; %
-  \op[left=of z] {u-z} {below:$\vctfunc{g}_{\rvct{z}}$} {u} {z} ; %
-\end{tikzpicture}
+\includetikz{undirected-generative-model}
 \caption{}\label{sfig:undirected-model-factor-graph}
 \end{subfigure}%
 \begin{subfigure}[t]{.2\linewidth}
 \centering
-\begin{tikzpicture}
-  \node (dummy) {};%
-  \node[latent, right=0.2 of dummy, yshift=8mm] (z) {$\rvct{z}$} ; %
-  \node[obs, right=0.2 of dummy, yshift=-8mm] (y) {$\rvct{x}$} ; %
-  \factor[above=of y, yshift=-0.5mm] {z-y} {right: $\mathsf{p}_{\rvct{x},\rvct{z}}$} {} {y,z} ; %
-\end{tikzpicture}
+\includetikz{undirected-generative-model-marginalised}
 \caption{}\label{sfig:undirected-model-factor-graph-marginalised}
 \end{subfigure}%
 \begin{subfigure}[t]{.3\linewidth}
 \centering
-\begin{tikzpicture}
-  \node[latent] (uz) {$\rvct{u}_1$} ; %
-  \factor[left=of uz] {pr-uz} {below: $\rho_{\scriptscriptstyle 1}$} {} {uz} ; %
-  \node[latent, right=0.8 of uz] (z) {$\rvct{z}$} ; %
-  \op[left=of z, xshift=1mm] {uz-z} {below: $\vctfunc{g}_{ \rvct{z}}$} {uz} {z} ; %
-  \node[obs, right=0.8 of uz, yshift=-16mm] (y) {$\rvct{x}$} ; %
-  \op[above=of y, yshift=-1mm] {uy_z-y} {right:$\vctfunc{g}_{ \rvct{x}|\rvct{z}}$} {z} {y} ; %
-  \node[latent] (uy) at (uy_z-y -| uz) {$\rvct{u}_2$} ; %
-  \factor[left=of uy] {pr-uy} {below: $\rho_{\scriptscriptstyle 2}$} {} {uy} ; %
-  \draw (uy) -- (uy_z-y) ; %
-\end{tikzpicture}
+\includetikz{directed-generative-model}
 \caption{}\label{sfig:directed-model-factor-graph}
 \end{subfigure}%
 \begin{subfigure}[t]{.2\linewidth}
 \centering
-\begin{tikzpicture}
-  \node (dummy) {};%
-  \node[latent, right=0.2 of dummy, yshift=8mm] (z) {$\rvct{z}$} ; %
-  \factor[left=of z] {pr-z} {below:  $\mathsf{p}_{\rvct{z}}$} {} {z} ; %
-  \node[obs, right=0.2 of dummy, yshift=-8mm] (y) {$\rvct{x}$} ; %
-  \factor[above=of y] {z-y} {right: $\mathsf{p}_{\rvct{x}|\rvct{z}}$} {z} {y} ; %
-\end{tikzpicture}
+\includetikz{directed-generative-model-marginalised}
 \caption{}\label{sfig:directed-model-factor-graph-marginalised}
 \end{subfigure}%
 \caption[Undirected and directed generative models.]{Factor graphs of undirected and directed generative models. Panel \subref{sfig:undirected-model-factor-graph} shows the more general undirected model case in which observed variables $\rvct{x}$ and latent variables $\rvct{z}$ are jointly generated from random inputs $\rvct{u}$, with \subref{sfig:undirected-model-factor-graph-marginalised} showing equivalent factor graph after marginalising out the random inputs. Panel \subref{sfig:directed-model-factor-graph} shows the directed model case in which we first generate the latent variables $\rvct{z}$ from a subset of the random inputs $\rvct{u}_{1}$ then generate the observed variables $\rvct{x}$ from $\rvct{z}$ and the remaining random inputs $\rvct{u}_{2}$, with \subref{sfig:directed-model-factor-graph-marginalised} showing resulting natural directed factorisation of joint distribution when marginalising out $\rvct{u}_1$ and $\rvct{u}_2$.}
@@ -1161,7 +1087,7 @@ Our constrained \ac{HMC} implementation is shown in Algorithm \ref{alg:constrain
 \label{alg:constrained_hmc}
 {
 \small
-\input{algorithms/alg_constrained_hmc_gbab}
+\input{algorithms/constrained-hmc}
 }
 \end{algorithm}
 
@@ -1195,22 +1121,7 @@ For larger systems, the Cholesky decomposition of the constraint Jacobian matrix
 \centering
 \begin{subfigure}[t]{.35\linewidth}
 \centering
-\begin{tikzpicture}
-  \node[latent] (z) {$\rvct{z}$} ; %
-  \op[above=of z] {uz-z} {right: $\vctfunc{g}_{\rvct{z}}$} {} {z} ; %
-  \node[latent, left=0.3 of uz-z] (uz) {$\rvct{u}_1$} ; %
-  \factor[left=of uz] {pr-uz} {below: $\rho_{\scriptscriptstyle 1}$} {} {uz} ; %
-  \draw (uz) -- (uz-z) ; %
-  \node[obs, below=1.2 of z] (xi) {$\rvct{x}_i$} ; %
-  \op[above=of xi] {uxi_z-xi} {right:$\vctfunc{g}_{ \rvct{x}_i|\rvct{z}}$} {z} {xi} ; %
-  \node[latent, left=0.3 of uxi_z-xi] (uxi)  {$\rvct{u}_{2,i}$} ; %
-  \factor[left=of uxi] {pr-uxi} {below: $\rho_{\scriptscriptstyle 2,i}$} {} {uxi} ; %
-  \draw (uxi) -- (uxi_z-xi) ; %
-  \node[below=0.0 of xi, yshift=0.5mm] (dummy) {} ; %
-  \plate {obs} 
-    {(xi)(uxi)(uxi_z-xi)(uxi_z-xi-caption)(pr-uxi)(pr-uxi-caption)(dummy)} 
-    {\footnotesize $i \in \fset{1 \,...\, N}$} ; %
-\end{tikzpicture}
+\includetikz{iid-directed-generative-model}
 \caption{Independent $\rvct{x}_i$}\label{sfig:directed-model-independent}
 \end{subfigure}%
 %\begin{subfigure}[t]{.25\linewidth}
@@ -1230,40 +1141,7 @@ For larger systems, the Cholesky decomposition of the constraint Jacobian matrix
 %\end{subfigure}%
 \begin{subfigure}[t]{.62\linewidth}
 \centering
-\begin{tikzpicture}
-  \node[latent] (z) {$\rvct{z}$} ; %
-  \op[above=of z] {uz-z} {right: $\vctfunc{g}_{\rvct{z}}$} {} {z} ; %
-  \node[latent, left=0.3 of uz-z] (uz) {$\rvct{u}_1$} ; %
-  \factor[left=of uz] {pr-uz} {below: $\rho_{\scriptscriptstyle 1}$} {} {uz} ; %
-  \draw (uz) -- (uz-z) ; %
-  \node[latent, below=1.2 of z] (uone) {$\rvct{u}_{2,1}$} ; %
-  \factor[below=of uone] {pr-uone} {right:$\rho_{2,1}$} {} {uone} ; %
-  \op[above=of uone] {xzero_uone_z-xone} {below right:$\vctfunc{f}_1$} {} {} ; %
-  \node[obs, left=0.3 of xzero_uone_z-xone] (xzero)  {$\rvct{x}_{0}$} ; %
-  \op[left=of xzero] {uzero-xzero} {below right: $\vctfunc{f}_0$} {} {xzero} ; %
-  \node[latent] (uzero) at (uone-|uzero-xzero) {$\rvct{u}_{2,0}$} ; %
-  \factor[below=of uzero] {pr-uzero} {right:$\rho_{2,0}$} {} {uzero} ; %
-  \draw (uzero) -- (uzero-xzero) ; %
-  \draw (z) -- (uzero-xzero) ; %
-  \node[obs, right=0.3 of xzero_uone_z-xone] (xone)  {$\rvct{x}_{1}$} ; %
-  \factoredge {xzero,uone,z} {xzero_uone_z-xone} {xone} ; %
-  \op[right=0.3 of xone] {xone_utwo_z-xtwo} {below right:$\vctfunc{f}_2$} {} {} ; %  
-  \node[latent] (utwo) at (uone-|xone_utwo_z-xtwo) {$\rvct{u}_{2,2}$} ; %
-  \factor[below=of utwo] {pr-utwo} {right:$\rho_{2,2}$} {} {utwo} ; %
-  \node[obs, right=0.3 of xone_utwo_z-xtwo] (xtwo) {$\rvct{x}_2$} ; %
-  \factoredge {z,xone,utwo} {xone_utwo_z-xtwo} {xtwo} ; %
-  \node[right=0.1 of xtwo] (dummy) {} ; %
-  \draw[densely dotted] (xtwo) -- (dummy) ; %
-  \op[right=0.5 of xtwo] {ufinal-xfinal} {below right:$\vctfunc{f}_T$} {} {} ; %  
-  \node[latent] (ufinal) at (uone-|ufinal-xfinal) {$\rvct{u}_{2,T}$} ; %
-  \factor[below=of ufinal] {pr-ufinal} {right:$\rho_{2,T}$} {} {ufinal} ; %
-  \node[obs, right=0.3 of ufinal-xfinal] (xfinal) {$\rvct{x}_T$} ; %
-  \factoredge {ufinal} {ufinal-xfinal} {xfinal} ; %
-  \node[left=0.1 of ufinal-xfinal] (dummy2) {} ; %
-  \draw[densely dotted] (dummy2) -- (ufinal-xfinal) ; %
-  \node[above left=0.1 and 0.2 of ufinal-xfinal] (dummy3) {} ; %
-  \draw[densely dotted] (dummy3) -- (ufinal-xfinal) ; %
-\end{tikzpicture}
+\includetikz{markov-directed-generative-model}
 \caption{Markovian $\rvct{x}_i$}\label{sfig:directed-model-markov}
 \end{subfigure}%
 \caption[Structured directed generative models.]{Factor graphs of examples of structured directed generative models.}
@@ -1320,7 +1198,7 @@ Also related is \emph{Optimisation Monte Carlo} \citep{meeds2015optimization}. T
 
 Our method also differs in treating all inputs to a generator equivalently; while the \emph{Optimisation Monte Carlo} authors similarly identify the simulator models as deterministic functions they distinguish between parameters and random inputs, optimising the first and independently sampling the latter. This can lead to random inputs being sampled for which no parameters can be found consistent with the observations (even with a within $\epsilon$ constraint). Although optimisation failure is also potentially an issue for our method, we found this occurred rarely in practice if an appropriate step size is chosen. Our method can also be applied in cases were the number of unobserved variables is greater than the number of observed variables unlike \emph{Optimization Monte Carlo}.
 
-\section{Experiments}\label{sec:experiments}
+\section{Experiments}\label{sec:dgm-experiments}
 
 To illustrate the applicability of the proposed method we performed inference tasks in three diverse settings: parameter inference in a stochastic Lotka-Volterra predator-prey model simulation, 3D human pose and camera parameter inference given 2D joint position information and finally in-painting of missing regions of digit images using a generative model trained on MNIST. In all three experiments Theano \citep{theano2016theano} was used to specify the generator function and calculate the required derivatives. All experiments were run on an Intel Core i5-2400 quad-core CPU. %Python code for the experiments is available at \url{https://git.io/dgm}.
 
@@ -1412,52 +1290,7 @@ Although using effective sample sizes as a measure of performance can give misle
 
 \begin{figure}[!t]
 \centering
-\begin{tikzpicture}
-  \node[latent] (uah) {$\rvct{u}_{h}$} ; %
-  \factor[left= of uah] {pr-uah} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {uah} ; %
-  \node[latent, right=1. of uah, yshift=12mm] (ms) {$\rvct{m}_1$} ; %
-  \node[latent, right=1. of uah, yshift=4mm] (ks) {$\rvct{k}_1$} ; %
-  \node[latent, right=1. of uah, yshift=-4mm] (mc) {$\rvct{m}_2$} ; %
-  \node[latent, right=1. of uah, yshift=-12mm] (kc) {$\rvct{k}_2$} ; %
-  \op[right=of uah, xshift=-1mm, yshift=8mm] {uah-ms_ks} {} {uah} {ms,ks} ; %
-  \op[right=of uah, xshift=-1mm, yshift=-8mm] {uah-mc_kc} {} {uah} {mc,kc} ; %
-  \node[latent, right= of ms, yshift=-4mm] (s) {$\rvct{r}_1$} ; %
-  \op[left= of s] {ms_ks_uas-s}
-    %{\tiny $\exp(\rvct{k}_s)\odot \rvct{u}_{a,s} + \rvct{m}_s$} 
-    {} {ms,ks} {s} ; %
-  \node[latent, right=1. of uah, yshift=20mm] (uas) {$\rvct{u}_{1}$} ; %
-  \factor[left= of uas] {pr-uas} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {uas} ; %
-  \draw (uas) -- (ms_ks_uas-s) ; %
-  \node[latent, right= of mc, yshift=-4mm] (c) {$\rvct{r}_2$} ; %
-  \op[left= of c] {mc_kc_uac-c}
-    %{\tiny $\exp(\rvct{k}_s)\odot \rvct{u}_{a,s} + \rvct{m}_\sin$} 
-    {} {mc,kc} {c} ; %
-  \node[latent, right=1. of uah, yshift=-20mm] (uac) {$\rvct{u}_{2	}$} ; %
-  \factor[left= of uac] {pr-uac} {below: \tiny $\nrm{\vct{0}, \idmtx}$} {} {uac} ; %
-  \draw (uac) -- (mc_kc_uac-c) ; %
-  \node[latent, right= of s, yshift=-8mm] (a) {$\rvct{z}_a$} ; %
-  \op[left= of a] {s-c_a} {} {s,c} {a} ; %
-  \node[latent, below=0.5 of c] (ub) {$\rvct{u}_b$} ; %
-  \factor[left=of ub] {pr-ub} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {ub} ; %
-  \node[latent, right= of ub] (b) {$\rvct{z}_b$} ; %
-  \op[left= of b] {ub-b} {} {ub} {b} ; %
-  \node[latent, right=of a, yshift=-10mm] (p) {$\rvct{p}$} ; %
-  \op[left=of p] {a_b-p} {} {a,b} {p} ; %
-  \node[latent] (un) at (b-|p) {$\rvct{u}_x$} ; %
-  \factor[left= of un] {pr-un} {below: \tiny $\nrm{\vct{0},\idmtx}$} {} {un} ; %
-  \node[obs, right=of un] (x) {$\rvct{x}$} ; %
-  \node[latent, below=0.3 of ub] (uc) {$\rvct{u}_c$} ; %
-%  \node[latent, right= of uc] (cxy) {$\rvct{z}_{c,:2}$} ; %
-  \node[latent, right= of uc] (cxy) {$\rvct{z}_{c}$} ; %
-  \op[left= of cxy] {uc-cxy} {} {uc} {cxy} ; %
-  \factor[left=of uc] {pr-uc} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {uc} ; % 
-%  \node[latent, below=0.3 of cxy] (cz) {$\rvar{z}_{c,2}$} ; %
-%  \op[left= of cz] {uc-cz} {} {uc} {cz} ; %
-  \node[latent, right= of cxy, yshift=-0.15] (cm) {$\rvct{C}$} ; %
-%  \op[left= of cm] {cxy_cz-cm} {} {cxy,cz} {cm} ;
-  \op[left= of cm] {cxy-cm} {} {cxy} {cm}
-  \op[left=of x] {un_cm_p-x} {} {un,cm,p} {x} ; %
-\end{tikzpicture}
+\includetikz{human-pose-generative-model}
 \caption[Human pose generative model factor graph.]{Factor graph of human pose differentiable generative model. The operations corresponding to the deterministic nodes ($\diamond$) in the graph are described in Algorithm \ref{alg:pose-model-generators}.}
 \label{fig:pose-dgm-factor-graph}
 \end{figure}

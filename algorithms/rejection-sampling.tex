@@ -2,17 +2,17 @@
 \small
     \Require
     $\utgtdens$ : unnormalised target density,~
-    $q$ : normalised proposal density, \\
+    $q$ : normalised density of proposal distribution $Q$,~
     $M$ : constant such that $\utgtdens(\vct{x}) \leq Mq(\vct{x}) ~\forall \vct{x} \in \set{X}$.
     \Ensure\raggedright
-    Independent sample from target density $\tgtdens(\vct{x}) = \frac{1}{Z} \utgtdens(\vct{x})$.
+    Independent sample from distribution with density $\tgtdens(\vct{x}) = \frac{1}{Z} \utgtdens(\vct{x})$.
 \end{algorithmic}
 \hrule
 \small
 \begin{algorithmic}[1]
   \Repeat
-    \State $\vct{x} \sim q$ 
-    \State $h \sim \mathcal{U}(0,Mq(\vct{x}))$
+    \State $\vct{x} \sim q(\cdot)$ 
+    \State $h \sim \mathcal{U}(\cdot \gvn 0,Mq(\vct{x}))$
   \Until{ $h \leq \utgtdens(\vct{x})$ }
   \State \Return $\vct{x}$
 \end{algorithmic}

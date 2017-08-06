@@ -1,0 +1,28 @@
+\begin{algorithmic}
+\small
+    \Require
+    $\vct{x}_n,\vct{p}_n$ : current position--momentum state pair,~
+    $\utgtdens$ : differentiable unnormalised target density,\\
+    $\delta t$ : leapfrog integrator step size
+    \Ensure\raggedright
+    $\vct{x}_{n+1}$ : next chain state with $\vct{x}_n \sim \tgtdens \implies \vct{x}_{n+1} \sim \tgtdens$.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $\vct{x}^* \gets \vct{x}_n + \frac{\delta t}{2} \mtx{M}^{-1}\vct{p}_n$
+  \State $\vct{p}^* \gets \vct{p}_n - \delta t \nabla\phi(\vct{x}^*)$
+  \For{$s \in \fset{1 \dots L-1}$}
+    \State $\vct{x}^* \gets \vct{x}^* + \delta t \mtx{L}^{-1}\mtx{M}^{-1}\vct{p}^*$
+    \State $\vct{p}^* \gets \vct{p}^* - \delta t \nabla\phi(\vct{x}^*)$
+  \EndFor
+  \State $\vct{x}^* \gets \vct{x}^* + \frac{\delta t}{2} \mtx{M}^{-1}\vct{p}^*$
+  \State $u \sim \mathcal{U}(0,1)$
+  \State $\alpha \gets \exp\lpa\phi(\vct{x}_n) + \frac{1}{2}\vct{p}_n\mtx{M}^{-1}\vct{p}_n - \phi(\vct{x}^*) - \frac{1}{2}\vct{p}^*\mtx{M}^{-1}\vct{p}^*\rpa$
+  \If{$u < \alpha$}
+    \State $\vct{x}_{n+1}, \vct{p}_{n+1} \gets \vct{x}^*, \vct{p}^*$ \Comment{Proposed move accepted}
+  \Else
+    \State $\vct{x}_{n+1}, \vct{p}_{n+1} \gets \vct{x}_{n}, -\vct{p}_n$ \Comment{Proposed move rejected}
+  \EndIf
+  \State \Return $\vct{x}_{n+1}, \vct{p}_{n+1}$
+\end{algorithmic}
