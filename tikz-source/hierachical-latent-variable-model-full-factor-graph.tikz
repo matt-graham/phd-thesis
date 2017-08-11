@@ -1,0 +1,10 @@
+\begin{tikzpicture}
+  \node[latent] (x) {$\rvct{x}$} ; %
+  \node[latent, right=1.5 of x] (zn) {$\rvct{z}^{(n)}$} ; %
+  \node[obs, right=1 of zn] (yn) {$\rvct{y}^{(n)}$} ; %
+  \factor[left=of x] {pr-x} {below:$\pden{\rvct{x}}$} {} {x} ; %
+  \factor[left=of zn] {x-zn} {below:$\pden{\rvct{z}|\rvct{x}}$} {x} {zn} ; %
+  \factor[left=of yn] {x_zn-yn} {below:$\pden{\rvct{y}|\rvct{z},\rvct{x}}$} {zn} {yn} ; %
+  \draw[-] (x) to[bend left=45] (x_zn-yn);
+  \plate {data} {(zn)(yn)(x-zn)(x_zn-yn)(x-zn-caption)(x_zn-yn-caption)} {$n \in \fset{1 \,...\, N}$} ; %
+\end{tikzpicture}

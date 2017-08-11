@@ -1,18 +1,27 @@
-\chapter{\mbox{Probabilistic modelling}}\label{ch:probabilistic-modelling}
+\chapter{Introduction}\label{ch:probabilistic-modelling}
 
 %\marginpar{We are hardly able to get through one waking hour without facing some situation (e.g. will it rain or won’t it?) where we do not have enough information to permit deductive reasoning \\--- Edward Jaynes}
 \marginpar{The actual science of logic is conversant at present only with things either certain, impossible, or entirely doubtful, none of which (fortunately) we have to reason on. Therefore the true logic for this world is the calculus of probabilities\\---James Clerk Maxwell}
-Inference is the process of drawing conclusions from evidence. Much of our lives are spent making inferences about the world given our observations of it; in particular inference is a central aspect of the scientific process. Although deductive logic offers a framework for inferring conclusions from absolute statements of truth, it does not apply to the more typical real-world setting where the information we receive is subject to uncertainty. 
+Inference is the process of drawing conclusions from evidence. 
+%Much of our lives are spent making inferences about the world given our observations of it; in particular inference is a central aspect of the scientific process. 
+While deductive logic offers a framework for inferring conclusions from absolute statements of truth, it does not apply to the more typical real-world setting where the information we receive is uncertain. 
 %\marginpar{Probability theory is nothing but common sense reduced to calculation. \\--- Pierre-Simon Laplace}%
-
-To make inferences under conditions of uncertainty, we must instead turn to probability theory. Probabilities offer a consistent framework for quantifying the uncertainty in our beliefs and making inferences given these beliefs. The output of the inference process is itself probabilistic, reflecting that the conclusions we make given uncertain information will themselves be subject to uncertainty. 
+To make inferences under conditions of uncertainty, we must instead turn to probability theory, which both offers a consistent framework for quantifying our beliefs and making inferences given these beliefs. %The output of the inference process is itself probabilistic, reflecting that the conclusions we make given uncertain information will themselves be subject to uncertainty. 
 
 %Various axiomatic bases have been proposed for deriving the laws of probability. Of particular note are the Kolmogorov axioms \citep{} which are the basis for the modern measure-theoretic formulation of probability theory. Cox's theorem \citep{} and related work by Polya \citep{} and Jaynes \citep{}, offers an alternative axiomatic basis for deriving probability theory from a minimal set of `common-sense' postulates, with resulting system of \emph{plausible reasoning} seen as natural extension of formal deductive logic under conditions of uncertainty. There has been much philosophical debate over the interpretation of probabilties
 
 %\marginpar{Probability theory is nothing but common sense reduced to calculation. \\--- Pierre-Simon Laplace}
-The topic of this thesis will be methods for performing approximate inference in large complex probabilistic models, with we in particular concentrating on the class of Markov chain Monte Carlo methods which we will introduce in the following chapter. In this chapter we will discuss the basic concepts of probabilistic modelling which will underpin the inference methods discussed in later chapters. 
+The key computational task in probabilistic inference is computing integrals with respect to probability distributions on the variables in a proposed model. Typically these integrals will not have analytic solutions and the large number of variables being integrated over mean numerical quadrature methods are impractically costly. In these cases we must resort to approximate methods which tradeoff an introduction of error for an increase in computational tractability. \ac{MCMC} methods are a very generally applicable class of approximate inference techniques which estimate the integrals of interest by computing averages over the states of a Markov chain. 
 
-In particular we will review some of the basic concepts of the measure-theoretic description of probability theory as some of the later results in the thesis are most clearly described within this framework which may be less familiar to some readers. We will also introduce graphical models as a compact way of visualising structure in probabilistic models and computation graphs as analagous tool for visualising the structure of functions. Finally we will give a concrete definition of the inference tasks that the methods presented in the rest of this thesis are aimed at computing approximate solutions to and motivate why such approximate computational methods are needed.
+The topic of this thesis is the development of new \ac{MCMC} methods. In particular we introduce several novel methods which exploit reparameterisations and augmentations of the state of a Markov chain to variously improve upon the computational efficiency, ease of use and degree of approximation error of existing approaches.
+
+%and in some cases allow inference in models were existing methods cannot be applied. 
+
+In this chapter we discuss the basic concepts of probabilistic modelling which underpin the inference methods discussed in later chapters. In particular we review the terminology and basic concepts of the measure-theoretic description of probability as some of the later results in the thesis are most clearly described within this framework. We also introduce graphical models as a compact way of visualising structure in probabilistic models. Finally we conclude with a discussion of the specific inference problems that the methods presented in the rest of this thesis are intended to help tackle.
+
+%aimed at computing approximate solutions to.
+
+%The topic of this thesis is methods for performing approximate inference in probabilistic models with challenging, with we in particular concentrating on the class of Markov chain Monte Carlo methods which we will introduce in the following chapter. In this chapter we will discuss the basic concepts of probabilistic modelling which will underpin the inference methods discussed in later chapters. 
 
 %We will here largely ignore philosophical disucssions of interpretations of probabilities, and instead concentrate on the computational aspects of performing probabilistic inference.
 
@@ -42,7 +51,9 @@ Kolmogorov's axioms:
 %\marginpar{Kolmogorov's axioms\\1. The probability of an event is real and non-negative. \\2. The probability of the sample space is 1. \\3. The probability of any countable set of mutually exclusive events is equal to the sum of the individual event probabilties.}
 Given this definition of a probability space, Kolmogorov's axioms \citep{kolmogorov1950foundations} can be used to derive a measure-theoretic formulation of probability theory. The probability of an event $\set{E} \in \sset{E}$ is defined as its measure $\probability(\set{E})$. Two events $\set{A},\set{B} \in \sset{E}$ are \emph{independent} if $\probability(\set{A}\cap\set{B}) = \probability(\set{A})\probability(\set{B})$.
 
-A measure-theoretic approach has the advantage of providing a unified treatment for describing probabilities on both finite and infinite sample spaces. Although alternative derivations of the laws of probability from different premises such as Cox's theorem \citep{cox1946probability,cox1963algebra} have been proposed, modern extensions of this work result in a calculus of probabilities that is equivalent to Kolmogorov's \citep{terenin2015cox}, with the differences mainly being in the philosophical interpretations of probabilities.
+The key advantage of the measure-theoretic approach to probability is that it provides a consistent definition of the probability of an event in any space we can define a measure on. This allows a unified treatment of the common cases of probability distributions of discrete and continuous random variables but also makes it possible to consider distributions on more general spaces. In Chapter \ref{ch:differentiable-generative-models} we will consider problems which involve distributions on implicitly-defined manifolds where this generality will be key to understanding the proposed methods.
+
+% A measure-theoretic approach has the advantage of providing a unified treatment for describing probabilities on both finite and infinite sample spaces. Although alternative derivations of the laws of probability from different premises such as Cox's theorem \citep{cox1946probability,cox1963algebra} have been proposed, modern extensions of this work result in a calculus of probabilities that is equivalent to Kolmogorov's \citep{terenin2015cox}, with the differences mainly being in the philosophical interpretations of probabilities.
 
 \subsection{Random variables}\label{subsec:random-variables}
 
@@ -50,7 +61,7 @@ A measure-theoretic approach has the advantage of providing a unified treatment 
 When modelling real-world processes, rather than considering events as subsets of an abstract sample space, it is usually more helpful to consider \emph{random variables} which represent quantities in the model of interest. A random variable $\rvar{x} : \set{S} \to \set{X}$ is defined as a measurable function from the sample space to a measurable space $(\set{X},\,\sset{F})$. 
 
 \marginpar{The Borel $\sigma$-algebra $\borel(\reals)$ is the smallest $\sigma$-algebra on $\reals$ which contains all open real intervals.}
-Often $\set{X}$ is the reals, $\reals$, and $\sset{F}$ is the Borel $\sigma$-algebra on the reals, $\borel(\reals)$, in which case we will refer to a \emph{real random variable}. It is also common to consider cases where $\set{X}$ is a real vector space, $\reals^D$, and $\sset{F} = \borel(\reals^D)$ - in this case we will term the resulting random variable a \emph{real random vector} and use the notation $\rvct{x} : \set{S} \to \set{X}$. A final common special case is when $\set{X}$ is countable and $\sset{F}$ is the power set $\powerset(\set{X})$ in which case we will refer to $\rvar{x}$ as a \emph{discrete random variable}. As we will generally be concerned with real-valued random variables (and vectors) in this thesis, when it is unambiguous to do so we will drop the `real' qualifier and simply refer to \emph{random variables} and \emph{random vectors}.
+Often $\set{X}$ is the reals, $\reals$, and $\sset{F}$ is the Borel $\sigma$-algebra on the reals, $\borel(\reals)$, in which case we refer to a \emph{real random variable}. It is also common to consider cases where $\set{X}$ is a real vector space, $\reals^D$, and $\sset{F} = \borel(\reals^D)$ - in this case refer to a \emph{real random vector} and use the notation $\rvct{x} : \set{S} \to \set{X}$. A final specific case is when $\set{X}$ is countable and $\sset{F}$ is the power set $\powerset(\set{X})$ in which case we refer to $\rvar{x}$ as a \emph{discrete random variable}. As we are most often concerned with real-valued random variables and vectors in this thesis, when it is unambiguous to do so we drop the `real' qualifier and simply refer to \emph{random variables} and \emph{random vectors}.
 
 \marginpar{If $(\set{X},\,\sset{F})$ and $(\set{Y},\,\sset{G})$ are two measurable spaces, $\mu$ a measure on these spaces and $f : \set{X} \to \set{Y}$ a measurable function, the pushforward measure $\mu_f$ satisfies $\mu_f(\set{A}) = \mu \circ f^{-1}(\set{A})$ $\forall \set{A} \in \sset{G}$.}
 Due to the definition of a random variable as a measurable function, we can define a pushforward measure on a random variable $\rvar{x}$
@@ -60,7 +71,7 @@ Due to the definition of a random variable as a measurable function, we can defi
   = \probability\lpa \lbr s \in \set{S}: \rvar{x}(s) \in A \rbr \rpa
   \quad \forall \set{A} \in \sset{F}.
 \end{equation}
-The measure $\prob{\rvar{x}}$ specifies that the probability of the event that the random variable $\rvar{x}$ takes a value in a measurable set $\set{A} \in \sset{F}$ is $\prob{\rvar{x}}(\set{A})$. We will often describe $\prob{\rvar{x}}$ as the \emph{distribution} of $\rvar{x}$.
+The measure $\prob{\rvar{x}}$ specifies that the probability of the event that the random variable $\rvar{x}$ takes a value in a measurable set $\set{A} \in \sset{F}$ is $\prob{\rvar{x}}(\set{A})$. We typically describe $\prob{\rvar{x}}$ as the \emph{distribution} of $\rvar{x}$.
 
 %Random variables will play a central role in the explanation of the work in this thesis. We will consider a random variable to represent a quantity we are uncertain about the value of; that uncertainty may be considered to arise from incomplete knowledge of the quantity or it having a fundamentally stochastic nature, this is mainly an issue of interpretation which we will largely sidestep.
 
@@ -86,7 +97,7 @@ In this context $\prob{\rvar{x}}$ and $\prob{\rvar{y}}$ are referred to as \emph
   \quad \forall \set{A} \in \sset{F},\,\set{B} \in \sset{G}.
 \end{equation}
 \marginpar{In Kolmogorov's probability theory, \eqref{eq:conditional-probability} is given as an additional definition distinct from the basic axioms. In alternatives such as the work of Cox \citep{cox1946probability,cox1963algebra} and de Finetti \citep{de1992foresight}, conditional probabilities are instead viewed as a primitive.}
-A particulary key concept for inference is the definition of \emph{conditional probability}. The conditional probability of an event $\set{A} \in \sset{E}$ occuring given another event $\set{B} \in \sset{E}$ has occured is denoted $\probability(\set{A} \gvn \set{B})$ and we have the definition
+A particularly key concept for inference is the definition of \emph{conditional probability}. The conditional probability of an event $\set{A} \in \sset{E}$ occuring given another event $\set{B} \in \sset{E}$ has occured is denoted $\probability(\set{A} \gvn \set{B})$ and we have the definition
 \begin{equation}\label{eq:conditional-probability}
   \probability(\set{A} \gvn \set{B}) =
   \frac{\probability(\set{A} \cap \set{B})}{\probability(\set{B})}
@@ -115,11 +126,11 @@ This decomposition of a joint probability into a product of a conditional and ma
 \end{equation}
 which will be of key importance in the later discussion of inference.
 
-The definition in \eqref{eq:joint-probability-rvar} of the joint probability of a pair of random variables can be extended to arbitarily large collections of random variables. Similarly conditional probabilities can be defined for collections of multiple jointly dependent random variables, with the product rule given in \eqref{eq:product-rule} generalising to a combinatorial number of possible factorisations of the joint probability. Graphical models offer a convenient way of representing the dependencies between large collections of random variables and any resulting factorisation structure in their joint probability, and are discussed in Appendix \ref{app:graphical-models}.
+The definition in \eqref{eq:joint-probability-rvar} of the joint probability of a pair of random variables can be extended to arbitarily large collections of random variables. Similarly conditional probabilities can be defined for collections of multiple jointly dependent random variables, with the product rule given in \eqref{eq:product-rule} generalising to a combinatorial number of possible factorisations of the joint probability. Graphical models offer a convenient way of representing the dependencies between large collections of random variables and any resulting factorisation structure in their joint probability, and are discussed in Section \ref{sec:graphical-models}.
 
 \subsection{Probability densities}\label{subsec:probability-densities}
 
-So far we have ignored how the probability measure $\probability$ is defined and by consequence the probability (distribution) of a random variable. 
+So far we have not specified how the probability measure $\probability$ is defined and by consequence the probability (distribution) of a random variable. 
 \marginpar{A measure on $\set{X}$ is $\sigma$-finite if $\set{X}$ is a countable union of finite measure sets.}
 The Radon--Nikodym theorem guarantees that for a pair of $\sigma-$finite measures $\mu$ and $\nu$ on a measurable space $(\set{X},\,\sset{F})$ where $\nu$ is absolutely continuous with respect to $\mu$,  then there is a unique (up to $\mu$-null sets) measurable function $f : \set{X} \to [0,\infty)$ termed a \emph{density} such that
 \begin{equation}\label{eq:radon-nikodym}
@@ -128,7 +139,7 @@ The Radon--Nikodym theorem guarantees that for a pair of $\sigma-$finite measure
   \quad \forall \set{A} \in \sset{F}.
 \end{equation}
 \marginpar{If $\mu$ and $\nu$ are measures on a measurable space $(\set{X},\,\sset{F})$ then $\nu$ has absolute continuity \acs{wrt} to $\mu$ if $~\forall \set{A} \in \sset{F}$, \mbox{$\mu(\set{A})=0 \Rightarrow \nu(\set{A})=0$.}}
-The two Lebesgue integral notations above are equivalent and we will use them interchangeably. The density function $f$ is also termed the \emph{Radon-Nikodym derivative} of $\nu$ with respect to $\mu$, denoted $\td{\nu}{\mu}$. Density functions therefore represent a convenient way to define a probability distribution with respect to a reference measure we will term the \emph{base measure}. The key requirement defining what is an appropriate base measure to use it that the probability measure of interest is absolutely continuous with respect to the base measure.
+The two Lebesgue integral notations above are equivalent and we will use them interchangeably. The density function $f$ is also termed the \emph{Radon-Nikodym derivative} of $\nu$ with respect to $\mu$, denoted $\td{\nu}{\mu}$. Density functions therefore represent a convenient way to define a probability distribution with respect to a reference measure we will term the \emph{base measure}. The key requirement defining what is an appropriate base measure to use it that the probability measure of interest is absolutely continuous with respect to it.
 
 It can also be shown that if $f = \td{\nu}{\mu}$ and  $g$ is a  measurable function
 \begin{equation}\label{eq:integral-wrt-density}
@@ -136,8 +147,9 @@ It can also be shown that if $f = \td{\nu}{\mu}$ and  $g$ is a  measurable funct
 \end{equation}
 which we will use later when discussing calculation of expectations.
 
-%\marginpar{The Lebesgue measure $\lebm{1}(\set{E})$ of a subset $\set{E} \subseteq \reals$ is $\lebm{1}(\set{E}) = \inf\lbrace \sum_{i=1}^\infty (b_i - a_i) :$ $E \subseteq \cup_{i=1}^\infty [a_i,\,b_i],$ $a_i,b_i \in \reals, a_i \leq b_i ~\forall i\in\naturals\rbrace$.}
-For real random variables, an appropriate base measure is the \emph{Lebesgue measure}, $\lebm{1}$, on $\reals$. The probability $\prob{\rvar{x}}$ of a real random variable $\rvar{x}$ can then be defined via a \emph{probability density} $\pden{\rvar{x}} : \reals \to [0,\,\infty)$ by
+\marginpar{The Lebesgue measure assigns a measure to subsets of a Euclidean space, and for $\reals$, $\reals^2$ and $\reals^3$ formalises the intuitive concepts of length, area and volume of subsets respectively.}
+%$\lebm{1}(\set{E})$ of a subset $\set{E} \subseteq \reals$ is $\lebm{1}(\set{E}) = \inf\lbrace \sum_{i=1}^\infty (b_i - a_i) :$ $E \subseteq \cup_{i=1}^\infty [a_i,\,b_i],$ $a_i,b_i \in \reals, a_i \leq b_i ~\forall i\in\naturals\rbrace$.}
+Real random variables will typically have a distribution $\prob{\rvar{x}}$ defined by a probability density $\pden{\rvar{x}} : \reals \to [0,\,\infty)$ with respect to the \emph{Lebesgue measure}, $\lebm{1}$, on $\reals$,
 \begin{equation}\label{eq:real-rv-prob-dens}
     \prob{\rvar{x}}(\set{A})
     = \int_{\set{A}} \pden{\rvar{x}}(x) \,\lebm{1}(\dr x)
@@ -145,7 +157,7 @@ For real random variables, an appropriate base measure is the \emph{Lebesgue mea
     \qquad
     \forall \set{A} \in \borel(\reals).
 \end{equation}
-Analagously for a random vector $\rvct{x}$ with density $\pden{\rvct{x}} : \reals^D \to [0,\,\infty)$ with respect to the $D$-dimensional Lebesgue measure $\lebm{D}$
+Analagously for a random vector $\rvct{x}$ with density $\pden{\rvct{x}} : \reals^D \to [0,\,\infty)$ with respect to the $D$-dimensional Lebesgue measure $\lebm{D}$ we have that
 \begin{equation}\label{eq:vector-prob-dens}
     \prob{\rvct{x}}(\set{A})
     = \int_{\set{A}} \pden{\rvct{x}}(\vct{x}) \,\lebm{D}(\dr \vct{x})
@@ -155,9 +167,9 @@ Analagously for a random vector $\rvct{x}$ with density $\pden{\rvct{x}} : \real
 \end{equation}
 %The normalisation requirement for the probability measure $\probability_{\rvar{x}}$ means that $\int_{\set{X}}\pden{\rvar{x}}\,\dr\lebm{1} = 1$. 
 The notation in the second equalities in \eqref{eq:real-rv-prob-dens} and \eqref{eq:vector-prob-dens} uses a convention that will be used throughout this thesis that integrals without an explicit measure are with respect to the Lebesgue measure. 
-\marginpar{The counting measure $\countm$ is defined as $\countm(\set{A}) = |\set{A}|$ for all finite $\set{A}$ and $\countm(\set{A}) = +\infty$ otherwise.}
 
-For discrete random variables, an appropriate base measure is instead the \emph{counting measure}, $\countm$. The probability of a discrete random variable is then defined via a probability density $\pden{\rvar{x}} : \set{X} \to [0,\,1]$ by
+\marginpar{The counting measure $\countm$ is defined as $\countm(\set{A}) = |\set{A}|$ for all finite $\set{A}$ and $\countm(\set{A}) = +\infty$ otherwise.}
+The probability distribution of a discrete random variable can be defined via probability density $\pden{\rvar{x}} : \set{X} \to [0,\,1]$ with respect to the \emph{counting measure} $\countm$,
 \begin{equation}
     \prob{\rvar{x}}(\set{A})
     = \int_{\set{A}} \pden{\rvar{x}}(x) \,\countm(\dr x)
@@ -165,7 +177,7 @@ For discrete random variables, an appropriate base measure is instead the \emph{
     \qquad
     \forall \set{A} \in \powerset(\set{X}).
 \end{equation}
-The co-domain of a probability density $\pden{\rvar{x}}$ for a discrete random variable is restricted to $[0,\,1]$ due to the non-negativity and normalisation requirements for the probability measure $\prob{\rvar{x}}$, with $\sum_{x\in\set{X}} \pden{\rvar{x}}(x) = 1$. Commonly for the case of a discrete random variable, the density $\pden{\rvar{x}}$ is instead referred to as a \emph{probability mass function}, with density reserved for real random variables. We will however use \emph{probability density} in both cases in keeping with the earlier definition of a density with respect to a base measure, this avoiding difficulties when definining joint probabilities on a mixture of real and discrete random variables.
+The co-domain of a probability density $\pden{\rvar{x}}$ for a discrete random variable is restricted to $[0,\,1]$ due to the non-negativity and normalisation requirements for the probability measure $\prob{\rvar{x}}$, with $\sum_{x\in\set{X}} \pden{\rvar{x}}(x) = 1$. Commonly for the case of a discrete random variable, the density $\pden{\rvar{x}}$ is instead referred to as a \emph{probability mass function}, with density reserved for real random variables. We will however use \emph{probability density} in both cases in keeping with the earlier definition of a density, this avoiding difficulties with terminology and notation when definining joint probabilities on a mixture of real and discrete random variables.
 
 \marginpar{If $(\set{X}_1,\,\sset{F}_1,\,\mu_1)$ and $(\set{X}_2,\,\sset{F}_2,\,\mu_2)$ are two measure spaces, the product measure $\mu_1 \times \mu_2$ on a measurable space $(\set{X}_1\times\set{X}_2,\,\sset{F}_1\otimes\sset{F}_2)$ is defined as satisfying $(\mu_1\times\mu_2)(\set{A}_1\times\set{A}_2) = \mu_1(\set{A}_1)\mu_2(\set{A}_2)$ $\forall \set{A}_1\in\sset{F}_1,\,\set{A}_2\in\sset{F}_2$.}
 The joint probability $\prob{\rvar{x},\rvar{y}}$ of a pair of random variables $\rvar{x}$ and $\rvar{y}$ with co-domains the measurable spaces $(\set{X},\,\sset{F})$ and $(\set{Y},\,\sset{G})$ respectively, can be defined via a joint probability density $\pden{\rvar{x},\rvar{y}} : \set{X} \times \set{Y} \to [0,\infty)$ with respect to a product measure $\mu_{\rvar{x},\rvar{y}} = \mu_{\rvar{x}} \times \mu_{\rvar{y}}$ by
@@ -194,13 +206,13 @@ The two measures $\mu_{\rvar{x}}$ and $\mu_{\rvar{y}}$ can differ for example $\
 
 When dealing with random variables, we will often only specify the co-domain of the random variable(s) and a (joint) probability density, with the base measure being implicitly defined as the Lebesgue measure for real random variables (or vectors), counting measure for discrete random variables and an appropriate product measure for a mix of random variables. Similarly we will usually neglect to explicitly define the probability space $(\set{S},\,\sset{E},\,\probability)$ which the random variable(s) map from. In this case we will typically use the loose notation $\rvar{x} \in \set{X}$ to mean a random variable $\rvar{x}$ with co-domain $\set{X}$. 
 
-This less explicit but more succinct probability notation in terms of random variables and densities is common in the machine learning and computational statitistics literature and will generally be preferred to improve readability. 
+%This less explicit but more succinct probability notation in terms of random variables and densities is common in the machine learning and computational statitistics literature and will generally be preferred to improve readability. 
 %The underlying measure-theoretic basis of these concepts will however be important for some of the upcoming definitions in this chapter and some of the derivations later in the thesis. 
 Tables \ref{tab:standard-distributions-discrete}, \ref{tab:standard-distributions-unbounded} and \ref{tab:standard-distributions-bounded} in Appendix \ref{app:distribution-definitions} give definitions of the densities and shorthand notation for some common parametric probability distributions that we use in this thesis.
 
 \subsection{Transforms of random variables}\label{subsec:change-of-variables}
 
-A key concept we will repeatedly make use of in this thesis is defining random variables via transformations of other random variables. Let $\rvar{x}$ be a random variable with co-domain the measurable space $(\set{X},\,\sset{F})$. Further let $(\set{Y},\,\sset{G})$ be a second measurable space and $\phi : \set{X} \to \set{Y}$ a measurable function between the two spaces. If we define $\rvar{y} = \phi \circ \rvar{x}$ then analagously to our original definition of $\prob{\rvar{x}}$ as the pushforward measure of $\probability$ under the measurable function defining $\rvar{x}$, we can define $\prob{\rvar{y}}$ in terms of $\prob{\rvar{x}}$ as
+A key concept we make use of in this thesis is defining transformations of random variables. Let $\rvar{x}$ be a random variable with co-domain the measurable space $(\set{X},\,\sset{F})$. Further let $(\set{Y},\,\sset{G})$ be a second measurable space and $\phi : \set{X} \to \set{Y}$ a measurable function between the two spaces. If we define $\rvar{y} = \phi \circ \rvar{x}$ then analagously to our original definition of $\prob{\rvar{x}}$ as the pushforward measure of $\probability$ under the measurable function defining $\rvar{x}$, we can define $\prob{\rvar{y}}$ in terms of $\prob{\rvar{x}}$ as
 \begin{equation}\label{eq:change-of-variables-probability}
   \prob{\rvar{y}}(\set{A}) = 
   \prob{\rvar{x}} \circ \phi^{-1}(\set{A}) =
@@ -303,7 +315,7 @@ For a pair of random variables $\rvar{x}$ and $\rvar{y}$ their covariance is def
 
 \subsection{Conditional expectations and densities}
 
-A related concept, and one which will be key in our discussion of inference, is conditional expectation. Let $(\set{S},\,\sset{E},\,\probability)$ be a probability space, $(\set{X},\,\sset{F})$ and $(\set{Y},\,\sset{G})$ two measurable spaces and $\rvar{x} : \set{S} \to \set{X}$ and $\rvar{y} : \set{S} \to \set{Y}$ two random variables. Then the \emph{conditional expectation of $\rvar{x}$ given $\rvar{y}$}, is defined as a measurable function $\expc{\rvar{x}\gvn\rvar{y}} : \set{Y} \to \set{X}$ satisfying
+A related concept, and one which will be key to the discussion of inference, is conditional expectation. Let $(\set{S},\,\sset{E},\,\probability)$ be a probability space, $(\set{X},\,\sset{F})$ and $(\set{Y},\,\sset{G})$ two measurable spaces and $\rvar{x} : \set{S} \to \set{X}$ and $\rvar{y} : \set{S} \to \set{Y}$ two random variables. Then the \emph{conditional expectation of $\rvar{x}$ given $\rvar{y}$}, is defined as a measurable function $\expc{\rvar{x}\gvn\rvar{y}} : \set{Y} \to \set{X}$ satisfying
 \begin{equation}\label{eq:conditional-expectation-property}
   \int_{\rvar{y}^{-1}(\set{B})} \rvar{x}(s) \,\probability(\dr s) =
   \int_{\set{B}} \expc{\rvar{x}\gvn\rvar{y}}(y) \,\prob{\rvar{y}}(\dr y)
@@ -399,7 +411,7 @@ When working with probabilistic models involving large numbers of random variabl
 %  \pden{\rvar{x}|\rvar{y},\rvar{z}}(x \gvn y,z).
 %\end{equation}
 
-Several different graphical formalisms for representing dependency structure in probabilistic models have been proposed, with \emph{directed graphical models} \citep{pearl1988probabilistic} (also known as \emph{Bayesian networks}) and \emph{undirected graphical models} \citep{kindermann1980markov} (also known as \emph{Markov random fields}) both common in practice and each offering a more natural representation for certain model classes. In this thesis we will use \emph{factor graphs} \citep{frey1997factor,frey2002extending} which combine the representational abilities of both directed and undirected graphical models while also offering a rich framework for representing finer-grained information about model structure.
+Several different graphical formalisms for representing dependency structure in probabilistic models have been proposed, with \emph{directed graphical models} \citep{pearl1988probabilistic} (also known as \emph{Bayesian networks}) and \emph{undirected graphical models} \citep{kindermann1980markov} (also known as \emph{Markov random fields}) both common in practice and each offering a more natural representation for certain model classes. In this thesis we will use \emph{factor graphs} \citep{frey1997factor,frey2002extending} which combine the representational abilities of both directed and undirected graphical models while also offering a richer framework for representing fine-grained information about model structure.
 
 \begin{figure}[t]
 \centering
@@ -424,7 +436,7 @@ Several different graphical formalisms for representing dependency structure in 
 \label{fig:example-factor-graphs}
 \end{figure}
 
-Factor graphs are bipartite graphs consists of two distinct types of nodes: \emph{variable nodes}, displayed as labelled circles and representing individual (potentially vector or matrix) random variables in a probabilistic model, and \emph{factor nodes}, displayed as filled squares and representing individual factors in the joint density across the random variables in the model. Edges between nodes in a factor graph are always between nodes of disparate types i.e. between factor and variable nodes, but never between factor and factor or variable and variable nodes.
+Factor graphs are bipartite graphs consisting of two node types: \emph{variable nodes}, displayed as labelled circles and representing individual (potentially vector or matrix) random variables in a probabilistic model, and \emph{factor nodes}, displayed as filled squares and representing individual factors in the joint density across the random variables in the model. Edges between nodes in a factor graph are always between nodes of disparate types i.e. between factor and variable nodes, but never between factor and factor or variable and variable nodes.
 
 %\footnote{In the original extension of undirected factor graphs \citep{frey1997factor} to include directivity \citep{frey2002extending}, it was proposed to allow multiple directed factors to connect via directed edges to the same variable node, representing multiple factors in a conditional density on that varaiable. This generalisation introduces extra normalisation requirements and looses the interpretation of a directed factor as directly representing a conditional density, and so we will here only use directed factor graphs in which there is at most one directed edge connecting from a factor to a node.}
 Factors may be either directed or undirected. Undirected factors, denoted by factor nodes in which all edges connecting to variable nodes are undirected, correspond to a factor in the joint density which depends on all of the variables with nodes connected to the factor, but without any requirement that the factor corresponds to a conditional or marginal probability density. 
@@ -477,15 +489,15 @@ with $Z$ a normalising constant such that the density integrates to one.
 
 Figure \ref{fig:hier-lin-regression-factor-graph} shows examples of some additional useful factor graph notation we will use in this thesis. We use as an example a factor graph corresponding to a hierarchical linear regression model which will be discussed in Chapter \ref{ch:continuous-tempering}. % The exact meaning of the model and its various factors are unimportant to the discussion of notation here so will be skipped for now. %We give some brief details now so the subsequent discussion of the notation used in Figure \ref{fig:hier-lin-regression-factor-graph} makes sense. The model is for a data set of $N$ real valued output values $\lbr y^{(i)} \rbr_{i=1}^N$ which are assumed to be \ac{iid} given $N$ corresponding input value pairs $\lbr (\vct{x}^{(i)},\,c^{(i)}) \rbr_{i=1}^N$ where each $\vct{x}^{(i)} \in \reals^D$ is a $D$-dimensional vector of real valued regressors, and each $c^{(i)} \in \fset{1\dots K}$ is an integer representation of a categorical regressor. A linear input-output relationship is assumed with 
 
-It will often be useful to be able to explicitly represent deterministic functions applied to the random variables in a factor graph. For this purpose we introduce an additional node type denoted by an unfilled diamond (\tikzset{external/export next=false}\tikz{\node[op] {};}). The semantics of this node type are very similar to standard directed factor nodes. Variables acting as inputs to the function are connected to the node by undirected edges and the variable corresponding to the function output indicated by a directed edge from the node to the relevant variable. Like standard factor nodes, the deterministic factor nodes only ever connect to variable nodes. The operations performed by the function on the inputs will usually be included as a label adjacent to the node as illustrated by the example in Figure \ref{fig:hier-lin-regression-factor-graph}. %A deterministic factor node can informally\footnote{A Dirac delta cannot strictly define a density as it is not the Radon--Nikodyn derivative of an absolutely continuous measure, however it can be informally treated as the density of a singular Dirac measure $\int f(x) \,\dr\delta(x) \simeq \int f(x) \delta(x) \,\dr x$.} be considered equivalent to a directed factor node with a degenerate Dirac delta conditional density on the output variable which concentrates all the probability mass at the output of the function applied to the inputs variables. %The previously discussed rules for evaluating conditional independency properties in factor graphs can be directly extended to account for the new node type by just considering it as a directed factor node.
+It will often be useful to be able to explicitly represent deterministic functions applied to the random variables in a factor graph. For this purpose we introduce an additional node type denoted by an unfilled diamond (\tikzset{external/export next=false}\tikz{\node[op] {};}). The semantics of this node type are similar to standard directed factor nodes. Variables acting as inputs to the function are connected to the node by undirected edges and the variable corresponding to the function output indicated by a directed edge from the node to the relevant variable. Like standard factor nodes, the deterministic factor nodes only ever connect to variable nodes. The operations performed by the function on the inputs will usually be included as a label adjacent to the node as illustrated by the example in Figure \ref{fig:hier-lin-regression-factor-graph}. A deterministic factor node can informally\footnote{A Dirac delta cannot strictly define a density as it is not the Radon--Nikodyn derivative of an absolutely continuous measure, however it can be informally treated as the density of a singular Dirac measure $\int f(x) \,\dr\delta(x) \simeq \int f(x) \delta(x) \,\dr x$.} be considered equivalent to a directed factor node with a degenerate Dirac delta conditional density on the output variable which concentrates all the probability mass at the output of the function applied to the inputs variables. %The previously discussed rules for evaluating conditional independency properties in factor graphs can be directly extended to account for the new node type by just considering it as a directed factor node.
 
-The deterministic node notation allows generative models consisting of the complex compositions deterministic operations and probabilistic sampling operations to be represented in a unified framework. Sub-graphs of a directed factor graph consisting entirely of determinstic nodes can be viewed as \emph{computation graphs}, a graphical formalism typically used in numerical computing frameworks to support efficient \emph{automatic differentiation} algorithms. We make extensive use of automatic differentation through software frameworks such as \emph{Theano} \citep{theano2016theano} in the numerical experiments discussed later in this thesis and also appeal to some theoretical results on automatic differentiation when discussing the computational cost of some of novel algorithms we introduce in later chapters. In Appendix \ref{ch:computation-graphs} we provide a short review of the basic concepts of computation graphs and automatic differentation and a discussion of their links to directed factor graphs.
+The deterministic node notation allows generative models consisting of complex compositions of deterministic functions and probabilistic sampling operations to be represented in a unified framework. Sub-graphs of a directed factor graph consisting entirely of determinstic nodes can be viewed as \emph{computation graphs}, a graphical formalism typically used in numerical computing frameworks to support efficient \emph{automatic differentiation} algorithms. We exploit this idea in later chapters to allow propagation of derivatives through complex probabilistic models and make extensive use of automatic differentiation implementations in frameworks such as \emph{Theano} \citep{theano2016theano} in the numerical experiments discussed later in this thesis. In Appendix \ref{ch:computation-graphs} we provide a short review of the basic concepts of computation graphs and automatic differentation and a discussion of their links to directed factor graphs.
 
 In some cases constant values used in a model will be included in a factor graph as plain nodes indicated only by a label. The $\vct{x}^{(i)}$ and $c^{(i)}$ nodes in Figure \ref{fig:hier-lin-regression-factor-graph} are an example of this notation.
 
-A commonly used convention in factor graphs (and other graphical models) is \emph{plate notation} \citep{buntine1994operations}, with an example of a plate shown by the rounded rectangle bounding some of the nodes in Figure \ref{fig:hier-lin-regression-factor-graph}. Plates are used to indicate a subgraph in the model which is replicated multiple times (with the replications being indexed over a set which is typically indicated in the lower right corner of the plate as in Figure \ref{fig:hier-lin-regression-factor-graph}). The subgraph entirely contained on the plate is assumed to be replicated the relevant number of times, with any edges crossing into the plate from variable nodes outside of the plate being repeated once for each subgraph replication. Plates are commonly used to represent a model component repeated across multiple data items.
+A commonly used convention in factor graphs (and other graphical models) is \emph{plate notation} \citep{buntine1994operations}, with an example of a plate shown by the rounded rectangle bounding some of the nodes in Figure \ref{fig:hier-lin-regression-factor-graph}. Plates are used to indicate a subgraph in the model which is replicated multiple times (with the replications being indexed over a set which is typically indicated in the lower right corner of the plate as in Figure \ref{fig:hier-lin-regression-factor-graph}). The subgraph entirely contained on the plate is assumed to be replicated the relevant number of times, with any edges crossing into the plate from variable nodes outside of the plate being repeated once for each subgraph replication. %Plates are commonly used to represent a model component repeated across multiple data items.
 
-Each of the factors in Figure \ref{fig:hier-lin-regression-factor-graph} is labelled with a shorthand for a probability density function corresponding to the conditional or marginal density factor associated with the node. Definitions for the shorthand notations that are used for densities in this thesis are given in Tables \ref{tab:standard-distributions-discrete}, \ref{tab:standard-distributions-unbounded} and \ref{tab:standard-distributions-bounded} in Appendix \ref{app:distribution-definitions}. The dependence of the factors on the value of the random variable the density is defined on is omitted in the labels for brevity.
+Each of the factors in Figure \ref{fig:hier-lin-regression-factor-graph} is labelled with a shorthand for a probability density function corresponding to the conditional or marginal density factor associated with the node. Definitions for the shorthand notations that are used for densities in this thesis are given in Appendix \ref{app:distribution-definitions}. The dependence of the factors on the value of the random variable the density is defined on is omitted in the labels for brevity.
 
 A final additional notation used in Figure \ref{fig:hier-lin-regression-factor-graph} is the use of a shaded variable node (corresponding to $\rvar{y}^{(i)}$) to indicate a random variable corresponding to an observable quantity in the model.
 
@@ -493,573 +505,229 @@ A final additional notation used in Figure \ref{fig:hier-lin-regression-factor-g
 
 \section{Inference}
 
-\begin{figure}[!t]
+\begin{figure}	
 \centering
-\begin{subfigure}[b]{.46\linewidth}
-\vskip 0pt
-\centering
-\includegraphics[width=\textwidth]{images/gravitation-lensing-macs-j1206-nasa-square-crop}
-\vskip 0pt
-\caption{Hubble Space Telescope image of galaxy cluster MACS J1206 showing visible distortion due to gravitational lensing. Image credit: ESA/Hubble.}
-\label{sfig:gravitational-lensing-photo}
-\end{subfigure}%
-\hspace*{\fill}
-\begin{subfigure}[b]{.46\linewidth}
-\vskip 0pt
-\centering
-\includegraphics[width=\textwidth]{images/simulated-galaxy-cluster}
-\vskip 0pt
-\caption{Simulated galaxy cluster image from \emph{Observing Dark Worlds} data \citep{kaggle2012observing} showing ellipticity of galaxies (black ellipses) distorted by dark matter halos (red circles).}
-\label{sfig:gravitational-lensing-simulated}
-\end{subfigure}%
-\caption[Examples of gravitational lensing.]{Gravitational lensing in real and simulated galaxy cluster images.}
-\label{fig:gravitational-lensing}
+\includetikz{simple-iid-factor-graph}
+\caption[Factor graph of \acs{iid} observed variables.]{Factor graph of $N$ observations $\rvct{y}^{(n)}$ independently and identically distributed according to a distribution with parameters $\rvct{x}$.}
+\label{fig:simple-iid-factor-graph}
 \end{figure}
 
-Having now introduced the tools we use to construct probabilistic models, we will now describe more concretely the task of inference. To help motivate our exposition we will discuss inference in the context of a specific problem: inferring the location of dark matter halos from the observed gravitational lensing of light emitted by surrounding galaxies. This task was the inspiration for a Kaggle\footnote{An online platform for predictive modelling competitions \url{https://www.kaggle.com}.} competition, \emph{Observing Dark Worlds} \citep{kaggle2012observing,harvey2014observing} and we will use the simplified formulation of the task used in the competition as the basis for our discussion here.% and model we present is based on the reports of two of the winning participants of that competition \citep{murray2012bayesian,salimans2012observing}.
+Having now introduced the tools and notation we will use to define probabilistic models, we will now describe more concretely the inference problems we will consider in this thesis. We begin with a overview of \emph{Bayesian inference}.
 
-\subsection{Example problem: Observing Dark Worlds}
+%We begin by motivating our earlier statement that they key computational challenge in inference problems is the computation of high-dimensional integrals.
 
-We will begin with a brief review of the motivation for the \emph{Observing Dark Worlds} inference problem. Dark matter is a hypothesised form of matter which does not emit or interact with electromagnetic radiation.  This prevents direct observation of dark matter by telescopes as it produces no signal in any part of the electromagnetic spectrum \citep{massey2010dark}. General relativity however predicts that all objects with mass locally distort spacetime. If a very large concentration of mass lies between an observer and a light source the strong distortion of spacetime by the mass significantly alters the paths of photons emitted by the source and causes the apparent image of the source to the observer to be visibly distorted \citep{bartelmann2001weak}. This effect is analagous to placing a lens between the light source and observer and this motivates the term \emph{gravitational lensing} to describe the phenonemon. It is believed that large concentrations of dark matter around galaxy clusters termed \emph{dark matter halos}, cause gravitational lensing of the light emitted from background galaxies observed in telescope imagery of galaxy clusters. %Detection of instances of such distortion would therefore allow indirect observation of the presence and sky position of dark matter halos. 
-
-\marginpar{In the context of gravitational lensing ellipticity is defined as a complex quantity $\epsilon = \frac{a-b}{a+b} \exp(2i\phi)$ where $a$ is the length of the ellipse major axis, $b$ the minor axis length and $\phi$ the orientation of the major axis. Here we will parameterise ellipticity terms of $e_1 = \mathrm{Re}(\epsilon) $ and $e_2 = \mathrm{Im}(\epsilon)$.}
-Galaxies typically have approximately elliptical shapes in telescope images. It is assumed that the \emph{ellipticities} of observed galaxy images not subject to gravitational lensing are isotropically distributed \citep{bartelmann2001weak}: there is no preferred orientation of the galaxies to an observer on Earth. The presence of a large mass concentration such as a dark matter halo between background galaxies and a telescope however locally distorts the distribution of the ellipticities of the observed galaxy images. An example of this effect in a galaxy cluster image from the Hubble Space Telescope is shown in Figure \ref{sfig:gravitational-lensing-photo} with the galaxies showing a bias towards being oriented tangentially to the bright region at the centre of the image. Local biases in the spatial distribution of galaxy ellipticities can therefore be used to infer the location of dark matter halos.
-
-The \emph{Observing Dark Worlds} inference task is formulated as follows. The observed data consists of the sky co-ordinates $\lbrace u_g, v_g \rbrace_{g=1}^G$ and ellipticity components $\lbrace e_{1,g}, e_{2,g} \rbrace_{g=1}^G$ of a set of $G$ galaxies. The task is given this data to infer the coordinates $\lbr \rvar{x}_h, \rvar{y}_h\rbr_{h=1}^H$ of the centers of a known number of dark matter halos present in the sky field of view. Galaxy coordinate and ellipticity data are provided for multiple cluster images each with a known number of halos present and the cluster image data are assumed to be \ac{iid}.
-
-The \emph{Observing Dark Worlds} data is simulated thus the ground truth positions of the dark matter halos are known in reality which was required for the purposes of evaluation in the competition. An example visualisation of one of the simulated galaxy cluster images in the data set is shown in Figure \ref{sfig:gravitational-lensing-simulated}. The known positions of the dark matter halos in this image are shown by red circles\footnote{A \emph{training set} of cluster image data was provided to competition participants for which the associated true dark matter halo positions were given. This data was distinct from the \emph{test set} cluster data were the halo positions are unknown and which is the basis of the described inference problem and scoring for the competition, with the training data intended to aid initial model exploration and evaluation.}. As can be seen the halo in the lower left of this image produces a strong visible distortion in the ellipticities, however the second halo at the top right has a much less visible effect on the surrounding galaxies. %, emphasising the challenging nature of even this toy version of the task. 
-
-The use of simulated data 
-%and provision of exact galaxy positions and ellipticities rather than also requiring these to be also inferred from telescope images significantly 
- reduces the difficulty of the \emph{Observing Dark Worlds} inference task compared to working with real gravitational lensing data, however for the purposes of our discussion the task is still sufficiently complex to highlight the computational challenges involved in inference problems. Further the probabilistic approach described here is similar to that used (albeit with significantly more complex models) in methods and tools used in practice to analyse gravitational lensing data to infer dark matter properties \citep{marshall2003bayesian,jullo2007bayesian}.
-
-\subsection{Defining a model}
-
-\begin{figure}[!t]
-\vskip 0pt
-\centering
-\includetikz{observing-dark-worlds-factor-graph}
-\vskip 5pt
-\caption[Gravitational lensing model factor graph.]{Factor graph of proposed model for \emph{Observing Dark Worlds} gravitational lensing inference problem for a single cluster image.}
-\label{fig:observing-dark-worlds-factor-graph}
-\end{figure}
+%We begin with a brief review of the \emph{Bayesian inference} approach.
 
 \marginpar{You cannot do inference without making assumptions\\---David Mackay}
-Our starting point for tackling inference problems will be to define a probabilistic model specifying proposed relationships between the observed and non-observed quantities to be inferred. The model codifies the assumptions we make about the problem and any prior beliefs we have. In virtually all real inference problems the model will be a significantly simplified description of a much more complex underlying process, usually motivated by prior empirical observations that the behaviour proposed by the model is a reasonable description of reality. For now we will consider the model as a singular fixed object we will perform inference with. In reality probabilistic modelling and inference are an iterative process with model criticism a key part of the loop \citep{box1980sampling,gelman2013philosophy}. We will discuss some of the (computational) issues involved in probabilistic model evaluation and comparison at the end of this chapter.
+The starting point for any inference problem is to define a model specifying proposed relationships between the observed data and unknown quantities to be inferred. The model codifies the assumptions we make about the problem and any prior beliefs we have. In virtually all real inference problems the model will be a simplified description of a much more complex underlying process, usually motivated by prior empirical observations that the behaviour proposed by the model is a reasonable description of reality. For now we will consider the model as a singular fixed object we will perform inference with. We consider probabilistic model comparison in a subsequent subsection.
 
-For the \emph{Observing Dark Worlds} problem, a proposed probabilistic model is shown as a directed factor graph in Figure \ref{fig:observing-dark-worlds-factor-graph}\footnote{The factor graph in Figure \ref{fig:observing-dark-worlds-factor-graph} is based on the models used by the participants with the top-two winning entries in the Kaggle competition, Iain Murray and Tim Salimans, and described in their personal reports on their competition entries \citep{salimans2012observing,murray2012bayesian} and an article evaluating the competition outcomes \citep{harvey2014observing}.}. This model assumes a simple, physically motivated relationship between the dark matter halo positions and the observed spatial distribution of galaxy ellipticities. As well as random variables for the halo coordinates $\lbrace \rvar{x}_h,\rvar{y}_h \rbrace_{h=1}^H$ and galaxy ellipticity components $\lbrace \rvar{e}_{1,g},\rvar{e}_{2,g} \rbrace_{g=1}^G$, the model also introduces additional latent (non-observed) random variables $\lbrace \rvar{m}_{h}, \rvar{t}_h \rbrace_{h=1}^H$, which correpond respectively to the unknown total masses of each halo (multiplied by an arbitrary scaling factor) and an unknown \emph{core radius} for each halo, which specifies a radial distance within which the distortion by the halo is of constant magnitude. The halo coordinates are assumed to be marginally uniformly distributed across the image extents. The halo mass and core radius latent variables are both positive quanties and are assumed to have log normal marginal distributions.
+Amongst the simplest, but also most common, modelling assumptions made is that the observed data values are \ac{iid} according to a parametric probability distribution. If we denote the collection of $N$ observed variables $\lbrace \rvct{y}^{(n)} \rbrace_{n=1}^N$ then we assume that each is independently generated from a distribution $\prob{\rvct{y}^{(n)}|\rvct{x}} = \prob{\rvct{y}|\rvct{x}} ~\forall n \in \lbrace 1 \,...\,N\rbrace$ with density $\pden{\rvct{y}|\rvct{x}} = \pd{\prob{\rvct{y}|\rvct{x}}}{\mu_{\rvct{y}}}$ and governed by a set of unknown parameters $\rvct{x} \in \set{X}$. %The \ac{iid} assumption is widely made in inference problems and although it will not be always be entirely valid in practice, it will often be a reasonable approximation. %A particularly common application is in probabilistic classification and regression problems where the observed variables $\lbrace \rvct{y}^{(n)} \rbrace_{n=1}^N$ represent the target
 
-The model proposes that at sky coordinate $(u,v)$ each halo produces a shear distortion of magnitude
-\begin{equation}\label{eq:dark-matter-halo-force}
-  f_h(u,v) = \frac{\rvar{m}_h}{\max(r_h,\rvar{t}_h)}
-  \quad\textrm{where}\quad
-  r_h = \sqrt{(\rvar{x}_h - u)^2 + (\rvar{y}_h - v)^2}
+Any beliefs we have about the plausible values for the parameters prior to observing data are integrated into the model by choosing an appropriate, typically parametric, marginal distribution $\prob{\rvct{x}}$, with this distribution, and the corresponding density $\pden{\rvct{x}} = \pd{\prob{\rvct{x}}}{\mu_{\rvct{x}}}$, referred to as the \emph{prior}. The joint distribution on the model variables then factorises as
+\begin{equation}\label{eq:iid-data-joint-density-factorisation}
+  \pden{\rvct{y}^{(1)},\,...\,,\rvct{y}^{(N)},\,\rvct{x}}(\vct{y}^{(1)},\,...\,,\vct{y}^{(N)},\,\vct{x}) =
+  \prod_{n=1}^N \pden{\rvct{y}|\rvct{x}}(\vct{y}^{(n)}\gvn\vct{x})\,
+  \pden{\rvct{x}}(\vct{x})
 \end{equation}
-and acting in a tangential direction to the radial vector from the halo centre $(\rvar{x}_h,\rvar{y}_h)$ to $(u,v)$. %, i.e. proportional to $\rvar{m}_h$ and of constant magnitude for galaxies with radial distance $\rvar{r}_{h,g}$ from the halo of less than the core radius $\rvar{t}_h$ and with a $\rvar{r}_{h,g}^{-1}$ dependence outside this threshold. 
-This functional relationship is just one possibility among many. % - alternative models using a different $f_h$ could be used instead.
-The post-competition review article \citep{harvey2014observing} revealed that the simulated data actually used dark matter halos with a mixture of two different radial density profiles, neither of which correspond to the distortion model assumed in \eqref{eq:dark-matter-halo-force}. This mismatch between a model and the actual process by which observations were generated will virtually always be the case in real inference problems. We can still make inferences which are consistent with our modelling assumptions, however we should as far as possible also critically review those modelling assumptions to check the validity of the inferences made.
-
-For galaxies where the variation of the magnitude of the distorting effect of a halo across the extent of the galaxy's image is small, a reasonable approximation of the gravitational lensing effect of a single halo on the observed ellipticity $(\rvar{e}_{1,g},\rvar{e}_{2,g})$ of a galaxy image with intrinsic (prior to any gravitational lensing effect) ellipticity $(\rvar{e}_{1_g}^\star, \rvar{e}_2^\star)$ is that 
-\begin{equation}\label{eq:obs-ellipticity-single-halo}
-  \rvar{e}_{1,g} = \rvar{e}_{1,g}^\star - \rvar{f}_{h,g} \cos(2 \rvar{a}_{h,g}),
-  \quad
-  \rvar{e}_{2,g} = \rvar{e}_{2,g}^\star -  \rvar{f}_{h,g} \sin(2 \rvar{a}_{h,g}),
+with this structure illustrated as a directed factor graph in Figure \ref{fig:simple-iid-factor-graph}. In analogy to the naming of the prior, the conditional distribution on the unknown model parameters after condition on observed data values is termed the \emph{posterior} and from the definition of conditional density \eqref{eq:conditional-density-definition} we can express its density as
+\begin{equation}\label{eq:iid-data-posterior-density}
+  \pden{\rvct{x}|\rvct{y}^{(1)},\,...\,,\rvct{y}^{(N)}}(\vct{x} \gvn \vct{y}^{(1)},\,...\,,\vct{y}^{(N)}) =
+\frac{
+  \prod_{n=1}^N \pden{\rvct{y}|\rvct{x}}(\vct{y}^{(n)}\gvn\vct{x})\,
+  \pden{\rvct{x}}(\vct{x})
+}
+{
+ \pden{\rvct{y}^{(1)},\,...\,,\rvct{y}^{(N)}}(\vct{y}^{(1)},\,...\,,\vct{y}^{(N)})
+}.
 \end{equation}
-where $\rvar{a}_{h,g} = \textrm{atan2}\lpa v_g - \rvar{y}_h, u_g - \rvar{x}_g\rpa$ is the angle the line from the centre of halo $h$ to galaxy $g$ makes to the horizontal axis and $\rvar{f}_{h,g} = f_h(u_g, v_g)$ is the magnitude of the shear distortion according to the proposed relationship in Equation \eqref{eq:dark-matter-halo-force} evaluated at the galaxy image centre \citep{bartelmann2001weak,marshall2003bayesian}. For clusters with multiple halos, a further simple linearity assumption is made, that the shear distortions due to the different halos act additively on the ellipticity components
-\begin{equation}\label{eq:obs-ellipticity-multiple-halos}
-  \rvar{e}_{1,g} = \rvar{e}_{1,g}^\star - \sum_{h=1}^H \rvar{f}_{h,g} \cos(2 \rvar{a}_{h,g}),
-  ~
-  \rvar{e}_{2,g} = \rvar{e}_{2,g}^\star -  \sum_{h=1}^H \rvar{f}_{h,g} \sin(2 \rvar{a}_{h,g}).
-\end{equation}
-The intrinsic ellipticities of the galaxies are assumed to have a isotropic, zero-mean normal distribution,  with standard deviation $\sigma$, with normal assumption corresponding well to empirical observations from large scale surveys \citep{bartelmann2001weak,marshall2003bayesian}. For now we will assume the standard deviation $\sigma$ of the intrinsic ellipticities, and the parameters $\mu_m,\,\sigma_m,\,\mu_t,\,\sigma_t$ of the halo mass and core radius marginal distributions have somehow been set to reasonable values, for example based on prior beliefs about the typical ranges of the variables. We will discuss possible strategies for choosing (or inferring) these parameters in more detail later.
-
-\subsection{Making predictions}
-
-Having now defined a model for the \emph{Observing Dark Worlds} problem, we now consider how to use this model to make predictions about the unobserved dark matter halo positions. The downstream task we are using the inference output for will generally determine what the exact inferential query we wish to evaluate is. In general however, any prediction output which takes into account all of the information we have about the unobserved variables given the assumed model and observed data will be computed as a conditional expectation.
-
-To motivate this statement for the \emph{Observing Dark Worlds} example we will discuss some instances of outputs we might wish to compute. For notational convenience we define the following random vectors for the halo random variables
-\begin{equation}
-  \rvct{x} = \begin{bmatrix} \rvar{x}_1 \\ \vdots \\[-1mm] \rvar{x}_H \end{bmatrix},
-  \quad
-  \rvct{y} = \begin{bmatrix} \rvar{y}_1 \\ \vdots \\[-1mm] \rvar{y}_H \end{bmatrix},
-  \quad
-  \rvct{m} = \begin{bmatrix} \rvar{m}_1 \\ \vdots \\[-1mm] \rvar{m}_H \end{bmatrix},
-  \quad
-  \rvct{t} = \begin{bmatrix} \rvar{t}_1 \\ \vdots \\[-1mm] \rvar{t}_H \end{bmatrix},
-\end{equation}
-and similarly for the observed and intrinsic galaxy ellipticities
-\begin{equation}
-  \rvct{e}_1 = \begin{bmatrix} 
-    \rvar{e}_{1,1} \\ \vdots \\[-1mm] \rvar{e}_{1,G}
-  \end{bmatrix},
-  \quad
-  \rvct{e}_2 = \begin{bmatrix} 
-    \rvar{e}_{2,1} \\ \vdots \\[-1mm] \rvar{e}_{2,G}
-  \end{bmatrix},
-  \quad
-  \rvct{e}^\star_1 = \begin{bmatrix} 
-    \rvar{e}^\star_{1,1} \\ \vdots \\[-1mm] \rvar{e}^\star_{1,G}
-  \end{bmatrix},
-  \quad
-  \rvct{e}^\star_2 = \begin{bmatrix} 
-    \rvar{e}^\star_{2,1} \\ \vdots \\[-1mm] \rvar{e}^\star_{2,G}
-  \end{bmatrix}.
-\end{equation}
-An obvious output we may wish to compute is the expected (mean) values of the halo positions given the observed ellipticities. From a decision theoretic standpoint these values correspond to the position predictions which minimise the expected squared error loss from the true positions given the model and observed data. 
-As conditonal expectations these are simply
-\begin{equation}
-  \vct{m}_{\rvct{x}} = \expc{\rvct{x} \gvn \rvct{e}_1 = \vct{e}_1,\,\rvct{e}_2 = \vct{e}_2}
-  ~~\textrm{and}~~
-  \vct{m}_{\rvct{y}} = \expc{\rvct{y} \gvn \rvct{e}_1 = \vct{e}_1,\,\rvct{e}_2 = \vct{e}_2}.
-\end{equation}
-We may also be interested in the covariances of the halo positions conditioned on the observations, these giving some idea of our remaining uncertainty in the positions and any correlations between them after conditioning on the observed ellipticities. Again these can be expressed as conditional expectations
-\begin{align}
-  \nonumber
-  \mtx{C}_{\rvct{x},\rvct{x}} &=
-  \expc{
-    (\rvct{x}-\vct{m}_{\rvct{x}})(\rvct{x}-\vct{m}_{\rvct{x}})\tr
-    \gvn \rvct{e}_1 = \vct{e}_1,\,\rvct{e}_2 = \vct{e}_2
-  },
-  \\
-  \mtx{C}_{\rvct{y},\rvct{y}} &=
-  \expc{
-    (\rvct{y}-\vct{m}_{\rvct{y}})(\rvct{y}-\vct{m}_{\rvct{y}})\tr
-    \gvn \rvct{e}_1 = \vct{e}_1,\,\rvct{e}_2 = \vct{e}_2
-  },
-  \\
-  \nonumber
-  \textrm{and}\quad
-  \mtx{C}_{\rvct{x},\rvct{y}} &=
-  \expc{
-    (\rvct{x}-\vct{m}_{\rvct{x}})(\rvct{y}-\vct{m}_{\rvct{y}})\tr
-    \gvn \rvct{e}_1 = \vct{e}_1,\,\rvct{e}_2 = \vct{e}_2
-  }.
-\end{align}
-In the \emph{Observing Dark Worlds} competition, participants' halo position predictions were evaluated by comparing to the known true halo positions using a metric provided as part of the competition instructions. If we denote the metric $\ell(\vct{x},\vct{y};\hat{\vct{x}},\hat{\vct{y}})$ where $(\vct{x},\vct{y})$ are the true halo positions and $(\hat{\vct{x}},\hat{\vct{y}})$ the predicted positions, then the optimal predictions given the assumed model and observed data can be calculated by minimising the expected metric value conditioned on the observed data
-\begin{equation}
-  \bar{\ell}(\hat{\vct{x}},\hat{\vct{y}}) =
-  \expc{\ell(\rvct{x},\rvct{y};\hat{\vct{x}},\hat{\vct{y}}) \gvn \rvct{e}_1 =\vct{e}_1, \rvct{e}_2=\vct{e}_2}.
-\end{equation}
-Due to linearity of the expectation operator, we can also calculate the derivatives of the expected metric with respect to the predictions as
-\begin{equation}
-\begin{split}
-  \pd{\bar{\ell}(\hat{\vct{x}},\hat{\vct{y}})}{\hat{\vct{x}}} &=
-  \expc{
-    \pd{\ell(\rvct{x},\rvct{y};\hat{\vct{x}},\hat{\vct{y}})}{\hat{\vct{x}}}
-    \mathrel{\Big|} \rvct{e}_1 =\vct{e}_1, \rvct{e}_2=\vct{e}_2}\\
-  \textrm{and}\quad
-  \pd{\bar{\ell}(\hat{\vct{x}},\hat{\vct{y}})}{\hat{\vct{y}}} &=
-  \expc{
-    \pd{\ell(\rvct{x},\rvct{y};\hat{\vct{x}},\hat{\vct{y}})}{\hat{\vct{y}}}
-    \mathrel{\Big|} \rvct{e}_1 =\vct{e}_1, \rvct{e}_2=\vct{e}_2}.
-\end{split}
-\end{equation}
-For some metrics we will be able to analytically solve for the stationary points to find the predictions minimising $\bar{\ell}(\hat{\vct{x}},\hat{\vct{y}})$ and more generally we can use the derivatives in an iterative optimisation scheme.
-
-Evaluating conditional expectations of functions of the unobserved variables in a model given observed data is therefore the key computational task in making inferences about the variables in a probabilistic model. The \emph{Observing Dark Worlds} model factor graph in Figure \ref{fig:observing-dark-worlds-factor-graph} defines a joint density across all the variables in the model. We can therefore use Equation \eqref{eq:conditional-expectation-density} to write the conditional expectation of a measurable function $f$ of the halo position random variables $\rvct{x}$ and $\rvct{y}$ as\footnote{For brevity the sets on which integrals are evaluated have been omitted in this section and should be assumed to be the full co-domain of the corresponding random vector.}
-\begin{equation}\label{eq:odw-conditional-expectation}
-\begin{split}
-  \expc{f(\rvct{x},\rvct{y}) \gvn \rvct{e}_1 =\vct{e}_1, \rvct{e}_2=\vct{e}_2} =&\\
-  \iint
-    f(\vct{x},\vct{y})\,
-    &\pden{\rvct{x},\rvct{y} | \rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y} \gvn \vct{e}_1,\vct{e}_2)
-  \,\dr\vct{x}\,\dr\vct{y},
-\end{split}
-\end{equation}
-where the conditional density $\pden{\rvct{x},\rvct{y} | \rvct{e}_1,\rvct{e}_2}$ is defined as
-\begin{equation}
-  \pden{\rvct{x},\rvct{y} | \rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y} \gvn \vct{e}_1,\vct{e}_2) =
-  \frac
-    {\pden{\rvct{x},\vct{y},\rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y},\vct{e}_1,\vct{e}_2)}
-    {\pden{\rvct{e}_1,\rvct{e}_2}(\vct{e}_1,\vct{e}_2)},
-\end{equation}
-with $\pden{\rvct{e}_1,\rvct{e}_2}$ defined in terms of $\pden{\rvct{x},\rvct{y},\rvct{e}_1,\rvct{e}_2}$ by marginalising out $\rvct{x}$ and $\rvct{y}$
-\begin{equation}
-  \pden{\rvct{e}_1,\rvct{e}_2}(\vct{e}_1,\vct{e}_2) =
-  \iint 
-    \pden{\rvct{x},\rvct{y},\rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y},\vct{e}_1,\vct{e}_2) 
-  \,\dr\vct{x}\,\dr\vct{y}.
-\end{equation}
-We can express $\pden{\rvct{x},\vct{y},\rvct{e}_1,\rvct{e}_2}$ itself as a marginal of the joint density over all random variables in the model (which we can read off as a product of factors from Figure \ref{fig:observing-dark-worlds-factor-graph}) by marginalising out $\rvct{m}$, $\rvct{t}$, $\rvct{e}_1^\star$ and $\rvct{e}_2^\star$
-\begin{equation}\label{eq:odw-e1-e2-x-y-joint-1}
-\begin{split}
-  \pden{\rvct{x}, \rvct{y}, \rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y},\vct{e}_1,\vct{e}_2) =
-  \iiiint &
-    \pden{\rvct{x}}(\vct{x}) \, 
-    \pden{\rvct{y}}(\vct{y}) \, 
-    \pden{\rvct{m}}(\vct{m}) \,
-    \pden{\rvct{t}}(\vct{t}) \,
-    \\[-1.5mm]& 
-    \pden{\rvct{e}_1 | \rvct{e}_1^\star\kern-2pt,\rvct{x},\rvct{y},\rvct{m},\rvct{t}}
-    (\vct{e}_1\gvn\vct{e}_1^\star\kern-2pt,\vct{x},\vct{y},\vct{m},\vct{t})\,
-    \\&    
-    \pden{\rvct{e}_2 | \rvct{e}_2^\star\kern-1.5pt,\rvct{x},\rvct{y},\rvct{m},\rvct{t}}
-    (\vct{e}_2\gvn\vct{e}_2^\star\kern-1.5pt,\vct{x},\vct{y},\vct{m},\vct{t})\,
-    \\&
-    \pden{\rvct{e}_1^\star}(\vct{e}_1^\star) \, 
-    \pden{\rvct{e}_2^\star}(\vct{e}_2^\star) \,
-    \dr\vct{e}_1^\star\dr\vct{e}_2^\star\dr\vct{t}\,\dr\vct{m}.
-\end{split}
-\end{equation}
-The integration with respect to $\vct{e}_1^\star$ and $\vct{e}_2^\star$ can be performed analytically as the conditional density factors $\pden{\rvct{e}_2 | \rvct{e}_2^\star\kern-2pt,\rvct{x},\rvct{y},\rvct{m},\rvct{t}}$ and $\pden{\rvct{e}_2 | \rvct{e}_1^\star\kern-2pt,\rvct{x},\rvct{y},\rvct{m},\rvct{t}}$ correspond to deterministic factors which depend linearly on $\rvct{e}_1^\star$ and $\rvct{e}_2^\star$. Expressing the deterministic factors as Dirac deltas and denoting the functions corresponding to the computational graphs in Figure \ref{fig:observing-dark-worlds-factor-graph} mapping from $\fset{\rvar{x}_h,\rvar{y}_h,\rvar{m}_h,\rvar{t}_h}_{h=1}^H$ to $\lbrace \rvar{d}_{1,g}\rbrace_{g=1}^G$ and $\lbrace \rvar{d}_{2,g} \rbrace_{g=1}^G$, $\vct{d}_1$ and $\vct{d}_2$ respectively, we have that
-\begin{equation}\label{eq:odw-e1-gvn-xymt}
-\begin{split}
-  &\pden{\rvct{e}_1 | \rvct{x},\rvct{y},\rvct{m},\rvct{t}} (\vct{e}_1\gvn\vct{x},\vct{y},\vct{m},\vct{t})
-  \\
-  &\qquad=
-  \int 
-    \pden{\rvct{e}_1 | \rvct{e}_1^\star\kern-2pt,\rvct{x},\rvct{y},\rvct{m},\rvct{t}}
-    (\vct{e}_1\gvn\vct{e}_1^\star\kern-2pt,\vct{x},\vct{y},\vct{m},\vct{t})\,
-    \pden{\rvct{e}^\star_1}(\vct{e}^\star_1)
-  \,\dr\vct{e}^\star_1 
-  \\
-  &\qquad=
-  \int 
-    \delta\lpa
-     \vct{e}_1 - \vct{e}^\star_1 - \vct{d}_1(\vct{x},\vct{y},\vct{m},\vct{t})
-    \rpa\,
-    \nrm{\vct{e}^\star_1 \gvn \vct{0},\sigma^2\idmtx}
-  \,\dr\vct{e}^\star_1\\
-  &\qquad=
-  \nrm{\vct{e}_1 \gvn \vct{d}_1(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\idmtx},
-\end{split}
-\end{equation}
-and likewise for $\pden{\rvct{e}_2 | \rvct{x},\rvct{y},\rvct{m},\rvct{t}}$
-\begin{equation}\label{eq:odw-e2-gvn-xymt}
-  \pden{\rvct{e}_2 | \rvct{x},\rvct{y},\rvct{m},\rvct{t}}(\vct{e}_2\gvn\vct{x},\vct{y},\vct{m},\vct{t})
-  =
-  \nrm{\vct{e}_2 \gvn \vct{d}_2(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\idmtx}.
-\end{equation}
-Rewriting \eqref{eq:odw-e1-e2-x-y-joint-1} in terms of \eqref{eq:odw-e1-gvn-xymt} and \eqref{eq:odw-e2-gvn-xymt} and substituting the definitions for the factors from Figure \ref{fig:observing-dark-worlds-factor-graph} we have that
-\begin{equation}\label{eq:odw-e1-e2-x-y-joint-2}
-\begin{split}
-  &\pden{\rvct{x},\rvct{y},\rvct{e}_1,\rvct{e}_2}(\vct{x},\vct{y},\vct{e}_1,\vct{e}_2) =
-  \iint 
-    \pden
-      {\rvct{x},\rvct{y},\rvct{m},\rvct{t},\rvct{e}_1,\rvct{e}_2}
-      (\vct{x},\vct{y},\vct{m},\vct{t},\vct{e}_1,\vct{e}_2)
-   \,\dr\vct{t}\,\dr\vct{m}
-  \\
-  &
-  ~=\iint
-  \prod_{h=1}^H \lpa 
-    \mathcal{U}\lpa x_h \gvn 0,x_{\textrm{max}}\rpa \,
-    \mathcal{U}\lpa y_h \gvn 0,y_{\textrm{max}}\rpa 
-  \rpa 
-  \\
-  &
-  \phantom{~=\iint}~
-    \nrm{\vct{e}_1 \gvn \vct{d}_1(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\idmtx}\,
-    \nrm{\vct{e}_2 \gvn \vct{d}_2(\vct{x},\vct{y},\vct{m},\vct{t}),\sigma^2\idmtx}
-  \\
-  &\phantom{~=\iint}~
-    \textrm{LogNorm}\lpa \vct{m} \gvn \mu_m\vct{1}, \sigma_m^2\idmtx \rpa \, 
-    \textrm{LogNorm}\lpa \vct{t} \gvn \mu_m\vct{1}, \sigma_m^2\idmtx \rpa
-  \,\dr\vct{t}\,\dr\vct{m}.
-\end{split}
-\end{equation}
-We cannot simplify this integral any further analytically. Thefore the conditional expectation we wish to compute in terms of integrals of functions we can evaluate pointwise is
-\begin{equation}\label{eq:odw-cond-expectation-2}
-\begin{split}
-  &\expc{f(\rvct{x},\rvct{y}) \gvn \rvct{e}_1 =\vct{e}_1, \rvct{e}_2=\vct{e}_2} = \\
-  &
-  \frac
-  {\displaystyle
-    \iiiint f(\vct{x},\vct{y}) \, 
-    \pden
-      {\rvct{x},\rvct{y},\rvct{m},\rvct{t},\rvct{e}_1,\rvct{e}_2}
-      (\vct{x},\vct{y},\vct{m},\vct{t},\vct{e}_1,\vct{e}_2)
-    \,\dr\vct{t}\,\dr\vct{m}\,\dr{\vct{x}}\,\dr{\vct{y}}
-  }
-  {\displaystyle
-    \iiiint
-      \pden
-      {\rvct{x},\rvct{y},\rvct{m},\rvct{t},\rvct{e}_1,\rvct{e}_2}
-      (\vct{x},\vct{y},\vct{m},\vct{t},\vct{e}_1,\vct{e}_2)
-    \,\dr\vct{t}\,\dr\vct{m}\,\dr{\vct{x}}\,\dr{\vct{y}}
-  }.
-\end{split}
-\end{equation}
-Each of the vector integration variables in \eqref{eq:odw-cond-expectation-2} is of dimension $H$ and so the overall dimension of the space being integrated over in both the numerator and denominator is $4H$.
-In the \emph{Observing Dark Worlds} data the number of halos per cluster image $H$ is between one and three so to evaluate conditional expectations of the halo positions we need to compute integrals over spaces with four, eight or twelve dimensions. 
-
-For four or eight dimensions it may be feasible to use quadrature methods \citep{davis1967numerical}, which involve evaluating the integrand across a fixed grid of points and then computing a weighted sum of these values, to numerically approximate the integrals to reasonable accuracy. For a fixed grid resolution however the cost of quadrature scales exponentially with the dimension of the space being integrated over - if $N$ points are used per dimension, using quadrature to evaluate \eqref{eq:odw-cond-expectation-2} will involve $N^{4H}$ evaluations of the integrand. 
-
-Assuming the computational cost of the function $f(\rvct{x},\rvct{y})$ the conditional expectation is being calculated of is negligible, the dominant cost in the evaluation of the integrands in \eqref{eq:odw-cond-expectation-2} will be in evaluating $\vct{d}_1(\vct{x},\vct{y},\vct{m},\vct{t})$ and $\vct{d}_2(\vct{x},\vct{y},\vct{m},\vct{t})$ which involve computing the distances and angles between all galaxy-halo pairs. Using a very simplistic (and conservative) assumption that each arithmetic, square root, comparison and trigonometric operation has a unit floating point operation cost, the computation graph in Figure \ref{fig:observing-dark-worlds-factor-graph} which is present on the overlap between the two plates will involve 15 floating point operations in a single forward pass and is evaluated $GH$ times for an overall cost per integrand evaluation of $15GH$ floating point operations. 
-
-A rough but conservative lower bound on the floating point operation count of evaluating the integrals in \eqref{eq:odw-cond-expectation-2} using quadrature is therefore $15 GH N^{4H}$. The number of galaxies $G$ per cluster image in the \emph{Observing Dark Worlds} data varies between 300 and 740. If we assume $G=500$ and that we use $N=20$ grid points per dimension, for the $H=2$ cases evaluating the conditional expectation will involve $\sim 1\times 10^9$ floating point operations, for $H=2$, $\sim 4 \times 10^{14}$ floating point operations and for $H=3$, $\sim 9\times 10^{19}$ floating point operations.
-
-At the time of writing, the theoretical peak floating point operation performance of a top-end multi-core server \ac{CPU} is around $5 \times 10^{11}$ \ac{FLOPS}. Assuming this peak performance could be obtained when using quadrature to approximate \eqref{eq:odw-cond-expectation-2}
-% (an optimistic but not completely terrible assumption as the computation is trivially paralleisable across the cores)
-, our back-of-the-envelope calculation suggests a trivial two millisecond compute time for clusters with one halo, a more noticeable thirteen minute computation for clusters with two halos, and an impractical six year wait for clusters with three halos.
-
-Current top-end \acp{GPU} have a peak theoretical (single-precision) floating point performance of around $10^{13}$ \ac{FLOPS} which at best would cut the computation time for a $H=3$ case by a factor of 20 to around 100 days. With a cluster of \ac{CPU} or \ac{GPU} nodes, or faster individual nodes due to future growth in processing power, the compute time could potentially be brought down further to more reasonable timescales. However the key point in this example is the exponential growth with dimension - even moving from eight to twelve dimensions made compute time impractical. Clearly therefore approximating the integrals in expectations like \eqref{eq:odw-cond-expectation-2} using quadrature methods is not viable when performing inference in models with large numbers of unobserved variables, with the example here showing that even integrals over what might initially seem a low dimensionality of twelve can be problematic.
-
-\subsection{Implicit models}\label{subsec:implicit-models}
-
-In the \emph{Observing Dark Worlds} example it was possible to analytically integrate out the random vectors $\rvct{e}_1^\star$ and $\rvct{e}_2^\star$, which correspond to the intrinsic galaxy ellipticities, due to the observed ellipticities $\rvct{e}_1$ and $\rvct{e}_2$ being deterministic linear functions of $\rvct{e}_1^\star$ and $\rvct{e}_2^\star$ respectively (for fixed $\rvct{x}$, $\rvct{y}$, $\rvct{m}$ and $\rvct{t}$). Rather than calculating the conditional densities on $\rvct{e}_1$ and $\rvct{e}_2$ by integrating out $\rvct{e}_1^\star$ and $\rvct{e}_2^\star$, we could equivalently have applied the change of variables formula \eqref{eq:change-of-variables-vector-bijective} for a bijective transformation; in this case the Jacobian determinant is simply one.
-
-\begin{figure}[t]
-\centering
-\begin{subfigure}[b]{.48\linewidth}
-\centering
-\includetikz{example-implicit-model-factor-graph}
-\caption{Directed factor graph defining model with two latent variables $(\rvar{u}, \rvar{v})$, and an observed variable $\rvar{x}$.}
-\label{sfig:simple-impl-factor-graph}
-\end{subfigure}
-~~
-\begin{subfigure}[b]{.48\linewidth}
-\centering
-\includetikz{example-implicit-model-cond-plot}
-\caption{Plot of density on latent variables (contours) and set of values for which $\rvar{x} = 1$ (green curve).}
-\label{sfig:example-implicit-model-cond-plot}
-\end{subfigure}
-\caption[Example of implicit probabilistic model.]{Simple example of an implicit probabilistic model where the observed variable is a non-bijective function of two latent variables.}
-\label{fig:example-non-bijective-transform-factor-graph}
-\end{figure}
-
-If the observed variables had instead been the output of a deterministic factor where there was no bijective dependence on any of the parent variables (inputs to the deterministic factor), the change of variables formula \eqref{eq:change-of-variables-vector-bijective} would no longer have applied. Generally in such cases it will not be possible to analytically marginalise out a parent variable to give an explicit conditional density on the observed variable(s). Models which do not admit explicit conditional densities on the observed variables are sometimes described as \emph{implicit models} \citep{diggle1984monte}, with simulator models being a common case.
-
-An illustration of such a case for a simple three variable model is shown in Figure \ref{fig:example-non-bijective-transform-factor-graph}. Here the observed variable $\rvar{x}$ is a deterministic function of two latent (unobserved) variables $\rvar{u}$ and $\rvar{v}$. There is no analytic solution in terms of elementary functions for $\rvar{u}$ as a function of $\rvar{x}$ and $\rvar{v}$ or for $\rvar{v}$ as a function of $\rvar{x}$ and $\rvar{u}$. This means the Dirac delta term corresponding to the deterministic factor cannot be integrated out. Due to the presence of the Dirac delta the joint density $\pden{\rvar{x},\rvar{u},\rvar{v}}$ is not well defined (the joint probability $\prob{\rvar{x},\rvar{u},\rvar{m}}$ is not absolutely continuous with respect to any measure) which complicates evaluations of conditional expectations such as $\expc{f(\rvar{u},\rvar{v}) \gvn \rvar{x} = 1}$. 
-
-In particular the set of $\rvar{u}$ and $\rvar{v}$ values corresponding to solutions to $\rvar{x} = 1$ (illustrated as the green curve in Figure \ref{sfig:example-directed-graphical-model}) has zero Lebesgue measure. Therefore even though the dimensionality is low in this case we can not use simple quadrature to evaluate conditional expectations without some further form of approximation. We will revisit methods for performing inference in implicit models in Chapter \ref{ch:differentiable-generative-models}.
-
-\subsection{Conjugacy and exact inference}\label{subsec:conjugacy-and-exact-inference}
-
-\tikzexternaldisable
-\begin{table}[!t]
-\centering
-\begin{tabular}{rl}
-  \toprule
-  \multicolumn{1}{c}{\textsf{Original factorisation}} & \multicolumn{1}{c}{\textsf{Conjugate factorisation}} \tabularnewline
-  \midrule
-  \tikz{
-    \node[latent] (x) {$\rvar{x}$} ; %
-    \node[latent, left=of x] (z) {$\rvar{z}$} ; %
-    \factor[left=of z, xshift=-2mm] {pr-z} {$\nrm{\mu,\sigma^2}$} {} {z} ; %
-    \factor[left=of x] {z-x} {$\nrm{\rvar{z},s^2}$} {z} {x}; %
-    \node[const, right=0.3 of x] (dummy) {} ; %
-    \draw[-, densely dotted] (x) -- (dummy) ; %
-  } &
-  \tikz{
-    \node[latent] (x) {$\rvar{x}$} ; %
-    \node[latent, left=3 of x] (z) {$\rvar{z}$} ; %
-    \factor[above=of x] {pr-x} {right:$\nrm{\mu,\sigma^2+s^2}$} {} {x} ; %
-    \factor[left=of x, xshift=-9mm] {x-z} {$\nrm{\frac{\sigma^2\rvar{x} + s^2\mu}{\sigma^2 + s^2}, \frac{\sigma^2 s^2}{\sigma^2 + s^2}}$} {x} {z}; %
-    \node[const, right=0.3 of x] (dummy) {} ; %
-    \draw[-, densely dotted] (x) -- (dummy) ; %
-  } \\
-  \tikz{
-    \node[latent] (x) {$\rvct{x}$} ; %
-    \node[latent, left=of x] (z) {$\rvct{z}$} ; %
-    \factor[left=of z, xshift=-2mm] {pr-z} {$\nrm{\vct{\mu},\mtx{\Sigma}}$} {} {z} ; %
-    \factor[left=of x] {z-x} {$\nrm{\rvct{z},\mtx{C}}$} {z} {x}; %
-    \node[const, right=0.3 of x] (dummy) {} ; %
-    \draw[-, densely dotted] (x) -- (dummy) ; %
-  } &
-  \tikz{
-    \node[latent] (x) {$\rvct{x}$} ; %
-    \node[latent, left=3 of x] (z) {$\rvct{z}$} ; %
-    \factor[above=of x] {pr-x} {right:$\nrm{\vct{\mu},\mtx{\Sigma}+\mtx{C}}$} {} {x} ; %
-    \factor[left=of x, xshift=-9mm] {x-z} {} {x} {z}; %
-    \node[align=left, anchor=south] (lab1) at (x-z.north) {\tiny$\nrm{\mtx{D}(\mtx{C}^{-1}\rvct{x} + \mtx{\Sigma}^{-1}\vct{\mu}), \mtx{D}}$} ; %
-    \node[align=left, anchor=north] (lab2) at (x-z.south) {\tiny$\textrm{where}~ \mtx{D} = (\mtx{C}^{-1}+\mtx{\Sigma}^{-1})^{-1}$} ; %
-    \node[const, right=0.3 of x] (dummy) {} ; %
-    \draw[-, densely dotted] (x) -- (dummy) ; %
-  } \\
-  \tikz{
-    \node[latent] (x) {$\rvar{x}$} ; %
-    \node[latent, left=of x] (z) {$\rvar{z}$} ; %
-    \factor[left=of z, xshift=-2mm] {pr-z} {$\textrm{Gamma}\lpa\alpha,\beta\rpa$} {} {z} ; %
-    \factor[left=of x] {z-x} {$\nrm{\mu,\frac{1}{\rvar{z}}}$} {z} {x}; %
-    \node[const, right=0.3 of x] (dummy) {} ; %
-    \draw[-, densely dotted] (x) -- (dummy) ; %
-  } &
-  \tikz{
-    \node[latent] (x) {$\rvar{x}$} ; %
-    \node[latent, left=3 of x] (z) {$\rvar{z}$} ; %
-    \factor[above=of x] {pr-x} {right:$\textrm{StT}\lpa 2\alpha,\mu,\sqrt{\frac{\beta}{\alpha}}\rpa$} {} {x} ; %
-    \factor[left=of x, xshift=-9mm] {x-z} {$\textrm{Gamma}\lpa\alpha + \frac{1}{2}, \beta + \frac{1}{2}(\rvar{x}-\mu)^2\rpa$} {x} {z}; %
-    \node[const, right=0.3 of x] (dummy) {} ; %
-    \draw[-, densely dotted] (x) -- (dummy) ; %
-  } \\
-  \tikz{
-    \node[latent] (x) {$\rvar{x}$} ; %
-    \node[latent, left=of x] (z) {$\rvar{z}$} ; %
-    \factor[left=of z, xshift=-2mm] {pr-z} {$\textrm{Gamma}\lpa\alpha,\beta\rpa$} {} {z} ; %
-    \factor[left=of x] {z-x} {$\textrm{Exp}(\rvar{z})$} {z} {x}; %
-    \node[const, right=0.3 of x] (dummy) {} ; %
-    \draw[-, densely dotted] (x) -- (dummy) ; %
-  } &
-  \tikz{
-    \node[latent] (x) {$\rvar{x}$} ; %
-    \node[latent, left=3 of x] (z) {$\rvar{z}$} ; %
-    \factor[above=of x] {pr-x} {right:$\textrm{Lomax}\lpa \alpha, \beta\rpa$} {} {x} ; %
-    \factor[left=of x, xshift=-9mm] {x-z} {$\textrm{Gamma}\lpa\alpha + \frac{1}{2}, \beta + \rvar{x}\rpa$} {x} {z}; %
-    \node[const, right=0.3 of x] (dummy) {} ; %
-    \draw[-, densely dotted] (x) -- (dummy) ; %
-  } \\
-  \tikz{
-    \node[latent] (x) {$\rvar{x}$} ; %
-    \node[latent, left=of x] (z) {$\rvar{z}$} ; %
-    \factor[left=of z, xshift=-2mm] {pr-z} {$\textrm{Beta}(\alpha, \beta)$} {} {z} ; %
-    \factor[left=of x] {z-x} {$\textrm{Ber}(\rvar{z})$} {z} {x}; %
-    \node[const, right=0.3 of x] (dummy) {} ; %
-    \draw[-, densely dotted] (x) -- (dummy) ; %
-  } &
-  \tikz{
-    \node[latent] (x) {$\rvar{x}$} ; %
-    \node[latent, left=3 of x] (z) {$\rvar{z}$} ; %
-    \factor[above=of x] {pr-x} {right:$\textrm{Ber}\lpa \frac{\alpha}{\alpha + \beta} \rpa$} {} {x} ; %
-    \factor[left=of x, xshift=-9mm] {x-z} {$\textrm{Beta}\lpa\alpha + \rvar{x}, \beta + 1 -\rvar{x}\rpa$} {x} {z}; %
-    \node[const, right=0.3 of x] (dummy) {} ; %
-    \draw[-, densely dotted] (x) -- (dummy) ; %
-  } \\
-  \bottomrule
-\end{tabular}
-\caption[Conjugate distribution factor graphs.]{Factor graph illustrations of conjugate distributions.}
-\label{tab:conjugate-distributions}
-\end{table}
-\tikzexternalenable
-
-Some densities have a \emph{conjugacy} property that can simplify inference. If $\rvar{x}$ and $\rvar{z}$ are two random variables in a model then the joint density on the two variable can be factorised as
-\begin{equation}\label{eq:conjugate-factorisation}
-  \pden{\rvar{x},\rvar{z}}(x,z) =
-  \pden{\rvar{x}|\rvar{z}}(x\gvn z)\pden{\rvar{z}}(z) =
-  \pden{\rvar{z}|\rvar{x}}(z\gvn x)\pden{\rvar{x}}(x).
+\marginpar{Bayesian inference is named after Thomas Bayes,~an~18th~century Presbyterian~minister, who proved a special case of what is now termed~Bayes'~theorem. Pierre-Simon Laplace later independently derived a more general statement of Bayes' theorem closer to the modern form.}% and was resposible for introducing many of the elements of what is now typically considered the Bayesian system of inference.}
+This expression relating the posterior on the unknown parameters to the prior distribution and model of the observations is an example of \emph{Bayes' theorem}. Typically the product of the conditional densities $\pden{\rvct{y}|\rvct{x}}$ is termed the \emph{likelihood} and considered a function of the value $\vct{x}$ of the unknown parameters $\rvct{x}$, with the observed data values $\lbrace \vct{y}^{(n)} \rbrace_{n=1}^N$ fixed. The denominator of the right-hand side \eqref{eq:iid-data-posterior-density}, the marginal density on the observed variables, can be written as a integral marginalising out the parameters from the joint density
+\begin{equation}\label{eq:model-evidence-definition}
+  \pden{\rvct{y}^{(1)},\,...\,,\rvct{y}^{(N)}}(\vct{y}^{(1)},\,...\,,\vct{y}^{(N)}) =
+  \int_{\set{X}} \prod_{n=1}^N \pden{\rvct{y}|\rvct{x}}(\vct{y}^{(n)}\gvn\vct{x})\,
+  \pden{\rvct{x}}(\vct{x}) \,\mu_{\rvct{x}}(\dr\vct{x}).
 \end{equation}
 \marginpar{A conditional density $\pden{\rvct{u}|\rvct{v}}$ is from the exponential family if it can be written as\\
 $\pden{\rvct{u}|\rvct{v}}(\vct{u}\gvn\vct{v})=$
 \\[1mm]
 $\frac{h(\vct{u}) \exp \lpa \vct{\eta}(\vct{v})\tr\vct{t}(\vct{u})\rpa}{z(\vct{v})}$,
 \\[1mm] with $\vct{\eta}(\vct{v})$ termed the \emph{natural parameters} and $\vct{t}(\vct{u})$ termed the \emph{sufficient statistics}.}
-For certain pairs of $\pden{\rvar{x}|\rvar{z}}$ and $\pden{\rvar{z}}$ the corresponding $\pden{\rvar{z}|\rvar{x}}$ and $\pden{\rvar{x}}$ have closed-form expressions. Some examples are shown in Table \ref{tab:conjugate-distributions}. In all of these examples $\pden{\rvar{x}|\rvar{z}}$ is a density for an \emph{exponential family distribution}. For every exponential family distribution density $\pden{\rvar{x}|\rvar{z}}$ there exists a $\pden{\rvar{z}}$ such that $\pden{\rvar{z}|\rvar{x}}$ is of the same parametric family as $\pden{\rvar{z}}$.
+This term is often described as the \emph{marginal likelihood} or the \emph{model evidence}. Generally this integral will not have an analytic solution though there are exceptions to this in a few special cases. For example if the densities $\pden{\rvct{y}|\rvct{x}}$ and $\pden{\rvct{x}}$ are both of \emph{exponential family distributions} and form a {conjugate pair} such that the posterior density is in the same family as the prior density then \eqref{eq:model-evidence-definition} will have a closed-form solution. For models in which the parameters are discrete the integral in \eqref{eq:model-evidence-definition} corresponds to a summation and so is in theory exactly solvable, though if the total number of possible configurations of the parameters is very large this summation can be infeasible to compute in practice. If the parameters are instead real-valued but of a low-dimensionality it may be possible to use numerical quadrature methods \citep{davis1967numerical} to compute the integral in \eqref{eq:model-evidence-definition} to a reasonable accuracy. Quadrature methods involve evaluating the integrand across a fixed grid of points and then computing a weighted sum of these values. For a fixed grid resolution however the cost of quadrature scales exponentially with the dimension of the space being integrated over - if $G$ points are used per dimension, for a $D$ dimensional parameter space evaluating \eqref{eq:model-evidence-definition} would require summing the joint density over $G^D$ parameter values.
 
-If $\rvar{x}$ corresponds to an observed variable in the model, then if evaluating conditional expectations $\expc{f(\rvar{z}) \gvn \rvar{x}}$ the conjugacy property means that conditional density $\pden{\rvar{z}|\rvar{x}}$ which $f$ should be integrated against has a closed form expression. Often for simple $f$, e.g. $f(z) = z$ or $f(z) = z^2$, the conditional expectations will have closed form solutions in such cases (i.e. corresponding to moments of the distribution defined by $\pden{\rvar{z}|\rvar{x}}$). Even when $f$ is more complex, typically generating independent random samples from $\pden{\rvar{z}|\rvar{x}}$ in such cases will be possible, simplifying the use of Monte Carlo methods (which will be introduced in the next chapter). If both $\rvar{z}$ and $\rvar{x}$ are latent variables then the conjugacy property is also useful as in this case $\rvar{z}$ can be analytically marginalised out of conditional expectations of functions which do not depend on $\rvar{z}$.
+For real-valued parameter spaces of a more than $\sim 10-20$ dimensions\footnote{With a grid of $G=10$ points per dimensions for $D=20$ a current high-end desktop processor with a theoretical peak performance of $5 \times 10^{11}$ \ac{FLOPS} would take on the order of years to compute the integral.} evaluating the model evidence term \eqref{eq:model-evidence-definition} is therefore typically computationally intractable. We can therefore often only evalulate the posterior density \eqref{eq:iid-data-posterior-density} up to an unknown constant. The posterior density itself is usually not of direct interest as it is only a proxy for describing the posterior distribution and is dependent on the particular model parameterisation chosen. However most quantities of interest from an inference perspective involve integrating functions against the posterior distribution - i.e. calculating conditional expectations given the observations - and as with the model evidence these integrals will typically be intractable to compute exactly. 
 
-\begin{figure}
+For example under an \ac{iid} assumption the density of the \emph{predictive distribution} of a new data point $\rvct{y}^*$ given the previously observed data is formed by integrating $\pden{\rvct{y}|\rvct{x}}$ against the posterior distribution
+\begin{equation}\label{eq:iid-predictive-distribution}
+\begin{split}
+  &\pden{\rvct{y}^*|\rvct{y}^{(1)},\,...\,,\rvct{y}^{(N)}}(\vct{y}^* \gvn \vct{y}^{(1)},\,...\,,\vct{y}^{(N)}) \\
+  &\qquad = 
+  \int_{\set{X}} 
+    \pden{\rvct{y}|\rvct{x}}(\vct{y}^*\gvn\vct{x})\,
+    \pden{\rvct{x}|\rvct{y}^{(1)},\,...\,,\rvct{y}^{(N)}}(\vct{x} \gvn \vct{y}^{(1)},\,...\,,\vct{y}^{(N)})
+  \,\mu_{\rvct{x}}(\dr \vct{x})
+  \\
+  & \qquad =
+  \expc{\pden{\rvct{y}|\rvct{x}}(\vct{y}^*\gvn\rvct{x}) \gvn \rvct{y}^{(1)} = \vct{y}^{(1)},\,...\,\rvct{y}^{(N)} = \vct{y}^{(N)}}.
+\end{split}
+\end{equation}
+If we wish to for example minimise the expected prediction error under some loss function this will involve integrating against this predictive distribution and so as a sub-task integrating against the posterior distribution on the model parameters. Similarly evaluating statistics of the unknown parameters under the posterior such as their mean or covariance corresponds to computing conditional expectations. In general any inferential output which takes in to account all of the information available from the posterior distribution will involve integrating against this distribution and so the computation of integrals is the key computational task in inference.
+
+As exact evaluation of the integrals of interest is usually intractable we must instead resort to \emph{approximate inference} methods which tradeoff an introduction of some level of approximation for an increase in computational tractability. In the next chapter we will review some of the major approximate inference methods which have been proposed and which form the basis for the contributions of this thesis.
+
+The \ac{iid} assumption is widely made in inference problems and although it will not be always be entirely valid in practice, it will often be a reasonable approximation. For real-valued parameter spaces $\set{X}$ and densities $\pden{\rvct{y}|\rvct{x}}$ and $\pden{\rvct{x}}$ meeting certain regularity conditions, if an \ac{iid} assumption is valid then the posterior distribution will asympotically tend to a multivariate normal distribution as the number of data points $N$ tends to infinity \citep{hartigan1983bayes}. For inference in models of large \ac{iid} datasets where the conditions for asymptotic normality are met, although the dimensionality of the parameter space will often still require the use of approximate inference methods, that the posterior distribution will have a close to normal geometry will typically mean even relatively simple computational methods can achieve good results.
+
+In this thesis we will primarily be concerned with methods for performing inference in models which do not fit into this mould. In the following subsections we discuss some of they key issues that can prove challenging to existing approximate inference approaches and which the methods contributed in this thesis are intended to help address.
+
+% iid data - asymptoptic normality
+
+%We will generally avoid the terms likelihood and marginal likelihood here and prefer to refer to the relevant conditional or marginal densities specifically using the notation introduced earlier in this chapter. The likelihood is usually formally defined as a function of the parameters given fixed values for the observed variables, with this usage arising from non-Bayesian \emph{maximum likelihood} methods which find values of the parameters which maximise the likelihood (given data). Under this definition it makes sense to refer to the likelihood of the parameters, but not the likelihood of observed variables (or observations / data). This leads to recommendations to refer to `the likelihood of the parameters given the [observed] data' \citep{mackay2003information}, which given the construct being discussed is actually a density on the observed data given parameter values is, in our opinion, not particularly clear. 
+
+%Further attaching a special name to the entity distracts from it being simply a conditional density function and implies a, in our view unwarrantedly, privileged role in inference. The fundamental object required for performing inference is the joint distribution across observed and unobserved variables. In many cases a factorisation in to a `prior' marginal distribution on the unobserved variables (parameters) and conditional distribution on the observed variables given unobserved variables will be natural, but not always. Consider for example the task of inferring the pixel values an unobserved portion of an image given the observed pixel values in the remaining image. Here it will be typically be more natural to represent our prior beliefs (about plausible images) as a joint distribution on all the image pixels, observed and unobserved directly, rather than specifying a prior distribution on the unobserved pixels and conditional distribution of the observed pixel values given the unobserved pixels. A difference of this image inference problem from the more typical model parameter inference problems considered in Bayesian inference is that we would not typically consider the unobserved region of the image `causing' the observed pixels, while a direction of causality from parameters to observed data is often implicitly assumed in Bayesian inference problems. Probability theory and inference is in general however agnostic to causality, and it is valid to consider inference in models without positing a direct causal link between the unobserved and observed variables.
+
+%The posterior distribution summarises our beliefs about the model parameters after observing data and so is central to Bayesian inference. Inference is sometimes described as the process of finding the posterior distribution
+
+% posterior distribution
+% evidence 
+
+% prediction on new data
+% summaries descriptions of parameters - mean, (co)variance
+% key-role of integration and exponential scaling of quadrature with dimension.
+
+% hierarchical latent variable models
+%  - example Gaussian process models, hierarchical regression models
+%  - ODW example?
+
+% implicit models
+%  - example simulators
+
+% multimodal distributions
+%  - Boltzmann machine
+
+% model comparison
+
+%In reality probabilistic modelling and inference are an iterative process with model criticism a key part of the loop \citep{box1980sampling,gelman2013philosophy}. We will discuss some of the (computational) issues involved in probabilistic model evaluation and comparison at the end of this chapter.
+
+%\marginpar{Always write down the probability of everything.\\--Steve Gull}
+%The first stage in any inference problem will be defining a probabilistic model for the problem at hand. A model embodies our assumptions about the problem, and in particular how we assume the quantities we observe are related to the unknown aspects that we wish to infer. Amongst the simplest, but also most commonly used, basic assumptions is that we observed a set of independent realisations 
+
+
+\subsection{Hierarchical latent variable models}
+
+\begin{figure}	
 \centering
-\includetikz{linear-dynamical-system-factor-graph}
-%\vskip 5pt
-\caption[Linear dynamical system factor graph.]{Factor graph for a latent linear dynamical system model.} %
-\label{fig:lds-factor-graph}
-\vspace{-2mm}
+\includetikz{hierachical-latent-variable-model-full-factor-graph}
+\caption[Hierarchical latent variable model factor graph.]{Factor graph of a simple hierarchical latent variable model with $N$ observed variables $\rvct{y}^{(n)}$ each associated with a local latent variable $\rvct{z}^{(n)}$, with both observed and latent variables dependent on a set of global latent variables (parameters) $\rvct{x}$.}
+\label{fig:hierarchical-latent-var-factor-graph}
 \end{figure}
 
-\marginpar{A Markov process is a stochastic process such that future states are conditionally independent of past states given the current state.}
-Various algorithms have been developed to exploit conjugacy in restricted classes of probabilistic models to perform efficient exact inference. Inference in \emph{latent linear dynamical systems}, an example of which is shown as a factor graph in Figure \ref{fig:lds-factor-graph}, can be efficiently performed with the recursive Kalman filtering and smoothing algorithms \citep{kalman1960new}. Closely related are the forward and backward updates for inference in \emph{hidden Markov models} \citep{stratonovich1960conditional} which have the same factorisation structure as latent linear dynamical systems but use a discrete rather than real-valued latent state. The \emph{junction tree algorithm} \citep{lauritzen1988local} is a general purpose algorithm for performing exact inference in undirected graphical models of discrete random variables which exploits conditional independency structure to efficiently decompose the inference into local computations; the computational cost of the algorithm scales exponentially with the number of nodes in the largest clique in the model and so is mainly relevant for graphs with relatively small maximal cliques.
-% message passing (link to reverse-mode AD?)
+In the preceding discussion of inference in a model of a \ac{iid} dataset, it was assumed that the only unknown variables in the model were a set of parameters $\rvct{x}$, the quantity of which did not depend on the number of data points $N$. This structure can be overly restrictive with it common that the process being modelled includes unknown quantities associated with each observed variable. Models will therefore  often include local (per data point) latent variables in addition to a set of global latent variables (or parameters). This grouping structure in the observed and unobserved variables in a model can extend to multiple levels and such models often are termed \emph{hierarchical} or \emph{multilevel} models.
 
-% discrete latent variables
-% Boltzmann machine distribution - summation of exponential number of states
-% junction tree
+A simple example of a hierarchical model is shown as a factor graph in Figure \ref{fig:hierarchical-latent-var-factor-graph}. As in the factor graph in Figure \ref{fig:simple-iid-factor-graph} we assume there are $N$ observed variables $\lbrace \rvct{y}^{(n)} \rbrace_{n=1}^N$ and a vector of global latent variables $\rvct{x}$. In this case we further include $N$ local latent variables $\lbrace \rvct{x}^{(n)} \rbrace_{n=1}^N$ paired with each observed variable. In Figure \ref{fig:hierarchical-latent-var-factor-graph} we assume the local latent variables and observed variables are conditionally independent given the global latent variables. More complex structures are also common - for example dynamical state space models for time series data assume dependencies between the latent variables corresponding to adjacent time points. %Variants on the structure shown in Figure \ref{fig:hierarchical-latent-var-factor-graph} encompass the basic form of probabilistic models commonly used in statistics and machine learning, such as latent Dirichlet allocation topic models \citep{blei2003latent} and Gaussian process regression and classification models \citep{rasmussen2006gaussian}.
 
-%In general we might consider inference as only an intermediate step with the inferential output (which we discuss in more detail below but for now we loosely define as a representation of the probable values of the unobserved random variables in our assumed model given observations) then being used in some downstream task. Achieving `optimal' in some sense performance in this task would then be considered the overall aim - decision theory offers a framework for making optimal decisions under uncertainty. Alternatively we might be interested in analysing the statistical properties of the model when conditioning on observations - for instance computing moments of variables or the probability that variables take values in within some set. Importantly in both cases however the fundamental computation involved is the same - evaluating conditional expectations of functions of the unobserved variables in the model given observations. We will generally remain agnostic to such considerations of how the output of the inference is to be used, and instead consider inference as the task of
+Although powerful, the introduction of local latent variables in to models can significantly increase the complexity of inference. At a basic level, as the number of unobserved variables is now dependent on the data set size, the total dimensionality of the space which needs to be integrated over when performing inference will typically be much higher than for models with a fixed number of parameters. This means the need for inference methods which scale well with dimensionality is even more essential. The growth of the the number of unobserved variables with the data set size $N$ will typically also mean that we can no longer expect asymptotic normality of the full posterior. Typically the posterior distribution on the local and global latent variables will have a complex geometry, with strong dependencies between the global and local latent variables that can limit the performance of many standard approximate inference approaches \citep{betancourt2015hamiltonian}.
 
-%In general we should consider the task of inference in the context of the downstream task the inferential output is being used for. %The topic of \emph{decision theory} considers the issues surrounding using a probabilistic model to reason and make decisions under uncertainty and is a signficant research area in its own right, we will however use a very coarse but still we believe useful characterisation that the fundamental computational task in probabilistic decision theory is computing the expected value of functions of unobserved variables given a probabilistic model and observations. In particular we will assume we have a loss function we wish to minimise the expected value of (or equivalently a utitlity function we wish to maximise the expected value of).
-
-
-
-%Given a probabilistic model and set of observations, we loosely define inference as the process of finding plausible values for the unobserved variables given the model and observations. 
-
-%Before considering inference specifically in the setting of the \emph{Observing Dark Worlds} problem, we will first try to express the computational task in more general terms. For the sake of notational brevity we assume that we collect all observed random variables in to the random vector $\rvct{y} \in \set{Y}$ and all unobserved random variables in the model of interst in to the random vector $\rvct{z} \in \set{Z}$. Our model defines a joint probability $\prob{\rvct{y},\rvct{z}}$; in the \emph{Observing Dark Worlds} case we specified this as a directed factor graph, alternatively we might specify our model as a simulator in code or as an undirected factor graph, in all cases explicitly or implicitly we define $\prob{\rvct{y},\rvct{z}}$.
-
-%We then define inference as the task of computing a representation of the information we have about the probable values of $\rvct{z}$ given the assumed model and observed values for $\rvct{y}$ which allows evaluation of conditional expectations $\expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y}}$ of functions of the unobserved random variables. This a not entirely standard definition and not is mathematically precise, however we believe it is broadly consistent with existing usages of \emph{inference} while making clear the key property that the motivation for inference algorithm is to allow computation of (conditional) expectations.
-
- %Making inferences about the unobserved variables given the model and observations then fundamentally corresponds to computing conditional expectations on the unobserved variables given the observations, $\expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y}}$. Conditional expectation can be used to express any inferential query we ha[align=left, anchor=north] (lab2) at (x-z.south)ve about the unobserved variables
- 
-\subsection{A note on Bayesian terminology}
-
-%We have so far discussed inference without using some of the language and terminology common to discussions of \emph{Bayesian inference}. This omission was purposeful - although many of the inference problems we will discuss in this thesis 
-
-%We have so far discussed inference in what to some readers may seem a somewhat obtuse way, in as much as we have avoided some of the terminology commonly used to describe Bayesian inference.
-
-%We have so far neglected to mention some of the terminology commonly used when discussing inference.
-
-%We have thus far avoided some of the terminology 
-
-%We have thus far discussed inference without mentioning some of the terminology commonly used in this context. In particular the system of inference that we have described would often be identified as being \emph{Bayesian} --- this name arises because of the central importance of \emph{Bayes' theorem} \eqref{eq:bayes-theorem} in defining the conditional probability of unobserved variables given observations. 
-
-The system of inference that we have described would typically be identified as being \emph{Bayesian}. This name arises because of the central importance of \emph{Bayes' theorem} \eqref{eq:bayes-theorem} in defining the conditional probability of unobserved variables given observations.
-
-While often the inference problems we will discuss in this thesis will be motivated from a Bayesian standpoint, the use of probabilistic modelling and resulting need to deal with the computational challenges of computing integrals in high dimensional spaces are not unique to Bayesian statistics. For instance many of the approximate inference methods we will discuss in the next two chapters were originally developed for use in studying statistical physics problems such as the phase transitions of the \emph{Ising spin model} (which we earlier encounted under the alternative name of the Boltzmann machine model). As our main interest in this thesis will be the computational aspects of inference rather than specific applications, we will therefore generally prefer to refer to probabilistic modelling and inference in general terms rather than Bayesian inference in particular.
-
-%For instance the Boltzmann machine model given as an example when discussing undirected graphical models, is more commonly known as an \emph{Ising spin model} in statistical physics and is used extensively as a simple model to study phase transition behaviour. Computing the normalising constant of the . There 
-
-For completeness we will briefly review the nomenclature typically used in Bayesian inference. For a model with observed variables $\rvct{x} \in \set{X}$ and unobserved variables $\rvct{z} \in \set{Z}$, often referred to as \emph{model parameters} in a Bayesian setting, the standard presentation of Bayesian inference assumes that the joint probability is specified by a density $\pden{\rvar{x},\rvar{z}} = \td{\prob{\rvct{x},\rvct{z}}}{(\mu_{\rvct{x}} \times \mu_{\rvct{z}})}$ which naturally factorises as $\pden{\rvct{x},\rvct{z}}(\vct{x},\vct{z}) = \pden{\rvct{x}|\rvct{z}}(\vct{x}\gvn\vct{z})\,\pden{\rvct{z}}(\vct{z})$. 
-
-In this case the probability distribution defined by the marginal density on the model parameters $\pden{\rvct{z}}$ is typically termed the \emph{prior distribution}, with the intepretation that it captures our beliefs about the parameters before observing data. The conditional density on the observed variables given parameters $\pden{\rvct{x}|\rvct{z}}$ is often referred to as the \emph{likelihood} or sometimes the \emph{statistical model} \citep{robert2007bayesian}.%, though as we will discuss below this usage is ambiguous. 
-
-The distribution defined by the conditional density on the parameters given the observations $\pden{\rvct{z}|\rvct{x}}$ is termed the \emph{posterior distribution}, with this naming indicative of it representing our beliefs about the parameters after observing data. The posterior density can be calculated from the prior and likelihood using the definition for conditional density given in \eqref{eq:conditional-density-definition}. Analagously to the definition for probabilities in \eqref{eq:bayes-theorem} the resulting relationship is often also termed Bayes' theorem
-\begin{equation}\label{eq:bayes-theorem-density}
- \pden{\rvct{z}|\rvct{x}}(\vct{z}\gvn\vct{x}) =
- \frac{\pden{\rvct{x}|\rvct{z}}(\vct{x}\gvn\vct{z})\,\pden{\rvct{z}}(\vct{z})}{\pden{\rvct{x}}(\vct{x})}
- \quad \forall \vct{z} \in \set{Z},\,\vct{x} \in \set{X} : \pden{\rvct{x}}(\vct{x}) > 0.
+In some cases the posterior distributions of the local latent variables associated with the observed data will not be of direct interest to the downstream task. For example the conditional independence structure in Figure \ref{fig:hierarchical-latent-var-factor-graph} means that the predictive distribution on a new unseen datapoint $\rvct{y}^*$ given the observed data can be written
+\begin{equation}\label{eq:hier-lv-predictive-distribution}
+\begin{split}
+  &\pden{\rvct{y}^*|\rvct{y}^{(1)},\,...\,,\rvct{y}^{(N)}}(\vct{y}^* \gvn \vct{y}^{(1)},\,...\,,\vct{y}^{(N)}) \\
+  &\qquad = 
+  \int_{\set{Z}} \int_{\set{X}}
+    \pden{\rvct{y}|\rvct{x},\rvct{z}}(\vct{y}^*\gvn\vct{x},\vct{z})\,
+    \pden{\rvct{z}|\rvct{x}}(\vct{z}\gvn\vct{x})\\
+  &\qquad \phantom{= \int_{\set{Z}} \int_{\set{X}}\,}
+    \pden{\rvct{x}|\rvct{y}^{(1)},\,...\,,\rvct{y}^{(N)}}(\vct{x} \gvn \vct{y}^{(1)},\,...\,,\vct{y}^{(N)})
+  \,\mu_{\rvct{x}}(\dr \vct{x})\,\mu_{\rvct{z}}(\dr \vct{z}).
+\end{split}
 \end{equation}
-Inference is then typically posed as the problem of computing the posterior distribution. This is typically not available in a closed form as evaluating the denominator in \eqref{eq:bayes-theorem-density}, $\pden{\rvct{x}}$, sometimes termed the \emph{model evidence}, requires integrating the joint density over the parameters
-\begin{equation}\label{eq:model-evidence-integral}
- \pden{\rvct{x}}(\vct{x}) = 
- \int_{\set{Z}} \pden{\rvct{x},\rvct{z}}(\vct{x},\vct{z})\,\dr\vct{z} =
- \int_{\set{Z}} \pden{\rvct{x}|\rvct{z}}(\vct{x}\gvn\vct{z})\,\pden{\rvct{z}}(\vct{z})
- \,\dr\vct{z}.
-\end{equation}
-Other than in special cases such as when $\pden{\rvct{z}}$ and $\pden{\rvct{x}|\rvct{z}}$ are both in the exponential family and form a conjugate pair such as those shown in Table \ref{tab:conjugate-distributions}, this integral does not have a closed form solution and typically $\set{Z}$ will be of a dimensionality which means quadrature will be too expensive. As $\pden{\rvar{x}}(\vct{x})$ is found by marginalising out $\rvct{z}$ from the product of the prior and likelihood, it is sometimes termed the \emph{marginal likelihood}, though this name obscures that it is also dependent on the prior.
+Predictions under the model will therefore not depend on the values of the local latent variables $\lbrace \rvct{z}^{(n)} \rbrace_{n=1}^N$, and so ideally we would marginalise out these variables from the full posterior distribution on all unobserved variables $\prob{\rvct{z}^{(1)},\,...\,,\rvct{z}^{(N)},\rvct{x}|\rvct{y}^{(1)},\,...\,,\rvct{y}^{(N)}}$ to obtain the posterior distribution on just the global latent variables $\prob{\rvct{x}|\rvct{y}^{(1)},\,...\,,\rvct{y}^{(N)}}$. The distribution $\pden{\rvct{x}|\rvct{y}^{(1)},\,...\,,\rvct{y}^{(N)}}$ is defined on a much lower dimensional space and will often have a simpler geometry which makes it more amenable to approximate inference methods, however generally the marginalisation over the local latent variables will not be analytically tractable.
 
-The usage of the term likelihood in Bayesian inference is overloaded: while it is often informally used to refer to the conditional density in $\pden{\rvct{x}|\rvct{z}}$ in Bayes' theorem (which is often summarised as \emph{posterior is proportional to likelihood times prior}), the likelihood is usually formally defined as a function of the parameters (given fixed values for the observed variables) with notation such as $\ell(\vct{z} \gvn \vct{x}) = \pden{\rvct{x}|\rvct{z}}(\vct{x}\gvn\vct{z})$ sometimes used to emphasise this. This usage is particularly common when discussing \emph{maximum likelihood} methods which find values of the parameters which maximise the likelihood (given data). In this latter interpretation it makes sense to refer to the likelihood of the parameters, but not the likelihood of observed variables (or observations / data). This leads to recommendations to refer to `the likelihood of the parameters given the [observed] data' \citep{mackay2003information}, which given the construct being discussed is actually a density on the observed data given parameter values is, in our opinion, not particularly clear.
+\subsection{Simulator models}\label{subsec:implicit-models}
 
-In this thesis we will avoid using the terms \emph{likelihood} and \emph{marginal likelihood}. We will generally prefer to refer to individual conditional and marginal densities (or probabilities) explicitly using the notation introduced earlier in this chapter, though we will use the terms prior, posterior and model evidence as qualifiers where appropriate.% to help with intuition.
-
-We will also prefer to consider a probabilistic model as defining a joint probability measure on observed and unobserved variables $\prob{\rvct{x},\rvct{z}}$, without necessarily making further assumptions of how this joint probability is specified. Commonly the model will be defined via an explicit joint density $\pden{\rvct{x},\rvct{z}}$ given for example by a directed factor graph, but for example in the case of simulator models, the model may instead by defined procedurally by code for sampling from the joint probability, with the joint density only implictly defined. 
-
-A further common special case is when the model is specified by a marginal density on the unobserved variables $\pden{\rvct{z}}$ (a prior in Bayesian terms) and a conditional density on observed variables given unobserved variables $\pden{\rvct{x}|\rvct{z}}$ (a `likelihood'), this factorisation naturally leading to the form given for Bayes' theorem in \eqref{eq:bayes-theorem-density}. However the assumption that the joint density can be easily factorised into closed form densities $\pden{\rvct{z}}$ and $\pden{\rvct{x}|\rvct{z}}$ is not a requirement to evaluate the posterior density $\pden{\rvct{z}|\rvct{x}}$, and there are inference problems where this will not apply.
-
-%Consider for example the problem of inferrring plausible values for a subset of observed pixels $\rvct{z}$ in an image given observed values for the remaining pixels $\rvct{x}$ and a probabilistic model defining a joint density on all of the pixels $\pden{\rvct{x},\rvct{z}}$. For many probabilistic models used for images (a simple example would be a pairwise Markov random field with undirected factors between each pair of adjacent pixel variables), while it will be possible to evaluate the joint density $\pden{\rvct{x},\rvct{z}}$, potentially only up to some unknown normalising consant, we may not be able to easily factorise this joint density in to a marginal density on the unobserved pixels $\pden{\rvct{z}}$ and conditional density on observed pixels given the unobserved pixels $\pden{\rvct{x}\gvn\rvct{z}}$.
-
-As a final comment on terminology, we will prefer to refer to unobserved or latent variables (which we will use interchangeably) rather than parameters when these quantities are being inferred as opposed to set to fixed values. %Although this point may seem minor, as we will see later a key idea of this thesis is that treating all unobserved variables in a probabilistic model jointly rather than differentially treating a subset considered as parameters can be of signficant computational benefit. 
-Parameters and latent variables are sometimes used distinctly, in particular defining parameters as unobserved variables that are of a fixed number and which all observed variables are dependent on, and latent variables as unobserved variables which only the observed variables associated with a particular data point are dependent upon and which increase in number with the quantity of observed datapoints \citep{bishop2006pattern}. When this distinction is helpful we will instead follow the terminology used in \citep{blei2017variational} and refer to the former as \emph{global latent variables} and the latter as \emph{local latent variables}.
-
-%However from the perspective of inference both sets of variables are equivalent - they are variables in the model which we assume we are uncertain about the value of as we do not observe their values directly and so need to infer. Although this point may seem minor, as we will see later a key idea of this thesis is that treating all unobserved variables in a probabilistic model jointly rather than differentially treating a subset considered as parameters can be of signficant computational benefit.
-
-%This is not just a pedantic point about terminology: as we will see in later chapters, a key idea in this thesis will be that by treating all unobserved variables in a model jointly we are often 
-
-
-% factorisation p(y|z)p(z) not natural for undirected models
-% considers prior and likelihood as separate objects, often with implication prior is subjective and likelihood is more objective - both are expressions of belief / assumptions and are not independent - if reparameterise likelihood need to change prior to keep consistent + any prior including uniform / improper prior makes assumptions (only flat in given parameterisation)
-
-\subsection{Hierarchical modelling}
-
-\begin{figure}
+\begin{figure}[!t]
 \centering
-\includetikz{observing-dark-worlds-hierarchical-factor-graph}
+\begin{subfigure}[b]{\linewidth}
+\vskip 0pt
+\centering
+\hrule
+\vskip 3pt
+%\begin{minipage}{0.7\linewidth}
+\begin{algorithmic}
+\small
+\State $\vct{y}_0 \sim \nrm{\cdot \gvn \vct{\nu},\mtx{\Psi}}$
+\State $\vct{x} \sim \nrm{\cdot \gvn \vct{\mu},\mtx{\Sigma}}$
+\For {$t \in \lbr 1 \dots T\rbr$}
+  \State $\vct{n}_{t-1} \sim \nrm{\cdot \gvn \vct{0},\idmtx}$
+  \State $\vct{y}_{t} \gets \vct{y}_{t-1} + h \lpa \vct{m}(\vct{y}_{t-1},\vct{x}) - \frac{1}{2} \vct{s}(\vct{y}_{t-1},\vct{x})\odot\pd{\vct{s}}{\vct{y}}(\vct{y}_{t-1},\vct{x})\rpa$
+  \State $\vct{y}_{t} \gets \vct{y}_{t}  + \sqrt{h} \, \vct{s}(\rvct{y}_{t-1},\rvct{z})\odot \rvct{n}_{t-1} + \frac{h}{2} \vct{s}(\vct{y}_{t-1},\vct{x})\odot\pd{\vct{s}}{\vct{y}}(\vct{y}_{t-1},\vct{x}) \odot \vct{n}_{t-1}^2$
+\EndFor
+\end{algorithmic}
+%\end{minipage}
+\vskip 3pt
+\hrule
+\vskip 3pt
+\captionsetup{justification=centering}
+\caption{Pseudo-code for Milstein method integration of \ac{SDE} model. } %
+\label{sfig:sim-model-code} %
+\end{subfigure}%
+\\[2ex]
+\begin{subfigure}[b]{\linewidth}
+\vskip 0pt
+\centering
+\includetikz{sde-simulation-factor-graph}
 %\vskip 5pt
-\caption[Observing Dark Worlds hierarchical model.]{Observing Dark Worlds hierarchical model.} %
-\label{fig:odw-hierarchical-factor-graph}
+\caption{Directed factor graph of 3 time steps of \ac{SDE} simulation.}
+\label{sfig:sim-model-factor-graph}
+\end{subfigure}%
+\caption[Simulator model example.]{Example of a simulator model corresponding to Milstein method integration of a set of \acsp{SDE}, $\dr \rvct{y}(t) = \vct{m}\lpa\rvct{y}(t),\rvct{x}\rpa \,\dr t + \vct{s}\lpa\rvct{y}(t),\rvct{x}\rpa \, \dr\rvct{n}(t)$, specified as pseudo-code in \subref{sfig:sim-model-code} and a directed factor graph in \subref{sfig:sim-model-factor-graph}. The dynamics of model are governed by parameters $\rvct{x}$. In the pseudo-code the notation $\sim$ followed by a distribution shorthand represents generating a value from the associated distribution and assigning it to a variable.} %
+\label{fig:simulator-model-example}
 \end{figure}
 
-When introducing the proposed model (Figure \ref{fig:observing-dark-worlds-factor-graph}) for the \emph{Observing Dark Worlds} problem we glossed over how the parameters $\sigma$, $\mu_m$, $\sigma_m$, $\mu_t$ and $\sigma_t$ were chosen, assuming for simplicity they had somehow been set to reasonable values. Rather than considering these quantities as fixed parameters, a more Bayesian approach would be instead to also treat them as further unobserved variables to infer.
+The probabilistic models considered so far have been defined by explicitly specifying a density over the all the variables in the model, for example via a factor graph. Rather than defining the density on the variables in a model an alternative approach is for a process for generating values for the variables in a model to be specified procedurally in code, with the resulting joint density on the model variables then only implicitly defined. Such models are sometimes termed \emph{simulator} or \emph{implicit} models \citep{diggle1984monte}. %; we will use the term \emph{implicit generative model} here.
 
-In particular if we now consider $\upsigma$, $\upmu_{\rvar{m}}$, $\upsigma_{\rvar{m}}$, $\upmu_{\rvar{t}}$ and $\upsigma_{\rvar{t}}$ as (global) latent variables, we can encode our prior beliefs about what are plausible values for the variables by setting densities on each. For example, for the intrinsic ellipticity scale variable $\upsigma$ we might use $\mathrm{Gamma}(2,0.1)$. This has support only for positive values as required for a scale variable, and reflects the known properties of the intrinsic ellipticities - that they have non-zero variability (with the density tending to zero as $\upsigma \to 0$) and that they are bounded to unit magnitude and hence their standard deviation would be expected to be $ \ll 1$. We might have less strong prior beliefs about the range of plausible values for the halo mass and core radii distribution, and so choose to use concordantly less constraining prior distributions on the scale and location variables for these distributions. For example a prior of $\nrm{0, 5}$ on the location variables $\upmu_{\rvar{m}}$ and $\upmu_{\rvar{t}}$ and a prior of $\mathcal{C}_{\geq 0}(2)$ on the scale variables $\upsigma_{\rvar{m}}$ and $\upsigma_{\rvar{t}}$, supports a wide range of values for these variables as being reasonable while still making a weak assumption that extreme values are implausible.
+A common setting in which such models occur is the simulation of a mechanistic model of a physical process for example described by a set of \acfp{SDE}. In implementations of such simulator models, the stochasticity in the model will be introduced via draws from a pseudo-random number generator in the programming language used to specify the model. Given these random inputs, the output of the simulator is then calculated as a series of deterministic operations performed to the inputs and so can be described by a computation graph. The overall composition of directed factor nodes specifying the generation of random inputs from known densities by the random number generator and computation graph describing the operations performed by the simulator code together therefore define a directed factor graph. An example of a simulator model corresponding to Milstein method approximate integration \citep{kloeden1992numerical} of a set of \acp{SDE} is shown as both pseudo-code and a factor graph in Figure \ref{fig:simulator-model-example}.
 
-In the \emph{Observing Dark Worlds} competition, two distinct sets of data were provided --- a training set of $N_{\textrm{train}} = 300$ of cluster images in which the observed galaxy ellipticities, galaxy coordinates and halo positions were all provided, and a test set of $N_{\textrm{test}} = 120$ images where only the observed galaxy ellipticities and galaxy coordinates are provided. Assuming both the training and test data are \ac{iid} we can form a \emph{hierarchical model} for the problem which specifies a joint density across the observed and local latent variables for all of the training and test set clusters as well as the global latent variables $\upsigma$, $\upmu_{\rvar{m}}$, $\upsigma_{\rvar{m}}$, $\upmu_{\rvar{t}}$ and $\upsigma_{\rvar{t}}$. A factor graph for the proposed hierarchical model is shown in Figure \ref{fig:odw-hierarchical-factor-graph}. Compared to the factor graph in Figure \ref{fig:observing-dark-worlds-factor-graph} for a single cluster image some detail in the model structure for each cluster has been hidden to make the higher level structure clearer, and the galaxy positions, which are all observed, have been omitted. The vector notation introduced when discussing inference in the model has also been used to remove the need for plates indexed across galaxies and halos.
+%If the observed variables had instead been the output of a deterministic factor where there was no bijective dependence on any of the parent variables (inputs to the deterministic factor), the change of variables formula \eqref{eq:change-of-variables-vector-bijective} would no longer have applied. Generally in such cases it will not be possible to analytically marginalise out a parent variable to give an explicit conditional density on the observed variable(s). %Models which do not admit explicit conditional densities on the observed variables are sometimes described as \emph{implicit models} \citep{diggle1984monte}, with simulator models being a common case.
 
-When making predictions using the hierarchical model, the local latent variables $\lbrace \rvct{x}^{(i)}, \rvct{y}^{(i)},\rvct{m}^{(i)},\rvct{t}^{(i)} \rbrace$ are now jointly dependent when not conditioning on the values of the global latent variables $\upsigma$, $\upmu_{\rvar{m}}$, $\upsigma_{\rvar{m}}$, $\upmu_{\rvar{t}}$ and $\upsigma_{\rvar{t}}$. It is therefore necessary to jointly integrate across all of the local latent variables associated with each training and test set cluster when evaluating conditional expectations given the observed data. The resulting integral is over a space of several thousand dimensions. Given the infeasibility of using quadrature to compute conditional expectations of the halo positions for even a single cluster image, clearly in this case the need for computational methods for inference which scale to high dimensionalities is even more stark.
+\begin{figure}[t]
+\centering
+\begin{subfigure}[b]{.48\linewidth}
+\centering
+\includetikz{example-implicit-model-factor-graph}
+\caption{Directed factor graph for model with two latent variables $(\rvar{x}_1, \rvar{x}_2)$, and an observed variable $\rvar{y}$.}
+\label{sfig:simple-impl-factor-graph}
+\end{subfigure}
+~~
+\begin{subfigure}[b]{.48\linewidth}
+\centering
+\includetikz{example-implicit-model-cond-plot}
+\caption{Plot of marginal density on latent variables (contours) and set of values for which $\rvar{y} = 1$ (green curve).}
+\label{sfig:example-implicit-model-cond-plot}
+\end{subfigure}
+\caption[Example of implicit probabilistic model.]{Simple example of an implicit probabilistic model where the observed variable is a non-bijective function of two latent variables.}
+\label{fig:example-non-bijective-transform-factor-graph}
+\end{figure}
 
-% sigma - more than zero (intrinsic variability) but << 1 as e \in [-1, 1]
-% mu_t / mu_m - weak prior knowledge, however extreme values e.g. 1e6 or 1e-6 seem unlikely
-% sigma_t / sigma_m - again weak prior knowledge - allow for zero variability and fat tail
+A key difference of simulator models from more typical probabilistic models is that the variables corresponding to observables in the factor graph of a simulator model may be the output of deterministic factors rather than probabilistic directed factors. An illustration of such a case for a simple three variable model is shown in Figure \ref{fig:example-non-bijective-transform-factor-graph}. Here the observed variable $\rvar{y}$ is a deterministic function of two latent (unobserved) variables $\rvar{x}_1$ and $\rvar{x}_2$. There is no analytic solution in terms of elementary functions for $\rvar{x}_1$ as a function of $\rvar{y}$ and $\rvar{x}_2$ or for $\rvar{x}_2$ as a function of $\rvar{x}_1$ and $\rvar{y}$. This means the Dirac delta term corresponding to the deterministic factor cannot be integrated out. Due to the presence of the Dirac delta the joint density $\pden{\rvar{y},\rvar{x}_1,\rvar{x}_2}$ is not well defined (the joint distribution $\prob{\rvar{y},\rvar{x}_1,\rvar{x}_2}$ is not absolutely continuous with respect to the Lebesgue measure) which complicates evaluations of conditional expectations such as $\expc{f(\rvar{x}_1,\rvar{x}_2) \gvn \rvar{y} = 1}$. In particular the set of $\rvar{x}_1$ and $\rvar{x}_2$ values corresponding to solutions to $\rvar{y} = y$ for an particular $y$ (illustrated for $y=1$ as the green curve in Figure \ref{sfig:example-directed-graphical-model}) is an implicitly defined manifold in the $\rvar{x}_1$--$\rvar{x}_2$ space and has zero Lebesgue measure. The lack of an explicit conditional density in such implicit models makes it difficult to apply standard approximate inference methods. %Therefore even though the dimensionality is low in this case we can not use simple quadrature to evaluate conditional expectations without some further form of approximation. %We will revisit methods for performing inference in implicit models in Chapter \ref{ch:differentiable-generative-models}.
+
+\subsection{Undirected models}
+
+\begin{figure}[!t]
+\vskip 0pt
+\centering
+\includetikz{boltzmann-machine-factor-graph}
+%\vskip 5pt
+\caption[Boltzmann machine factor graph.]{Five unit Boltzmann machine factor graph showing explicit actorisation of distribution into pairwise and single variable potentials.}
+\label{fig:boltzmann-machine-factor-graph}
+\end{figure}
+
+Figure \ref{fig:boltzmann-machine-factor-graph} shows the factor graph for a \emph{Boltzmann machine} distribution, sometimes called a \emph{pairwise binary Markov random field} or \emph{Ising model}, on five binary random variables $\lbrace \rvar{s}_i \rbrace_{i=1}^5$. A Boltzmann machine distribution can be factored in to a product of pairwise weighted interactions $\exp(\rvar{s}_i W_{ij} \rvar{s}_j)$ and single variable bias potentials $\exp(b_i \rvar{s}_i)$, each of which are explicitly represented by labelled factors in Figure \ref{fig:boltzmann-machine-factor-graph}.
 
 \subsection{Model comparison}
 
-So far we have discussed making inferences about the unobserved variables in a single fixed model. An important second level of inference is comparing between competing models for the same observed data. As we will see this can be treated consistently with a simple extension to the existing probabilistic framework we have discussed. 
+So far we have discussed making inferences about the unobserved variables in a single fixed model. An important second level of inference is comparing between competing models for the same observed data. This can be treated consistently with a simple extension to the existing probabilistic framework we have discussed. 
 
-As a simple motivating example, we can consider comparing our proposed model for the \emph{Observing Dark Worlds} problem, in which we assumed that the magnitude of the shear distortion had the functional dependence given in \eqref{eq:dark-matter-halo-force}, to an alternative model which assumes
-\begin{equation}\label{eq:dark-matter-halo-force-alt-1}
-  f_h(u,v) = \frac{\rvar{m}_h}{r_h}
-  \quad\textrm{where}\quad
-  r_h = \sqrt{(\rvar{x}_h - u)^2 + (\rvar{y}_h - v)^2}.
-\end{equation}
 \marginpar{Ockham's Razor is a philoshopical principle, commonly attributed to the 14th century Franciscan friar William of Ockham, that states if there exist multiple explanations for observations, all else being equal we should prefer the simplest.}
-This model is simpler in the sense of requiring only one additional latent variable, $\rvar{m}_h$, per halo (compared to both $\rvar{m}_h$ and $\rvar{t}_h$), but produces a non-realistic infinite magnitude distortion at zero radial distances. Given the observed data, we would ideally like to be able to make a judgement as to which of the two proposed models better describes the data. To be useful this comparison must take into account the relative complexity of the models; a model with more free variables will generally be able to fit observed data more closely, however \emph{Ockham's Razor} (and corresponding empirical evidence of the loss of predictive power of overly complex models) suggests we should prefer simpler models where possible. By marginalising over the unobserved variables in a model, the probabilistic model comparison framework we will describe automatically embodies Ockham's Razor \citep{mackay2003information}. 
+Given observed data, we would ideally like to be able to make a judgement as to which of two (or more) proposed models better describes the data. To be useful this comparison must take into account the relative complexity of the models however; a model with more free variables will generally be able to fit observed data more closely, however \emph{Ockham's Razor} (and corresponding empirical evidence of the loss of predictive power of overly complex models) suggests we should prefer simpler models where possible. By marginalising over the unobserved variables in a model, the probabilistic model comparison framework we describe automatically embodies Ockham's Razor \citep{mackay2003information}. 
 %We will first pose the model inference problem in general terms before returning to the \emph{Observing Dark Worlds} problem to give a concrete example.
 
 \begin{figure}
@@ -1070,34 +738,34 @@ This model is simpler in the sense of requiring only one additional latent varia
 \label{fig:model-comparison-factor-graph}
 \end{figure}
 
-The general model comparison set up we will assume is that we have a finite set of $M$ models, indexed by an \emph{indicator} variable $\rvar{m} \in \fset{1 \dots M}$. All models share the same observed variables  $\rvct{x}$, and there are a set of per model vectors of unobserved variables $\fset{\rvct{z}_m}_{m=1}^M$ which are assumed to be independent (before conditioning on observations). More complex structures could be assumed such as the models sharing a set of common unobserved variables, however we only consider the case of independent models here. The joint density on the observations, model indicator and latent variables is then assumed to factorise as
+The general model comparison set up we assume is that we have a finite set of $M$ models, indexed by an \emph{indicator} variable $\rvar{m} \in \fset{1 \dots M}$. All models share the same observed variables  $\rvct{y}$\footnote{For notational simplicity here we assume all observed variables have been concatenated in to one vector and similarly for the observed variables, with any internal model factorisation structure such as discussed in the preceding sections omitted.}, and there are a set of per model vectors of unobserved variables $\fset{\rvct{x}_m}_{m=1}^M$ which are assumed to be independent (before conditioning on observations). More complex structures could be assumed such as the models sharing a set of common unobserved variables, however we only consider the case of independent models here. The joint density on the observations, model indicator and latent variables is then assumed to factorise as
 \begin{equation}\label{eq:multi-model-joint}
 \begin{split}
-  &\pden{\rvct{x},\rvar{m},\rvct{z}_1,...\, ,\rvct{z}_M}
-  (\vct{x},m,\vct{z}_1,...\, ,\vct{z}_M) =\\[-2mm]
+  &\pden{\rvct{y},\rvar{m},\rvct{x}_1,\,...\, ,\rvct{x}_M}
+  (\vct{y},m,\vct{x}_1,...\, ,\vct{x}_M) =\\[-2mm]
   &\qquad\qquad
-  \pden{\rvct{x}|\rvar{m},\rvct{z}_m}(\vct{x}\gvn m,\vct{z}_m)\,
+  \pden{\rvct{x}|\rvar{m},\rvct{z}_m}(\vct{y}\gvn m,\vct{x}_m)\,
   \pden{\rvar{m}}(m)\,
-  \prod_{n=1}^M \pden{\rvct{z}_n}(\vct{z}_n).
+  \prod_{n=1}^M \pden{\rvct{x}_n}(\vct{x}_n).
 \end{split}
 \end{equation}
-The marginal density on the model indicator $\pden{\rvar{m}}$ represents our prior beliefs about the relative probabilities of the models before observing data. Importantly the value of the model indicator variable $\rvar{m}$ selects the relevant per model conditional density on the observed variables given latent variables $\pden{\rvct{x}|\rvar{m},\rvct{z}_m}$; this represents the assumption that conditioned on the model indicator assuming a particular model index $m$ the observed variables are conditionally independent of the latent variables of all other models $\rvct{x} \perp \fset{\rvct{z}_n}_{n\neq m} \gvn \rvar{m} = m$. An extension to factor graphs, \emph{gates} \citep{minka2009gates}, can be used to represent such context-dependent conditional independencies. Figure \ref{fig:model-comparison-factor-graph} shows a gated factor graph of equation \ref{eq:multi-model-joint}, with the gate indicated by the dashed box. %The semantics of the gate are that any edges from factors or variables nodes within the gate box to variables or factor outside the gate are only active when the gating variable, indicated by the the variable
+The marginal density on the model indicator $\pden{\rvar{m}}$ represents our prior beliefs about the relative probabilities of the models before observing data. Importantly the value of the model indicator variable $\rvar{m}$ selects the relevant per model conditional density on the observed variables given latent variables $\pden{\rvct{y}|\rvar{m},\rvct{x}_m}$; this represents the assumption that conditioned on the model indicator assuming a particular model index $m$ the observed variables are conditionally independent of the latent variables of all other models $\rvct{y} \perp \fset{\rvct{x}_n}_{n\neq m} \gvn \rvar{m} = m$. An extension to factor graphs, \emph{gates} \citep{minka2009gates}, can be used to represent such context-dependent conditional independencies. Figure \ref{fig:model-comparison-factor-graph} shows a gated factor graph of equation \ref{eq:multi-model-joint}, with the gate indicated by the dashed box. %The semantics of the gate are that any edges from factors or variables nodes within the gate box to variables or factor outside the gate are only active when the gating variable, indicated by the the variable
 
-Given this computational set up, the task in model comparison is then to compute the relative probabilities of each of the models given observed data. These probabilities\footnote{As $\rvar{m}$ is a discrete random variable the probability of the event of $\rvar{m}$ taking a value in the singleton set $\fset{m}$ given that $\rvct{x} = \vct{x}$ is equal to the density $\pden{\rvar{m}|\rvct{x}}(m\gvn\vct{x})$.} are given by
+Given this computational set up, the task in model comparison is then to compute the relative probabilities of each of the models given observed data. These probabilities\footnote{As $\rvar{m}$ is a discrete random variable the probability of the event of $\rvar{m}$ taking a value in the singleton set $\fset{m}$ given that $\rvct{y} = \vct{y}$ is equal to the density $\pden{\rvar{m}|\rvct{y}}(m\gvn\vct{y})$.} are given by
 \begin{equation}\label{eq:model-posterior}
-  \pden{\rvar{m}|\rvct{x}}(m\gvn\vct{x}) = 
-  \frac{\pden{\rvct{x}|\rvar{m}}(\vct{x}\gvn m)\,\pden{\rvar{m}}(m)}
-  {\sum_{n=1}^M \lpa \pden{\rvct{x}|\rvar{m}}(\vct{x}\gvn n)\,\pden{\rvar{m}}(n)\rpa},
+  \pden{\rvar{m}|\rvct{y}}(m\gvn\vct{y}) = 
+  \frac{\pden{\rvct{y}|\rvar{m}}(\vct{y}\gvn m)\,\pden{\rvar{m}}(m)}
+  {\sum_{n=1}^M \lpa \pden{\rvct{y}|\rvar{m}}(\vct{y}\gvn n)\,\pden{\rvar{m}}(n)\rpa},
 \end{equation}
-which can be seen as a direct analogue to Bayes' theorem for the posterior density on unobserved random variables for a single model. The key quantities needed to evaluate the model posterior probabilities are the marginal densities $\pden{\rvct{x}|\rvar{m}}(\vct{x}\gvn m)$ evaluated at the observed data. Computing these values requires marginalising out the latent variables from the per model joint densities on observed and latent variables
+which can be seen as a direct analogue to Bayes' theorem for the posterior density on unobserved random variables for a single model. The key quantities needed to evaluate the model posterior probabilities are the marginal densities $\pden{\rvct{y}|\rvar{m}}(\vct{y}\gvn m)$ evaluated at the observed data. Computing these values requires marginalising out the unobserved variables from the per model joint densities on observed and unobserved variables
 \begin{equation}\label{eq:model-marginal-den}
-  \pden{\rvct{x}|\rvar{m}}(\vct{x}\gvn m) = 
-  \int_{\set{Z}_m} \pden{\rvct{x}|\rvar{m},\rvct{z}_m}(\vct{x}\gvn m, \vct{z}) \pden{\rvct{z}_m}(\vct{z})
-  \,\dr\vct{z}.
+  \pden{\rvct{y}|\rvar{m}}(\vct{y}\gvn m) = 
+  \int_{\set{X}_m} \pden{\rvct{y}|\rvar{m},\rvct{x}_m}(\vct{y}\gvn m, \vct{x}) \pden{\rvct{x}_m}(\vct{x})
+  \,\dr\vct{x}.
 \end{equation}
 This value is equal to the denominator in Bayes' theorem \eqref{eq:bayes-theorem-density}, this explaining the naming of this term as the \emph{model evidence}.
 
-As with evaluating conditional expectations of functions of the latent variables in a model given observations, evaluating the model evidence values requires integrating across the space of all latent variables. In most cases this integral will not have an analytic solution and the number of latent variables will be sufficiently large to make numerical quadrature methods impractical. The key computational challenge in being able to perform probabilistic model comparison with complex high dimensional models is therefore again being able to efficiently to compute integrals in high dimensional spaces.
+As described previously, evaluating the model evidence values requires integrating across the space of all unobserved variables. The key computational challenge in being able to perform probabilistic model comparison with complex high dimensional models is therefore again being able to efficiently to compute integrals in high dimensional spaces. Unlike the integrals required for making predictions using a single model however, the model evidence integral cannot be naturally expressed as an expectation of a function with respect to the posterior distribution. This can complicate approximate computation of model evidence terms compared to other quantities involved in inference.
 
 \section{Summary}
 

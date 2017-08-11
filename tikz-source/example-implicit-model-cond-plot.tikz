@@ -7,8 +7,8 @@
     ymin=-5, ymax=5,
     width=48mm,
     height=48mm,
-    xlabel={\small $u$},
-    ylabel={\small $v$},
+    xlabel={\small $x_1$},
+    ylabel={\small $x_2$},
     every tick label/.append style={font=\tiny},
     axis y line=center,
     axis x line=middle,
@@ -29,10 +29,10 @@
     \draw[gray] (axis cs:0,0) circle [radius=0.84];
     \draw[gray] (axis cs:0,0) circle [radius=0.46];
     \addlegendimage{no markers,gray}
-    \addlegendentry{$\pden{\rvar{u},\rvar{v}}$};
+    \addlegendentry{$\pden{\rvar{x}_1,\rvar{x}_2}$};
     \addplot+[mark=none, thick] table [x=u, y=v, col sep=comma] 
       {data/example-implicit-model-curve-1.csv};
-    \addlegendentry{$\rvar{x} = 1$};
+    \addlegendentry{$\rvar{y} = 1$};
     
 \end{axis}
 \end{tikzpicture}

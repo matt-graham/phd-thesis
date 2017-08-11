@@ -1,8 +1,8 @@
 \begin{tikzpicture}
-  \node[latent] (zm) {$\rvct{z}_{m}$} ; %
-  \factor[left=of zm] {pr-zm} {below:\small $\pden{\rvct{z}_m}$} {} {zm} ; %
-  \node[obs, right=of zm, xshift=13mm] (x) {$\rvct{x}$} ; %
-  \factor[left=of x, xshift=-7mm] {zm-x} {below:\small $\pden{\rvct{x}|\rvar{m},\rvct{z}_m}$} {zm} {x} ; %
+  \node[latent] (zm) {$\rvct{x}_{m}$} ; %
+  \factor[left=of zm] {pr-zm} {below:\small $\pden{\rvct{x}_m}$} {} {zm} ; %
+  \node[obs, right=of zm, xshift=13mm] (x) {$\rvct{y}$} ; %
+  \factor[left=of x, xshift=-7mm] {zm-x} {below:\small $\pden{\rvct{y}|\rvar{m},\rvct{x}_m}$} {zm} {x} ; %
   \node[latent, above=0.5 of zm-x] (m) {$\rvar{m}$} ; %
   \factor[left=of m] {pr-m} {\small $\pden{\rvar{m}}$} {} {m} ; %
   \gate {mgate} {(zm-x)(zm-x-caption)} {m} {.north} ; %

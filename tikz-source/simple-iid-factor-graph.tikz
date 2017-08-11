@@ -1,0 +1,7 @@
+\begin{tikzpicture}
+  \node[latent] (theta) {$\rvct{x}$} ; %
+  \node[obs, right=1.5 of theta] (yn) {$\rvct{y}^{(n)}$} ; %
+  \factor[left=of theta] {pr-theta} {below:$\pden{\rvct{x}}$} {} {theta} ; %
+  \factor[left=of yn] {theta-yn} {below:$\pden{\rvct{y}|\rvct{x}}$} {theta} {yn} ; %
+  \plate {data} {(yn)(theta-yn)(theta-yn-caption)} {$n \in \fset{1 \,...\, N}$} ; %
+\end{tikzpicture}
