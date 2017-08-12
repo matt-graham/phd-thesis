@@ -1,0 +1,256 @@
+\chapter{Optimisation-based approximate inference}\label{app:optimisation-based-approximate-inference}
+
+The sampling-based approaches to approximate inference discussed in the previous two sections although a significant improvement in terms of computational complexity over quadrature methods can still be computationally demanding. In particular the \ac{MCMC} methods which were identified as most suitable for inference in large, complex probabilistic models, will involve a minimum of one evaluation of the target distribution density per generated \ac{MCMC} sample if using for example a simple random-walk Metropolis method and potentially tens or hundreds of density evaluation per sample if using more complex schemes such as slice sampling or the Hamiltonian Monte Carlo. Typically chains will need to be run on the order of $10^2$ to $10^4$ iterations to ensure adequate converge of to the target distribution and to give a sufficient number of effective samples to get reasonable estimates of the expectations of interest, with generally running multiple chains preferred to give additional robustness and to allow convergence diagnostics.
+
+In large complex models each target density evalulation may be computationally expensive. In particular when performing inference conditioned on large sets of observed data the target density will typically factorise into a product (or sum in log space) of per datapoint factors. This means the cost of each target density evaluation will scale with the number of datapoints and so can become appreciable for large datasets. Alongside the increase in computational demands for large (in the sense of number of datapoints) datasets, for common forms of probabilistic models such as observed variables which are \ac{iid} given a set of fixed dimension unobserved variables (parameters), local asymptotic normality results means that the target (posterior) distribution will become increasingly well approximated by a multivariate normal distribution as the number of  observed data points increases. %This suggests it may viable to accept a decrease in the ability of our approximate inference method to represent integrals across arbitrary complex distributions with an increase in the scalability of the algorithms to performing inference in large datasets.
+
+%A key observation in the previous chapter was that inference at both the level of computing conditional expectations of latent variables in a model and in evaluating evidence terms to allow model comparison, will for most models of interest correspond to being able to integrate (potentially constant) functions against a probability density defined with respect to a base measure\footnote{There are models for which the corresponding probability measure is not absolutely continuous with respect to another measure and so cannot be represented by a density, however we will concentrate on the common case were a density exists.}. In particular we wish to be able to compute integrals of the form
+%\begin{equation}\label{eq:integral-against-density}
+%  \int_{\set{X}} f(\vct{x}) \, \tgtdens(\vct{x}) \,\dr\mu(\vct{x})
+%\end{equation}
+%where $\tgtdens$ is the density on a space $\set{X}$ of a probability measure with respect to a base measure $\mu$ and $f$ is a measurable function. For instance in the case of computing the \emph{posterior mean} in a Bayesian inference problem with observed variables $\rvct{y}$ and latent variables $\rvct{x}$ where the posterior density $\pden{\rvct{x}|\rvct{y}}$ is defined with respect to the $D$-dimensional Lebesgue measure, we would have  $\tgtdens(\vct{x}) = \pden{\rvct{x}|\rvct{y}}(\vct{x}\gvn\vct{y})$ for an observed $\vct{y}$, $\mu(\vct{x}) = \lebm{D}(\vct{x})$ and $f(\rvct{x}) = \vct{x}$. Often we will only be able to evaluate $\tgtdens$ up to an unknown unnormalising constant i.e. $\tgtdens(\vct{x}) = \frac{1}{Z}\utgtdens(\vct{x})$ with we able to evaluate $\utgtdens$ pointwise but $Z$ intractable to compute. For example in a Bayesian inference setting $\utgtdens(\vct{x})$ would be the joint density $\pden{\rvct{x},\rvct{y}}(\vct{x},\vct{y})$ and $Z$ the model evidence $\pden{\rvct{y}}(\vct{y})$. When peforming inference in undirected graphical models, we would instead have that $\utgtdens$ is the product of clique potentials and $Z$ the corresponding normaliser.
+
+In this section we will review an alternative class of approximate inference methods to the sampling approaches reviewed so far which tradeoff a generally lower computational cost than \ac{MCMC} approaches for a loss of the ability to represent integrals across complex distributions with arbitary accuracy and so asymptoptic exactness guarantees. The central idea of these methods is to try to find a normalised probability density $q(\vct{x})$ from a `simple' family that in some sense approximates the target density, i.e. $\tgtdens(\vct{x}) \approx q(\vct{x})$. Depending on the family chosen for $q$, integrals of some functions $f$ against the target density $\tgtdens$, can be approximated by analytic solutions to integrals of $f$ against $q$ e.g. if $q(\vct{x}) = \nrm{\vct{x} \gvn \vct{\mu},\mtx{\Sigma}}$ then we can approximate the mean of the target density as $\vct{\mu}$ and the covariance as $\mtx{\Sigma}$. To compute integrals of more general functions $f$ we will typically still need to resort to using a Monte Carlo approach; generally it will be possible to directly generate independent samples from $q$ however while usually this will not be the case for $\tgtdens$ hence this two-step approach still offers (computational) advantages over directly applying a Monte Carlo approach. Often the approaches we will discuss also allow estimation of the normalising constant $Z$ which may be needed for model comparison.
+
+\section{Laplace's method}
+
+For target densities $\tgtdens$ defined with respect to a $D$-dimensional Lebesgue measure $\lebm{D}$, a simple approach for computing a multivariate normal approximation  $q$ to $\tgtdens$ is \emph{Laplace's method}. Although not always strictly required, in general the method will work better for target densities with unbounded support, and more generally for targets which are as `close to normal' as possible. Therefore a useful initial step will often be to apply a change of variables to the target density, such that the density on the transformed space has unbounded support, for example working with the density on the logarithm of a random variable with support only on positive values.
+
+The key idea in Laplace's method is to form a truncated Taylor series approximation to the logarithm of the unnormalised target density
+\begin{equation}\label{eq:log-target-taylor-expansion}
+\begin{split}
+  \log\utgtdens(\vct{x}) \approx 
+  \log\utgtdens(\vct{x}^*) 
+  &+ \vct{g}(\vct{x}^*)\tr(\vct{x}-\vct{x}^*) \\
+  &+ \frac{1}{2} (\vct{x}-\vct{x}^*)\tr \mtx{H}(\vct{x}^*)(\vct{x}-\vct{x}^*),\\
+\end{split}
+\end{equation}
+where the \emph{gradient} and \emph{Hessian} of $\log\utgtdens$ are defined respectively as
+\begin{equation}
+  \vct{g}(\vct{x}) = \pd{\log\utgtdens(\vct{x})}{\vct{x}}\tr
+  \quad\textrm{and}\quad
+  \mtx{H}(\vct{x}) = \pdd{\log\utgtdens(\vct{x})}{\vct{x}}{\vct{x}\tr}.
+\end{equation}
+\marginpar{A matrix $\mtx{M} \in \reals^{D\times D}$ is \emph{positive semi definite}, denoted $\mtx{M} \succeq 0$, \acs{iff} $\vct{x}\tr\mtx{M}\vct{x} \geq 0$ $\forall \vct{x} \in \reals^D$ and \emph{positive definite}, denoted $\mtx{M} \succ 0$, if the inequality is made strict. Corresponding definitions for a \emph{negative semi definite} matrices, $\mtx{M} \preceq 0$, and \emph{negative definite} matrices, $\mtx{M} \prec 0$, are formed by reversing the sign of the inequality.}
+If the point $\vct{x}^*$ the expansion is formed around is chosen to be a (local) maxima of $\log\utgtdens$, which necessarily means that the gradient is zero, $\vct{g}(\vct{x}^*) = \vct{0}$, and the Hessian is negative definite, $\mtx{H}(\vct{x}^*) \prec 0$, then
+\begin{equation}\label{eq:laplace-approximation-log}
+  \log\utgtdens(\vct{x}) \approx
+  \log\utgtdens(\vct{x}^*) + \frac{1}{2} (\vct{x}-\vct{x}^*)\tr \mtx{H}(\vct{x}^*)(\vct{x}-\vct{x}^*).
+\end{equation}
+Taking the exponential of both sides we therefore have that
+\begin{equation}\label{eq:laplace-approximation-exp}
+  \utgtdens(\vct{x}) \approx
+  \utgtdens(\vct{x}^*) \exp\lpa-\frac{1}{2} (\vct{x}-\vct{x}^*)\tr \lpa -\mtx{H}(\vct{x}^*)\rpa(\vct{x}-\vct{x}^*)\rpa.
+\end{equation}
+This has the form of an unnormalised multivariate normal density with mean $\vct{x}^*$ and inverse covariance (precision) $-\mtx{H}(\vct{x}^*)$.
+
+\begin{figure}[!t]
+\centering
+\includetikz{laplace-approximation}
+\vspace{-3mm}
+\caption[Univariate example of Laplace's method.]{Univariate example of Laplace's method. Left axis shows the logarithm of the unnormalised target density $\log\utgtdens(x)$ (green curve) and the corresponding quadratic Taylor series approximation $\log\utgtdens(x^*) + \frac{h}{2}(x-x^*)^2$ (dashed orange curve) around the maxima $x^*$ with $h = (\nicefrac{\partial^2\log\utgtdens}{\partial x^2})|_{x^*}$. The right axis shows the corresponding normalised target density $\tgtdens(x)$ (green curve) and approximate density $q(x) = \nrm{x \gvn x^*, -h^{-1}}$ (dashed orange curve).}
+\label{fig:laplace-approximation-example}
+\end{figure}
+
+This suggests setting the approximate density $q$ to a multivariate normal density $\nrm{\vct{x} \gvn \vct{x}^*,\mtx{C}}$ with $\mtx{C} = -\mtx{H}(\vct{x}^*)^{-1}$, i.e.
+\begin{equation}\label{eq:laplace-approximation}
+  q(\vct{x}) = 
+  \frac{1}{(2\uppi)^{\frac{D}{2}}|\mtx{C}|^{\frac{1}{2}}} 
+  \exp\lpa-\frac{1}{2}(\vct{x}-\vct{x}^*)\tr\mtx{C}^{-1}(\vct{x}-\vct{x}^*)\rpa.
+\end{equation}
+An example of applying Laplace's method to fit a normal approximation to a univariate generalised logistic target is shown in Figure \ref{fig:laplace-approximation-example}.
+
+As $q(\vct{x}^*) \approx \tgtdens(\vct{x}^*) = \utgtdens(\vct{x}^*) / Z$ we can also form an approximation $\tilde{Z}$ to the normalising constant $Z$ for the target density
+\begin{equation}\label{eq:laplace-approximation-normalising-const}
+  Z \approx \tilde{Z} = (2\uppi)^{\frac{D}{2}} |\mtx{C}|^{\frac{1}{2}}\utgtdens(\vct{x}^*).
+\end{equation}
+To use Laplace's method we need to be able to find a maxima of $\log\utgtdens$ and evaluate the Hessian at this point. For simple unimodal target densities it may be possible to find the maxima and corresponding Hessian analytically. More generally if the gradient of $\log\utgtdens$ can be calculated (using for example reverse-mode automatic differentation), then a maxima can be found by performing iterative gradient ascent. The Hessian can then be evaluated at this point using analytic expressions for the second partial derivatives or again by using automatic differentiation (by computing the Jacobian of the gradient of $\log\utgtdens$).
+
+Though relatively simple to calculate, Laplace's method will often result in an approximate density which fits poorly to the target. As it only uses local information about the curvature of the (log) target density at the mode, away from the mode the approximate density can behave very differently from the target density, for instance observe the poor fit to the tails of the target of the example shown in Figure \ref{fig:laplace-approximation-example}. For multimodal densities, several different Laplace approximations can be calculated, each likely to at best capture a single mode well. For target densities which are well approximated by a normal distribution, for instance due to asymptotic convergence to normality of a posterior for \ac{iid} data, Laplace's method can give reasonable results however. 
+
+\section{Variational methods}
+
+Laplace's method is limited by using information about the target density evaluated at only one point to fit the approximation. An alternative approach is to instead try to fit the approximate density based on minimising a global measure of `goodness of fit' to the target; this is the strategy employed in \emph{variational inference}.
+
+The naming of variational inference arises from its roots in the \emph{calculus of variations}, which is concerned with functionals (loosely a function of a function, often defined by a definite integral) and their derivatives. In particular it is natural to define the measure of the `goodness of fit' of the approximate density to the target as a functional of the approximate density. The value of this functional is then minimised with respect to the approximate density function. 
+
+The most common functional used to define goodness of fit in variational inference is the \ac{KL} divergence \citep{kullback1951information}. The \ac{KL} divergence in its most general form is defined for a pair of probability measures $P$ and $Q$ on a space $\set{X}$ with $P$ absolutely continuous with respect to $Q$ as
+\begin{equation}\label{eq:kullback-leibler-probability-measures}
+  \kldiv{P}{Q} =
+  \int_{\set{X}} \log\lpa\td{P}{Q}\rpa \,\dr P,
+\end{equation}
+which is read as the \ac{KL} divergence from $P$ to $Q$. The \ac{KL} divergence is always non-negative $\kldiv{P}{Q} \geq 0$, with equality if and only if $P = Q$ almost everywhere. Intutively the \ac{KL} divergence gives a measure of how `close' two measures are\footnote{From an information theory perspective $\kldiv{P}{Q}$ is typically termed the \emph{relative entropy of $P$ with respect to $Q$} and measures the expected information loss (in \emph{nats} for base-$\mathrm{e}$ logarithms or \emph{bits} for base-2 logarithms) of using $Q$ to model samples from $P$.}, however it is not a true distance as it is asymmetric: in general $\kldiv{P}{Q} \neq \kldiv{Q}{P}$.
+
+Generally we will work with probability densities rather than underlying probability measures. If $p$ and $q$ are the densities of two probability measures $P$ and $Q$ defined with respect to the same base measure $\mu$ on a space $\set{X}$, i.e. $p = \td{P}{\mu}$ and $q = \td{Q}{\mu}$, then we will denote the \ac{KL} divergence from $P$ to $Q$ in terms of the densities $p$ and $q$ by $\kldiv[\mu]{p}{q} = \kldiv{P}{Q}$, and from the definition \eqref{eq:kullback-leibler-probability-measures} we have that
+\begin{equation}\label{eq:kullback-leibler-probability-densities}
+  \kldiv[\mu]{p}{q} =
+  \int_{\set{X}} p(x) \, \log\frac{p(x)}{q(x)} \, \dr\mu(x),
+\end{equation}
+with absolute continuity of $P$ with respect to $Q$ corresponding to a requirement that $p(x) = 0 ~\forall x \in \set{X} : q(x) = 0$. Somewhat loosely, we will refer to $\kldiv[\mu]{p}{q}$ as the \ac{KL} divergence from the (density) $p$ to the (density) $q$ rather than refering to the underlying measures.
+
+When used without further qualification, variational inference is generally intended to mean inference performed by minimising a variational objective corresponding to the \ac{KL} divergence from an approximate density $q$ to the target density $\tgtdens$. More specifically using the decomposition of the target density into an unnormalised density $\utgtdens$ and normalising constant $Z$ we have that
+\begin{equation}\label{eq:kullback-leibler-var-obj}
+  \varobj\lsb q \rsb = \log Z - \kldiv[\mu]{q}{\tgtdens} =
+  \int_{\set{X}} q(\vct{x})\,\log \frac{\utgtdens(\vct{x})}{q(\vct{x})} \,\dr\mu(\vct{x}),
+\end{equation}
+with $\varobj\lsb q \rsb$ the specific objective usually maximised in variational inference problems, with all terms in the integrand being evaluable pointwise. As $\log Z$ is constant with respect to the approximate density, maximising $\varobj$ with respect to $q$ is directly equivalent to minimising $\kldiv[\mu]{q}{\tgtdens}$. Due to the non-negativity of the \ac{KL} divergence we have that the following inequality holds
+\begin{equation}\label{eq:evidence-lower-bound}
+  \varobj\lsb q \rsb \leq \log Z.
+\end{equation}
+When the target density $\tgtdens$ corresponds to a posterior $\pden{\rvct{x}|\rvct{y}}$ on latent variables $\rvct{x}$ given observed variables $\rvct{y}$ and $\utgtdens$ the corresponding joint density $\pden{\rvct{x},\rvct{y}}$, the normalising constant $Z$ is equal to the model evidence term $\pden{\rvct{x}}$ in Bayes' theorem. As $\varobj$ is a lower bound on $\log Z$ and so the (log) model evidence, the variational objective $\varobj$ is therefore sometimes termed the \ac{ELBO} in this context.
+
+Using the \ac{KL} divergence from the approximate to target density as the variational objective is not the only choice avaialable. One obvious alternative is the reversed form of the \ac{KL} divergence, $\kldiv[\mu]{\tgtdens}{q}$ from the target density to the approximate density. In general as this form of the divergence involves evaluating an integral with respect to the target density, precisely the intractable computational task we are hoping to find an approximate solution, direct applications of this approach are limited to toy problems were this integral can be solved exactly or efficiently approximated. 
+
+An approach called \ac{EP} \citep{minka2001expectation} however locally optimises an objective closely related to $\kldiv[\mu]{\tgtdens}{q}$. \ac{EP} is generally applied to target distributions with a density which factorise in to a product of (often per-datapoint) factors
+\begin{equation}\label{eq:ep-target-density-factorisation}
+  \utgtdens(\vct{x}) = \prod_{i\in\set{I}} \utgtdens_i(\vct{x}).
+\end{equation}
+An approximate density is defined with an equivalent factorisation
+\begin{equation}\label{eq:ep-approximate-density-factorisation}
+  q(\vct{x}) = \prod_{i\in\set{I}} q_i(\vct{x}),
+\end{equation}
+with each $q_i$ factor restricted to be the density of an exponential family distribution. \ac{EP} then fits the individual approximate factors by iteratively for each $j \in \set{I}$ minimising
+\begin{equation}\label{eq:ep-kl-obj}
+  \min_{q_j} \vvmathbb{D}_{\scriptscriptstyle\mathrm{KL}}^{\mu}
+  \Big[
+    {\utgtdens_j(\vct{x}) \prod_{i\in\set{I} \setminus \fset{j}} q_i(\vct{x})}
+  \,\Big\Vert\,
+    {q_j(\vct{x}) \prod_{i\in\set{I} \setminus \fset{j}} q_i(\vct{x})}
+  \Big].
+\end{equation}
+This is similar to minimising the \ac{KL} divergence from the individual target factor $\utgtdens_j$ to the corresponding approximate factor $q_j$, i.e. $\kldiv[\mu]{\utgtdens_j}{q_j}$, but \eqref{eq:ep-kl-obj} instead weights the integral by the density of the `cavity distribution' formed by current approximation of the product of the remaining target factors. Ideally as training proceeds the cavity distribution becomes an increasingly good approximation to the product of the true remaining factors and so \ac{EP} locally minimises an objective increasingly close to $\kldiv[\mu]{\tgtdens}{q}$. The additional context provided by weighting by the cavity distribution density favours approximate factors $q_j$ which fit well to the true factor $\utgtdens_j$ where the mass of the current global approximation is concentrated. This is usually a significant improvement over simply fitting each $q_j$ individually by minimsing $\kldiv[\mu]{\utgtdens_j}{q_j}$ which will often fit a very poor global approximation.
+%; we will discuss \ac{EP} further later in the chapter.
+
+The \ac{KL} divergence can be considered as a special case of a broader class of $\alpha$-divergences. In particular the \emph{R\'{e}nyi divergence} \citep{renyi1961measures,van2014renyi} of order $\alpha > 0, \alpha \neq 1$ between two probability measures $P$ and $Q$ with probability densities $p = \td{P}{\mu}$ and $q = \td{Q}{\mu}$ on a space $\set{X}$ is defined as
+\begin{equation}\label{eq:renyi-alpha-divergence}
+  \rdiv{\alpha}{P}{Q} =
+  \rdiv[\mu]{\alpha}{p}{q} =
+  \frac{1}{\alpha -1} \log \lpa \int_{\set{X}} p(\vct{x})^\alpha\,q(\vct{x})^{1-\alpha}\,\dr\mu(\vct{x})\rpa.
+\end{equation}
+For $\alpha > 0$, $\rdiv{\alpha}{P}{Q}$ is a valid divergence, that is $\rdiv{\alpha}{P}{Q} \geq 0$ with equality if and only if $P = Q$ almost everywhere. The definition can also be extended to the cases $\alpha = 1$ and $\alpha=0$ by considering limits of \eqref{eq:renyi-alpha-divergence}. Using L'H\^{o}pital's rule it can be shown that $\lim_{\alpha \to 1} \rdiv{\alpha}{P}{Q} = \kldiv{P}{Q}$. For $\alpha \to 0$, we have that $\rdiv{\alpha}{P}{Q} \to -\log P\lpa\support(Q)\rpa$ where $\support(Q)$ represents the support of the probability measure $Q$; in this case $\rdiv{\alpha}{P}{Q}$ is no longer a valid divergence as it is equal to zero whenever $\support(P) = \support(Q)$. It can also be shown that for $\alpha \not\in \fset{0,1}$ that $\rdiv{\alpha}{P}{Q} = \frac{\alpha}{1-\alpha}\rdiv{1-\alpha}{Q}{P}$. This motivates extending the definition in \eqref{eq:renyi-alpha-divergence} for $\alpha < 0$, in which case we have that $\rdiv{\alpha}{P}{Q} = \frac{\alpha}{1-\alpha}\rdiv{1-\alpha}{Q}{P} \leq 0$ \citep{li2016renyi}.
+
+Analogously to using the decomposition of the target density $\tgtdens$ in to an unnormalised density $\utgtdens$ and unknown normaliser $Z$ when defining the previous variational objective in \eqref{eq:kullback-leibler-var-obj}, it is observed in \citep{li2016renyi} that a \emph{variational R\'{e}nyi bound}, $\varobj_{\alpha}$, can be defined as
+\begin{equation}\label{eq:renyi-variational-objective}
+\begin{split}
+  \varobj_{\alpha}\lsb q \rsb
+  = 
+  \log Z - \rdiv[\mu]{\alpha}{q}{\tgtdens}
+  =
+  \frac{1}{1-\alpha} 
+  \log \int_{\set{X}} q(\vct{x}) \lpa \frac{\utgtdens(\vct{x})}{q(\vct{x})}\rpa^{1-\alpha} \kern-3pt\dr\mu(\vct{x}).
+\end{split}
+\end{equation}
+For $\alpha > 0$, we have that $\rdiv[\mu]{\alpha}{q}{\tgtdens} \geq 0$ and so $\varobj_\alpha$ is a lower bound on the $\log Z$, analogously to the \ac{ELBO}, and we should maximise $\varobj_\alpha$ with respect to $q$ to minimise $\rdiv[\mu]{\alpha}{q}{\tgtdens}$. For $\alpha < 0$ we have instead that $\rdiv[\mu]{\alpha}{q}{\tgtdens} \leq 0$ and so $\varobj_{\alpha}$ is an upper bound on $\log Z$ and that we should minimise $\varobj_\alpha$ to minimise $\rdiv[\mu]{1-\alpha}{\tgtdens}{q}$ (note the swapped order of the density arguments). An equivalent observation of the possibility of upper bounding $\log Z$ is made in \citep{dieng2016chi} with a reparameterised version of \eqref{eq:renyi-variational-objective} in terms of $n=1-\alpha > 1$.
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}[b]{.32\linewidth}
+\centering
+\includetikz{var-obj-kl-pq}
+\caption{$\kldiv[\lambda]{\tgtdens}{q}$}
+\label{sfig:var-obj-kl-pq}
+\end{subfigure}
+\begin{subfigure}[b]{.32\linewidth}
+\centering
+\includetikz{var-obj-renyi}
+\caption{$\rdiv[\lambda]{\alpha}{\tgtdens}{q},~\alpha=\frac{1}{2}$}
+\label{sfig:var-obj-renyi}
+\end{subfigure}
+\begin{subfigure}[b]{.32\linewidth}
+\centering
+\includetikz{var-obj-kl-qp}
+\caption{$\kldiv[\lambda]{q}{\tgtdens}$}
+\label{sfig:var-obj-kl-qp}
+\end{subfigure}
+\caption[Variational objective comparison.]{Comparison of approximate densities fitted under different variational objectives. Each plot shows a bimodal target density $\tgtdens(x)$ and a normal approximate density $q(x) = \nrm{x \gvn \mu,\sigma^2}$ where $\mu$ and $\sigma$ have been set to values which minimise the variational objective shown in the caption.}
+\label{fig:variational-objective-comparison}
+\end{figure}
+
+As generally the family chosen for the approximate density $q$ will not include the target density as a member, the choice of variational objective is important in determining the properties of how $q$ approximates the target density \citep{bishop2006pattern}. The standard variational objective corresponding to $\kldiv[\mu]{q}{\tgtdens}$ strongly penalises regions in $\set{X}$ where $\frac{\tgtdens(\vct{x})}{q(\vct{x})} \ll  1$, therefore the approximate densities fitted using this objective tend to be undispersed compared to the target density, and in the case of target densities with multiple separated modes fitted with a unimodal approximate density, the approximate density will tend to fit only one mode well (with fits to the different modes corresponding to different local optima in the objective). Conversely using the reversed \ac{KL} divergence $\kldiv[\mu]{\tgtdens}{q}$ as the variational objective penalises approximate densities where $\frac{q(\vct{x})}{\tgtdens(\vct{x})} \ll 1$ in regions with significant mass under the target density, therefore the approximate densities fitted using this objective tend to be overdispersed compared to the target density, and in the case of multimodal target densities, the approximate densities will tend to `cover' multiple modes. Using a variational objective corresponding to a R\'{e}nyi divergence with $0 < \alpha < 1$, allows interpolating between these two behaviours (with $\alpha$ close to one favouring undispersed approximate densities similar to $\kldiv[\mu]{q}{\tgtdens}$, with the solutions becoming increasingly dispersed as $\alpha$ becomes lower). 
+
+Figure \ref{fig:variational-objective-comparison} gives examples of normal approximate densities fitted to a bimodal target with three variational objectives to illustrate the effect of the different objectives on the fitted approximation. In Figure \ref{sfig:var-obj-kl-pq} the approximate density $q$ was fitted by minimising $\kldiv[\lambda]{\tgtdens}{q}$, the resulting $q$ putting mass on both modes in the target (and significant mass on the region of low density between the two target modes). The approximate density $q$ in Figure \ref{sfig:var-obj-kl-qp} was instead fitted by minimising $\kldiv[\lambda]{q}{\tgtdens}$, with the result that $q$ concentrates its mass around one of the modes. Finally Figure \ref{sfig:var-obj-renyi} shows an approximate density fitted by minimising the R\'{e}nyi divergence \eqref{eq:renyi-alpha-divergence} with $\alpha = \frac{1}{2}$ for which $\rdiv[\lambda]{\alpha}{\tgtdens}{q} = \rdiv[\lambda]{\alpha}{q}{\tgtdens}$ and which interpolates between the behaviours of the two objectives used in Figures \ref{sfig:var-obj-kl-pq} and \ref{sfig:var-obj-kl-qp}. The approximate density here is less dispersed than in the $\kldiv[\lambda]{\tgtdens}{q}$ case, but still places more mass on the minor mode than the $\kldiv[\lambda]{q}{\tgtdens}$ case.
+
+Once the variational objective has been defined, it still remains to choose the family of the approximate density $q$ and optimisation scheme. 
+%We will deal with the former of these two issues first.
+%Defining the \ac{ELBO} as the variational objective still leaves open the choices of several of the key algorithmic elements of variational inference. One particularly important decision in variational inference methods is the choice of the approximate density $q_{\vct{\theta}}$. 
+A very common choice is to use an approximate density in the \emph{mean-field variational family}; this assumes that the variables the target density is defined on can be grouped in to a set of mutually independent vectors $\fset{\rvct{x}_i}_{i\in\set{I}}$ and so the approximate density can be factorised as
+\begin{equation}\label{eq:mean-field-variational-family}
+  q(\vct{x}) = \prod_{i\in\set{I}} q_i(\vct{x}_i).
+\end{equation}
+This assumption can signficantly reduce the computational demands of variational inference and facilitates simple evaluation of the approximate marginal density $q_{i}$ of each variable group once fitted. However the mutual independence assumption prevents the approximate density $q$ from being able to represent any of the dependencies between the variable groups in the target density. The early development of variational inference was largely based around mean-field family approximations \citep{peterson1987mean,saul1996mean}, with the naming arising from its origins in \emph{mean-field theory}, used to study the behaviour of systems such as the Ising spin model in statistical physics \citep{parisi1998statistical}. Despite the limitations in representational capacity imposed by the independence assumption, because of its computational tractability mean-field variational inference methods remain very popular \citep{blei2017variational}, with mean-field approximations allowing use of a particularly simple algorithm for optimising the standard variational objective \eqref{eq:kullback-leibler-var-obj}, \emph{co-ordinate ascent variational inference} \citep{bishop2006pattern,blei2017variational}.
+
+A more recent alternative to traditional mean-field variational methods, is to assume a fixed parametric form for the approximate density, i.e. $q(\vct{x}) = q_{\vct{\theta}}(\vct{x})$, where $q_{\vct{\theta}}$ is a density with respect to the measure $\mu$ of a fixed parametric family with a vector of parameters $\vct{\theta}$ \citep{graves2011practical,blei2012variational,salimans2013fixed,ranganath2014black,kucukelbir2016automatic}. Under this parametric assumption, rather than a variational optimisation problem we can now consider the variational objective functional $\varobj[q]$ as instead a function of the parameters $\ell(\vct{\theta}) = \varobj[q_{\vct{\theta}}]$. For the standard variational objective \eqref{eq:kullback-leibler-var-obj} we have that
+\begin{equation}\label{eq:kl-var-obj-parameteric}
+  \ell(\vct{\theta}) = 
+  \int_{\set{X}} q_{\vct{\theta}}(\vct{x}) \log\frac{\utgtdens(\vct{x})}{q_{\vct{\theta}}(\vct{x})} \,\mu(\dr\vct{x}).
+\end{equation}
+Using the identities that for any $q_{\vct{\theta}}$ which is differentiable with respect to $\vct{\theta}$ we have that
+\begin{align}\label{eq:log-derivative-identity}
+  &\pd{q_{\vct{\theta}}(\vct{x})}{\vct{\theta}} = 
+  q_{\vct{\theta}}(\vct{x}) \pd{\log q_{\vct{\theta}}(\vct{x})}{\vct{\theta}}\\
+  \textrm{and}\qquad &\label{eq:score-function-expectation-identity}
+  \int_{\set{X}} q_{\vct{\theta}}(\vct{x}) \pd{\log q_{\vct{\theta}}(\vct{x})}{\vct{\theta}} \,\mu(\dr\vct{x}) = 0,
+\end{align} 
+the gradient of \eqref{eq:kl-var-obj-parameteric} with respect $\vct{\theta}$ can be expressed as
+\begin{equation}\label{eq:kl-var-obj-parameteric-gradient}
+  \pd{\ell}{\vct{\theta}} = 
+  \int_{\set{X}} q_{\vct{\theta}}(\vct{x}) \pd{\log q_{\vct{\theta}}(\vct{x})}{\vct{\theta}} \log \frac{\utgtdens(\vct{x})}{q_{\vct{\theta}}(\vct{x})}  \,\mu(\dr\vct{x}).
+\end{equation}
+Typically both of the integrals in \eqref{eq:kl-var-obj-parameteric} and \eqref{eq:kl-var-obj-parameteric-gradient} defining the variational objective and its gradient will not have analytic solutions. However both take the forms of expectations of a random vector with distribution defined by the approximate density $q_{\vct{\theta}}$. If we can generate independent samples from $q_{\vct{\theta}}$ we can therefore form unbiased Monte Carlo estimates of the objective and its gradient.
+
+The unbiased gradient estimates can then be used in a stochastic gradient ascent method \citep{robbins1951stochastic} to maximise $\ell(\vct{\theta})$ with respect to $\vct{\theta}$. This basic framework is applicable to a much broader class of target distributions than the previously discussed variational inference approaches, requiring only that we can pointwise evaluate a, potentially unnormalised, density function $\utgtdens$ for the target distribution. Likewise the only restrictions on the approximating distribtion are that we can evaluate a density function $q_{\vct{\theta}}$ which is differentiable with respect to its parameters $\vct{\theta}$ and that we can generate independent samples from this distribution to form the Monte Carlo estimates. 
+
+For target distributions on a real-valued space, a simple choice for $q_{\vct{\theta}}$ meeting these requirements is a multivariate normal density $q_{\vct{\theta}}(\vct{x}) = \nrm{\vct{x}\gvn\vct{\mu},\mtx{\Sigma}}$ with the mean $\vct{\mu}$ and covariance $\mtx{\Sigma}$ forming the parameters $\vct{\theta}$ maximised with respect to. Using a diagonal covariance $\mtx{\Sigma}$ would correspond to a mean-field factorisation assumption for the approximate density, however we can also use more general covariances including a full dense matrix allowing for arbitrary covariance structure in the approximate density, or a sparse covariance matrix which exploits known conditional independencies in the target distribution.
+
+Although appealingly simple and flexible, the basic scheme as described so far has a major pitfall which is that the variance of the gradients estimate computed by forming the obvious Monte Carlo estimator from \eqref{eq:kl-var-obj-parameteric-gradient} typically has a very high variance for the complex target distributions of interest. This necessitates either taking a very large number of Monte Carlo samples to estimate the gradient for each parameter update with sufficient accuracy or taking very small gradient steps to allow stable optimisation. Therefore practical schemes based on this idea generally require the use of variance reduction methods to estimate the variational objective parameter gradient.
+
+The \ac{BBVI} algorithm of \citep{ranganath2014black} proposes using two forms of variance reduction to compute more efficient gradient estimtates - Rao-Blackwellisation and control variates. The Rao-Blackwellisation method relies on being able to decompose the approximate density $q_{\vct{\theta}}$ into a product of factors with per factor variational parameters and is so restricted to cases such as mean-field approximations where this is the case. The control variate method is more general and can be applied to non mean-field approximate densities.
+
+An alternative variance reduction approach is proposed in the \ac{ADVI} algorithm of \citep{kucukelbir2016automatic} which instead uses a reparameterisation of the approximating distribution to produce a lower variance gradient estimator for a more restricted class of target distributions which have a differentiable density with respect to the Lebesgue measure.  It is assumed that the samples from the approximating distribution can be generating using a transform sampling method, more specifically that there exists a differentiable bijective function $\vctfunc{g}_{\vct{\theta}} : \set{U} \to \set{X}$ and a distribution $R$ on $\set{U}$ which has a density $\rho$ which does not depend on $\vct{\theta}$ such that
+\begin{equation}
+  q_{\vct{\theta}}(\vct{x}) = \rho\lpa\vctfunc{g}_{\vct{\theta}}^{-1}(\vct{x})\rpa \left|\pd{\vctfunc{g}_{\vct{\theta}}^{-1}}{\vct{x}}\right|.
+\end{equation}
+In this case by the change of variables formula \eqref{eq:change-of-variables-vector-bijective} discussed in Chapter \ref{ch:probabilistic-modelling} if $\vct{u}$ is an independent sample from $R$ then $\vct{x} = \vctfunc{g}_{\vct{\theta}}(\vct{u})$ will be an independent sample from the approximate distribution with density $q_{\vct{\theta}}$. This transformation can be used to reparameterise the variational objective integral as
+\begin{equation}\label{eq:kl-var-obj-parameteric-reparam}
+  \ell(\vct{\theta}) = 
+  \int_{\set{U}} \rho(\vct{u}) \big(
+    \log\lpa\utgtdens\circ\vctfunc{g}_{\vct{\theta}}(\vct{u})\rpa +
+    \log\left|\pd{\vctfunc{g}_{\vct{\theta}}}{\vct{u}}\right| - \log\rho(\vct{u})
+  \big)
+  \,\dr\vct{u}
+\end{equation}
+with a corresponding gradient expression
+\begin{equation}\label{eq:kl-var-obj-parameteric-reparam-gradient}
+  \pd{\ell}{\vct{\theta}} = 
+  \int_{\set{U}} \rho(\vct{u}) \lpa
+    \pd{}{\vct{\theta}}\log\lpa\utgtdens\circ\vctfunc{g}_{\vct{\theta}}(\vct{u})\rpa +
+    \pd{}{\vct{\theta}}\log\left|\pd{\vctfunc{g}_{\vct{\theta}}}{\vct{u}}\right|
+  \rpa
+  \,\dr\vct{u}.
+\end{equation}
+As suggested by the name \ac{ADVI} uses automatic differentiation to calculate the gradient expression inside the parentheses in \eqref{eq:eq:kl-var-obj-parameteric-reparam-gradient}, with importantly this requiring propagation of derivatives through the target density function $\utgtdens$ as well as the transformation $\vctfunc{g}_{\vct{\theta}}$. To form a Monte Carlo estimate of the gradient using this reparameterisation we therefore require the target model density to be differentiable and so it is less general than the method used in \ac{BBVI}, however as shown empirically in \citep{kucukelbir2016automatic} the resulting gradient estimator will tend to be signficantly more efficient requiring fewer samples to bring the variance to a reasonable level, with often gradients computed with a single sample being sufficient for stable optimisation.
+
+%In particular a multivariate normal approximate density is used $q_{\vct{\theta}}(\vct{x}) = \nrm{\vct{x}\gvn\vct{\mu},\mtx{L}\mtx{L}\tr}$ parameterised by a mean vector $\vct{\mu}$ and Cholesky factor of the covariance matrix $\mtx{L}$. If $\rvct{u}$ is a 
+%The \ac{ADVI} algorithm uses two forms of state space transformation. First a bijective transformation $\vctfunc{t} : \set{X} \to \reals^D$ from the original target distribution space $\set{X}$ to a $D$-dimensional real valued space is defined. The aim of this transformation is to reparameterise the target distribution density so that it has unbounded support on $\reals^D$ - for example a log-transform of a variable with support on the positive real line might be used to transform to a variable with support across the full real line. 
+
+%In \cite{salimans2013fixed} $f_{\vct{\theta}}$ is chosen as an exponential family distribution and $\vct{\theta}$ specified to be the natural parameters of the density. A linear-regression inspired algorithm w
+
+%For instance for the \emph{Observing Dark Worlds} hierarchical model (Figure \ref{fig:odw-hierarchical-factor-graph}) discussed in the previous chapter, we have that the local latent variables corresponding to the halo masses $\rvct{m}^{(i)}$, core radii $\rvct{t}^{(i)}$ and centre coordinates $\rvct{x}^{(i)}, \rvct{y}^{(i)}$ (for the test set data) for a particular cluster are conditionally independent of the variables for all other clusters given the global variables $\upsigma,\upmu_{\rvar{m}},\upsigma_{\rvar{m}},\upmu_{\rvar{t}}$ and $\upsigma_{\rvar{t}}$. A natural structured factorisation for an approximate density in this case would therefore be that indicated by the factor graph in Figure \ref{fig:odw-structured-variational-density}.
+%\begin{equation}\label{eq:odw-structured-variational-family-example}
+%\begin{split}
+%  q_{\vct{\theta}}\lpa
+%    \fset{\vct{m}^{(i)}\kern-3pt, \vct{t}^{(i)}}_{i=1}^N,
+%    \fset{\vct{x}^{(j)}\kern-3pt, \vct{y}^{(j)}\kern-3pt, \vct{m}^{(j)}\kern-3pt, \vct{t}^{(j)}}_{j=N+1}^{N + M}, \sigma, \mu_m, \sigma_m, \mu_t, \sigma_t
+%  \rpa = \\
+%   q_{0,\vct{\theta}}\lpa \sigma, \mu_m, \sigma_m, \mu_t, \sigma_t \rpa
+%   \prod_{i=1}^N q_{i,\vct{\theta}}\lpa
+%     \vct{m}^{(i)}\kern-3pt, \vct{t}^{(i)} \gvn \sigma, \mu_m, \sigma_m, \mu_t, \sigma_t
+%   \rpa\\
+%   \prod_{j=N+1}^{N+M} q_{j,\vct{\theta}}\lpa
+%     \vct{x}^{(j)}\kern-3pt, \vct{y}^{(j)}\kern-3pt, \vct{m}^{(j)}\kern-3pt, \vct{t}^{(j)} 
+%     \gvn \sigma, \mu_m, \sigma_m, \mu_t, \sigma_t
+%   \rpa.
+%\end{split}
+%\end{equation}
+
+%Even with a factorisation chosen for the approximate density, it remains to define the parametric form for each of the approximate factors. In general there is a tradeoff in the choice of approximate density parameterisation between representational power of the resulting approximate density and corresponding ability to represent the target density well, and the tractability of optimising the variational objective.
