@@ -10,16 +10,16 @@
 \hrule
 \small
 \begin{algorithmic}[1]
-  \State $h \sim \mathcal{U}\lpa 0,\utgtdens(\vct{x}_n) / \nrm{\vct{x}_n \gvn \vct{\mu}, \mtx{\Sigma}}\rpa$ \Comment{Sample slice height}
-  \State $\vct{v} \sim \nrm{\vct{\mu}, \mtx{\Sigma}}$ \Comment{Sample vector setting slice ellipse}
-  \State $\theta_u \sim \mathcal{U}(0,2\uppi)$ \Comment{Uniformly sample bracket around current state}
+  \State $h \sim \mathcal{U}\lpa \cdot \gvn 0,\utgtdens(\vct{x}_n) / \nrm{\vct{x}_n \gvn \vct{\mu}, \mtx{\Sigma}}\rpa$ \Comment{Sample slice height}
+  \State $\vct{v} \sim \nrm{\cdot \gvn \vct{\mu}, \mtx{\Sigma}}$ \Comment{Sample vector setting slice ellipse}
+  \State $\theta_u \sim \mathcal{U}(\cdot \gvn 0,2\uppi)$ \Comment{Uniformly sample bracket around current state}
   \State $\theta_l \gets \theta_u - 2\uppi$
   \State $\theta \gets \theta_u$
   \While{\textsc{True}}
     \State $\vct{x}^* \gets (\vct{x}_n - \vct{\mu}) \cos\theta + (\vct{v} - \vct{\mu}) \sin\theta + \vct{\mu}$  \Comment{Update proposed state}
     \If{$\utgtdens(\vct{x}^*) / \nrm{\vct{x}^* \gvn \vct{\mu}, \mtx{\Sigma}} \leq h$} \Comment{Proposed point not on slice}
       \IfThenElse{$\theta < 0$}{$\theta_l \gets \theta$}{$\theta_u \gets \theta$} \Comment{Shrink slice bracket}
-      \State $\theta \sim \mathcal{U}(\theta_l, \theta_u)$ \Comment{Sample uniformly from new bracket}
+      \State $\theta \sim \mathcal{U}(\cdot \gvn \theta_l, \theta_u)$ \Comment{Sample uniformly from new bracket}
     \Else
       \State \Return $\vct{x}^*$
     \EndIf

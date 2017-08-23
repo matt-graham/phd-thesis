@@ -1,0 +1,16 @@
+\begin{algorithmic}
+\small
+    \Require
+    $(\vct{x}_n, k_n)$ : current target variables -- temperature index state pair,~
+    $\transop_1$ : transition operator updating only target variables $\rvct{x}$ and leaving distribution with density in \eqref{eq:simulated-tempering-joint-target-density} invariant,~
+    $\transop_2$ : transition operator updating only temperature index $\rvar{k}$ and leaving distribution with density in \eqref{eq:simulated-tempering-joint-target-density} invariant.
+    \Ensure\raggedright
+    $(\vct{x}_{n+1}, k_{n+1})$ : new target variables -- temperature index state pair.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $\vct{x}_{n+1} \sim \transop_1(\cdot \gvn \vct{x}_n,\,k_n)$
+  \State $k_{n+1} \sim \transop_2(\cdot \gvn \vct{x}_{n+1},\,k_{n})$
+  \State \Return $(\vct{x}_{n+1},\, k_{n+1})$
+\end{algorithmic}

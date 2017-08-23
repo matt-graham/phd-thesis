@@ -13,13 +13,13 @@
 \small
 \begin{algorithmic}[1]
   \State $\vct{p} \sim \nrm{\vct{0}, \mtx{M}}$ \Comment{Independently sample new momentum vector.}
-  \State $\vct{p}^* \gets \vct{p} - \frac{\delta t}{2} \nabla\phi(\vct{x}_n)$ \Comment{Initial half momentum step $\hat{\vct{\psi}}_{\frac{\delta t}{2}}^{\textsc{a}}$.}
+  \State $\vct{p}^* \gets \vct{p} - \frac{\delta t}{2} \nabla\phi(\vct{x}_n)\tr$ \Comment{Initial half momentum step $\hat{\vct{\psi}}_{\frac{\delta t}{2}}^{\textsc{a}}$.}
   \State $\vct{x}^* \gets \vct{x}_n + \delta t \mtx{M}^{-1}\vct{p}^*$ \Comment{$\hat{\vct{\psi}}_{\delta t}^{\textsc{b}}$.}
   \For{$s \in \fset{1 \dots L-1}$}
-    \State $\vct{p}^* \gets \vct{p}^* - \delta t \nabla\phi(\vct{x}^*)$ \Comment{$\hat{\vct{\psi}}_{\frac{\delta t}{2}}^{\textsc{a}} \circ \hat{\vct{\psi}}_{\frac{\delta t}{2}}^{\textsc{a}}$.}
+    \State $\vct{p}^* \gets \vct{p}^* - \delta t \nabla\phi(\vct{x}^*)\tr$ \Comment{$\hat{\vct{\psi}}_{\frac{\delta t}{2}}^{\textsc{a}} \circ \hat{\vct{\psi}}_{\frac{\delta t}{2}}^{\textsc{a}}$.}
     \State $\vct{x}^* \gets \vct{x}^* + \delta t \mtx{M}^{-1}\vct{p}^*$ \Comment{$\hat{\vct{\psi}}_{\delta t}^{\textsc{b}}$.}
   \EndFor
-  \State $\vct{p}^* \gets \vct{p}^* - \frac{\delta t}{2} \nabla\phi(\vct{x}^*)$ \Comment{Final half momentum step $\hat{\vct{\psi}}_{\frac{\delta t}{2}}^{\textsc{a}}$.} 
+  \State $\vct{p}^* \gets \vct{p}^* - \frac{\delta t}{2} \nabla\phi(\vct{x}^*)\tr$ \Comment{Final half momentum step $\hat{\vct{\psi}}_{\frac{\delta t}{2}}^{\textsc{a}}$.} 
   \State $u \sim \mathcal{U}(0,1)$
   \State $\alpha \gets \exp\lpa\phi(\vct{x}_n) + \frac{1}{2}\vct{p}\mtx{M}^{-1}\vct{p} - \phi(\vct{x}^*) - \frac{1}{2}\vct{p}^*\mtx{M}^{-1}\vct{p}^*\rpa$ \Comment{Accept probability.}
   \If{$u < \alpha$}

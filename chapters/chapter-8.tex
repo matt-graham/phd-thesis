@@ -332,7 +332,7 @@ The two \ac{CT} approaches, Gibbs \ac{CT} and joint \ac{CT}, both dominate in te
 \begin{figure}[h]
 \centering
 \includetikz{radon-hierarchical-linear-regression-factor-graph}
-\caption{Factor graph of Radon hierarchical regression model.}
+\caption{Radon hierarchical regression model.}
 \label{sfig:hier-lin-regression-factor}
 \end{figure}%
 
@@ -341,9 +341,8 @@ The two \ac{CT} approaches, Gibbs \ac{CT} and joint \ac{CT}, both dominate in te
 \vskip 0pt
 \centering
 \includegraphics[width=0.8\textwidth]{images/continuous-tempering/hier-lin-regression-marg-lik-t2}
-\caption{Log marginal likelihood estimates.}\label{sfig:hier-lin-regression-marg-lik}
 \vskip 0pt
-\caption[Radon hierachical regression model marginal likelihood estimates]{Log marginal likelihood estimates against run time for hierarchical regression model. Black dashed line shows estimated log marginal likelihood from a long \ac{AIS} run which is used as a proxy ground truth. The noisy blue curve shows the \emph{evidence lower bound} \ac{ADVI} objective over training and the red dot-dashed line the final converged value used for $\log\zeta$. The green curve shows log marginal likelihood estimates using samples from \ac{NUTS} chains running on the extended joint density in the estimator \eqref{eq:ct-norm-const-estimator}, with the run time corresponding to increasing samples being included in the estimator (offset by initial \ac{ADVI} run time). Curve shows mean over 10 runs and filled region $\pm 3$ standard errors of mean.}
+\caption[Radon model marginal likelihood estimates.]{Log marginal likelihood estimates against run time for hierarchical regression model. Black dashed line shows estimated log marginal likelihood from a long \ac{AIS} run which is used as a proxy ground truth. The noisy blue curve shows the \emph{evidence lower bound} \ac{ADVI} objective over training and the red dot-dashed line the final converged value used for $\log\zeta$. The green curve shows log marginal likelihood estimates using samples from \ac{NUTS} chains running on the extended joint density in the estimator \eqref{eq:ct-norm-const-estimator}, with the run time corresponding to increasing samples being included in the estimator (offset by initial \ac{ADVI} run time). Curve shows mean over 10 runs and filled region $\pm 3$ standard errors of mean.}
 \label{fig:hier-lin-regression}
 \end{figure}
 

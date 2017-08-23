@@ -21,20 +21,23 @@
 \let\cleardoublepage\relax
 \let\cleardoublepage\relax
 
+\setlength{\parskip}{0ex}
+\setlength{\itemsep}{1ex}
+
 % List of figures  
 \refstepcounter{dummy}
 \addcontentsline{toc}{section}{\listfigurename}
 \listoffigures
 
-%\vspace{4ex}
-\newpage
+\vspace{10ex}
+%\newpage
 
 % List of tables
 \refstepcounter{dummy}
 \addcontentsline{toc}{section}{\listtablename}
 \listoftables
         
-\vspace{4ex}
+\vspace{10ex}
 
 
 % List of algorithms
@@ -51,16 +54,16 @@
 %\renewcommand{\lstlistlistingname}{List of Code Listings}
 %\addcontentsline{toc}{section}{\lstlistlistingname}
 %\lstlistoflistings 
-
+    
 %\vspace{4ex}
 \newpage
-       
+\enlargethispage{2\baselineskip}
 % Acronyms
 \refstepcounter{dummy}
 \addcontentsline{toc}{section}{List of Abbreviations}
 \section*{List of Abbreviations}
-
-\begin{acronym}[RMHMC]
+\vspace*{8pt}
+\begin{acronym}[RMHMC~~]
 \input{front-back-matter/acronyms.tex}
 \end{acronym}
 
