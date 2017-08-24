@@ -1,11 +1,867 @@
-\chapter{\mbox{Hamiltonian Monte Carlo}}\label{ch:hamiltonian-monte-carlo}
+\chapter{Pseudo-marginal methods}\label{ch:pseudo-marginal-methods}
 
-\section{Hamiltonian dynamics}
+The \ac{MCMC} methods considered in Chapter \ref{ch:approximate-inference} provide a widely applicable set of tools for performing inference in probabilistic models where we can evaluate a, potentially unnormalised, density function for the target distribution of interest. In some models we may not be able to directly evaluate such a function however but instead have access to an unbiased estimator of the target density. The pseudo-marginal framework \citep{andrieu2009pseudo} allows \ac{MCMC} methods to be extended to such problems.
 
-\section{Euclidean Hamiltonian Monte Carlo}
+The typical setting for pseudo-marginal methods is that a distribution on an extended set of variables is constructed which has the target distribution as a marginal. Values of a density function for the target distribution are then estimated by using a Monte Carlo method such as importance sampling to approximately marginalise out the additional variables. The variables which are marginalised out may correspond to latent variables specified in the model but that are not of direct interest for the inference task or variables introduced solely for computational reasons. In both cases it will usually be possible to specify a Markov transition operator which leaves the distribution on the extended set of variables invariant, with such schemes often being described as \emph{data augmentation} \citep{tanner1987calculation,van2001art} or \emph{auxiliary variable}  \citep{edwards1988generalization,higdon1998auxiliary} methods. Here we will refer to any variables which are marginalised over as auxiliary variables and the variables of interest we wish to infer plausible values for as the target variables.
 
-\section{Riemannian-manifold Hamiltonian Monte Carlo}
+The density of the joint distribution on auxiliary and target variables will often have a complex geometry with strong dependencies between the variables and in some cases may be multimodal. This can lead to poor exploration of the extended space by simple \ac{MCMC} schemes such as random-walk Metropolis--Hastings and Gibbs sampling \citep{andrieu2009pseudo}. The motivation for pseudo-marginal methods is that in some cases the density of the marginal distribution on the target variables will have a simpler geometry than the density of the joint distribution on the extended space and therefore be more amenable to exploration by standard \ac{MCMC} methods. 
 
-\section{Constrained Hamiltonian Monte Carlo}
+Although in general we cannot analytically integrate out the auxiliary variables, the pseudo-marginal framework shows how an unbiased estimator of the marginal density can be used within a Metropolis--Hastings update while maintaining the asymptoptic exactness of standard \ac{MCMC} methods.  Intuitively the lower the variance of the density estimator the closer the behaviour of the algorithm to the case where the auxiliary variables are analytically marginalised out. We can control the variance of the estimator both by varying the number of auxiliary variable samples used in the Monte Carlo estimate and by using variance reduction methods to increase the estimator efficiency.
 
-\section{Adaptive variants}
+%In some cases simple \ac{MCMC} schemes such as random-walk Metropolis--Hastings and Gibbs sampling are only able to make small moves in the extended space of auxiliary and target variables due to strong dependencies between the variables. This can lead to high correlations between the chain states and so poor effective sample sizes \citep{andrieu2009pseudo}. The motivation for pseudo-marginal methods is that the marginal distribution on the target variables will sometimes have a
+
+  %and so by approximately marginalising out the auxiliary variables more efficient updates to the target variables can be performed. Intuitively the lower the variance of the density estimator the closer the behaviour of the algorithm to the case where the auxiliary variables are analytically marginalised out \citep{andrieu2009pseudo}. We can control the variance of the estimator both by varying the number of auxiliary variable samples used in the Monte Carlo estimate and by using variance reduction methods to increase the efficiency of the estimator. The pseudo-marginal framework shows how the marginal density estimate can be used within a Metropolis--Hastings type update while still maintaining the asymptoptic exactness guarantees of standard \ac{MCMC} methods.
+
+%A further advantage of the pseudo-marginal formulation is that 
+By posing the problem of specifying an \ac{MCMC} algorithm in terms of designing an efficient\footnote{We use `efficient' in a general sense here rather than the notion of a minimum-variance unbiased estimator satisfying the Cram\'{e}r-Rao lower bound \citep{rao1992information,cramer2016mathematical}.} unbiased estimator of the density of interest, the large literature on methods for constructing low-variance unbiased estimators can be exploited. For example comparatively cheap but biased optimisation-based inference approaches such as Laplace's method (see Appendix \ref{app:optimisation-based-approximate-inference}) can be combined with an importance sampling `debiasing' step to produce an unbiased estimator which can then be used in a pseudo-marginal \ac{MCMC} update. This provides a way of exploiting cheap but biased approximate inference methods within a \ac{MCMC} method which still gives guarantees of asymptotically exact results.
+
+%Pseudo-marginal methods have been successfully applied to perform inference in a diverse range of problems, including genetic population modelling \citep{beaumont2003estimation}, Gaussian process classification models \citep{filippone2014pseudo} and continuous time stochastic process models \citep{georgoulas2015unbiased}. 
+The pseudo-marginal framework has been applied to a wide range of probabilistic models were inference might otherwise be intractable. However the standard pseudo-marginal method, which is based on a Metro\-polis--Hastings transition operator, is suspectible to `sticking' behaviour where proposed moves are repeatedly rejected for many iterations \citep{andrieu2009pseudo,sherlock2015efficiency}. The method can also be difficult to tune as it breaks some of the assumptions underlying standard heuristics for adapting the parameters of Metropolis--Hastings methods.
+
+%and `doubly-intractable' distributions where an intractable normaliser depends on the variables being inferred \cite{murray2006mcmc,moller2006efficient,lyne2015russian}
+
+%In pseudo-marginal methods an estimated `pseudo-' marginal density is instead used in a Metropolis 
+
+%Typically pseudo-marginal methods are applied to problems in which auxiliary unobserved variables are introduced which need to be marginalised over to evaluate the target distribution of interest. In some cases these auxiliary variables may be interpretable quantities directly specified in the model of interest. For example in hierarchical probabilistic models with a set of global latent variables $\rvct{\theta}$ and local per-datapoint latent variable $\lbrace \rvct{z}_i\rbrace$ we may be only directly interested in computing plausible values for the global latent variables in order to allow these values to be used to make predictions for unseen datapoints.
+
+In this chapter we will discuss an alternative formulation of the pseudo-marginal framework which bridges between the approach of directly specifying a Markov transition operator on the extended state space which includes the auxiliary variables and the pseudo-marginal method where the auxiliary variables are approximately marginalised out. This \emph{auxiliary pseudo-marginal} framework still allows the intuitive design of pseudo-marginal algorithms in terms of identifying low-variance unbiased estimators, while overcoming some of the issues of the pseudo-marginal Metropolis--Hastings method. In particular it shows how more flexible adaptive \ac{MCMC} algorithms such as slice-sampling can be used within the pseudo-marginal setting, which can improve the robustness and ease of application of the approach by minimising the amount of user-tuning of free parameters required.
+
+The work summarised in this chapter is based on a collaboration with Iain Murray which resulted in the published conference paper
+\begin{itemize}
+ \item Pseudo-marginal slice sampling. Iain Murray and Matthew M. Graham. \emph{The Proceedings of the 19th International Conference on Artificial Intelligence and Statistics, JMLR W\&CP 51:911-919}, 2016.
+\end{itemize}
+Iain Murray was the main contributor of the ideas proposed in that publication and responsible for the `doubly-intractable' Gaussian and Ising model experiments in Sections 5.1 and 5.2 of the paper. We discussed the presentation and details of the work together. My individual contribution was implementing and analysing the Gaussian process classification experiments summarised in Section 5.3 of that work, an extended version of which is reproduced in Section \ref{subsec:pm-gaussian-process-classifier-exp} of this Chapter. The Gaussian latent variable model experiments discussed in Section \ref{subsec:pm-normal-latent-model-exp} were directly inspired by the experiments in Section 5.1 of the above paper, but we use a different latent variable model formulation for the model here and conduct additional empirical studies of the effect of the variance of the estimator on the relative performance of the algorithms and the sensitivity of the performance of the pseudo-marginal slice sampling algorithms to their free parameters. The text and figures in this chapter are all my own work, though inevitably some of the discussion and analysis is similar to sections of the above publication.
+
+%The additional experiments, analysis and discussion presented in this chapter are solely my own work.% Although my contribution to the novel ideas discussed in this chapter was therefore minor, this work is summarised here to provide background material on the pseudo-marginal method which will be important in the following chapter on inference in implicit generative models, and to explain the auxiliary pseudo-marginal \ac{MCMC} methods proposed in the above paper which we will use variants of in the experiments in the next chapter.
+
+\section{Problem definition}
+
+As in the previous chapter our goal is to be able to compute estimates of expectations with respect to a target distribution of interest, that is integrals of the form
+\begin{equation}
+  \bar{f} = \int_{\set{X}} f(\vct{x})\,P(\dr \vct{x}) = \int_{\set{X}} f(\vct{x})\,p(\vct{x})\,\mu(\dr\vct{x})
+\end{equation}
+where $f : \set{X} \to \reals$ is an arbitrary Lebesgue integrable function and $P$ is a probability distribution on a space $\set{X}$ with density $\tgtdens = \td{\tgtprob}{\mu}$. We assume as previously that the density $\tgtdens$ may have an intractable normalising constant $C$ that we cannot evaluate i.e. $\tgtdens(\vct{x}) = \utgtdens(\vct{x}) / C$. We make the further assumption here that we cannot directly evaluate $\utgtdens$ either but only compute an unbiased, non-negative estimate of it. More explicitly we assume we can generate values of a non-negative random variable $\hat{\rvar{p}}$ from a regular conditional distribution $\prob{\hat{\rvar{p}}|\rvct{x}}$ such that
+\begin{equation}\label{eq:pm-density-unbiased-estimator}
+  \utgtdens(\vct{x}) = \expc{ \hat{\rvar{p}} \gvn \rvct{x} = \vct{x}}
+  = \int_{0}^{\infty} \hat{p} \, \prob{\hat{\rvar{p}}|\rvct{x}}(\dr\hat{p}\gvn\vct{x})
+  \quad \forall \vct{x} \in \set{X}.
+\end{equation}
+Note that we only require that we can generate $\hat{\rvar{p}}$ values for a given $\rvct{x}$, not that we can evaluate a density for $\prob{\hat{\rvar{p}}|\rvct{x}}$. For concreteness throughout the rest of this chapter we will assume that the target variables take values in a real-valued space $\set{X} = \reals^D$ and that any density on these variables is defined with respect to the Lebesgue measure $\mu = \lebm{D}$.
+
+\subsection{Example: hierarchical latent variable models}
+
+\begin{figure}[!t]
+\centering
+\includetikz{hierarchical-latent-variable-model-factor-graph}
+\caption{Hierarchical model factor graph.}
+\label{fig:global-local-latent-variable-model}
+\end{figure}
+
+The application of pseudo-marginal methods we focus on is inference in hierarchical probabilistic models where the unobserved variables are split into global latent variables we are interested in inferring and local per datapoint latent variables that we wish to marginalise over the values of, as introduced in Section \ref{subsec:hierachical-models-intro} in Chapter \ref{ch:probabilistic-modelling}. For notational simplicity we here assume all observed variables are concatenated in a single vector $\rvct{y}$ and likewise all associated local latent variables in a vector $\rvct{z}$. The global latent variables, i.e. the target variables for inference, are then $\rvct{x}$. A factor graph representing the factorisation across the model variables is shown in Figure \ref{fig:global-local-latent-variable-model}.
+
+The target distribution $P$ is then the posterior distribution $\prob{\rvct{x}|\rvct{y}}$ given fixed observed values $\vct{y}$ and the unnormalised target density is chosen as the joint density $\utgtdens(\vct{x}) = \pden{\rvct{x},\rvct{y}}(\vct{x},\vct{y})$. We can express $\utgtdens$ as a marginal of the joint density $\pden{\rvct{x},\rvct{y},\rvct{z}}$, which assuming the latent variables $\rvct{z}$ being marginalised over are real-valued and have a density with respect to the Lebesgue measure can be written
+\begin{equation}\label{eq:pm-target-density-hierarchical-marginal}
+  \utgtdens(\vct{x}) = \pden{\rvct{x},\rvct{y}}(\vct{x},\vct{y}) =
+  \int_{\set{Z}} \pden{\rvct{x},\rvct{y},\rvct{z}}(\vct{x},\vct{y},\vct{z}) \,\dr\vct{z}.
+\end{equation}
+%\begin{equation}\label{eq:pm-target-density-hierarchical-marginal}
+%\begin{split}
+%  \utgtdens(\vct{x}) &= 
+%  \int_{\set{Z}} \pden{\rvct{x},\rvct{y},\rvct{z}}(\vct{x},\vct{y},\vct{z}) \,\dr\vct{z}\\
+%  &=
+%  \int_{\set{Z}} 
+%    \pden{\rvct{x}}(\vct{x})\, \pden{\rvct{z}|\rvct{x}}(\vct{z}\gvn\vct{x})\,
+%    \pden{\rvct{y}|\rvct{x},\rvct{z}}(\vct{y}\gvn\vct{x},\vct{z}) \,\dr\vct{z},
+%\end{split}.
+%\end{equation}
+Generally this integral will not have an analytic solution. We can however form an unbiased estimate of \eqref{eq:pm-target-density-hierarchical-marginal} using importance sampling. We define a \emph{importance distribution} $Q$ which we can generate independent samples from and with a known density $q$ which in general may depend on the values of the target variables $\vct{x}$ and observations $\vct{y}$. If $\lbrace \rvct{z}^{(n)} \rbrace_{n=1}^N$ are a set of independent variables distributed according to $Q$ then we can define a unbiased density estimator $\hat{\rvar{p}}$ as
+\begin{equation}\label{eq:pm-hierarchical-model-importance-sampling-estimator}
+  \hat{\rvar{p}} = \frac{1}{N} \sum_{n=1}^N \frac{\pden{\rvct{x},\rvct{y},\rvct{z}}(\rvct{x},\vct{y},\rvct{z}^{(n)})}{q(\rvct{z}^{(n)}\gvn\rvct{x},\vct{y})} \implies
+  \expc{\hat{\rvar{p}}\gvn\rvct{x} = \vct{x}} = \utgtdens(\vct{x}).
+\end{equation}
+The variance $\var{\hat{\rvar{p}}}$ is proportional to $\frac{1}{N}$ and so to decrease the estimator variance we can increase the number of importance samples used, however this comes with the tradeoff of an increased computational cost of each density estimate. The estimator variance will also be dependent on the importance distribution used. The optimal choice in terms of minimsing variance would be the conditional distribution $\prob{\rvct{z}|\rvct{x},\rvct{y}}$. Under this choice the density `estimate' takes the form
+\begin{equation}
+  \hat{\rvar{p}} = 
+  \frac{1}{N} \sum_{n=1}^N 
+  \frac
+    {\pden{\rvct{x},\rvct{y},\rvct{z}}(\rvct{x},\vct{y},\rvct{z}^{(n)})}
+    {\pden{\rvct{z}|\rvct{x},\rvct{y}}(\rvct{z}^{(n)}\gvn\rvct{x},\vct{y})} =
+  \frac{1}{N} \sum_{n=1}^N \pden{\rvct{x},\rvct{y}}(\rvct{x},\vct{y}) = \utgtdens(\rvct{x})  
+\end{equation}
+and so is equal to the unnormalised target density independent of the sampled $\rvct{z}^{(n)}$ values with zero variance. In reality however we will not be able to evaluate the density of $\prob{\rvct{z}|\rvct{x},\rvct{y}}$ nor sample from it as this is equivalent to being able to analytically solve the integral in \eqref{eq:pm-target-density-hierarchical-marginal}.
+
+The conditional distribution $\prob{\rvct{z}|\rvct{x}}$ will often be tractable to sample from and to evaluate the density of and so is a possible choice for the importance distribution. Typically however $\prob{\rvct{z}|\rvct{x}}$ will be much less concentrated than $\prob{\rvct{z}|\rvct{x},\rvct{y}}$. This will mean samples from $\prob{\rvct{z}|\rvct{x}}$ will tend to fall in low density regions of $\prob{\rvct{z}|\rvct{x},\rvct{y}}$, with only occassionally sampled values being in regions with high density under $\prob{\rvct{z}|\rvct{x},\rvct{y}}$ leading to a high variance estimator, with the problem becoming more severe as the dimension of $\rvct{z}$ increases. This can mean a large number of importance samples are needed to achieve an estimator with a reasonable variance.
+
+An alternative is to fit an approximation to $\prob{\rvct{z}|\rvct{x},\rvct{y}}$ to use as the importance distribution using for example one of the optimisation-based approximate inference approaches discussed in Appendix \ref{app:optimisation-based-approximate-inference}. For example we could use Laplace's method to fit a multivariate normal approximation $\pden{\rvct{z}|\rvct{x},\rvct{y}}(\vct{z}\gvn\vct{x},\vct{y}) \approx \nrm{\vct{z} \gvn \vct{\mu}_{\vct{x},\vct{y}},\mtx{\Sigma}_{\vct{x},\vct{y}}}$ and use this as the importance distribution. As $\pden{\rvct{z}|\rvct{x},\rvct{y}}$ depends on $\vct{x}$ this involves fitting an approximation for each $\vct{x}$ value we wish to evaluate the density at. Although computationally costly the significant variance reduction brought by this approach can make this overhead worthwhile in pratice \citep{filippone2014pseudo}.
+
+Inference in hierarchical latent variable models using an importance sampling estimator for the marginal density is just one setting in which pseudo-marginal methods are applied. Other applications of the framework have included inference methods for dynamical state space models using a particle filter estimator \citep{doucet2001sequential,gordon1993novel} for the marginal density of the observed state sequence given the model parameters \citep{pitt2010auxiliary,chopin2015particle,andrieu2010particle}, parameter inference in `doubly-intractable' distributions \citep{murray2006mcmc} where an intractable normaliser depends on the variables of interest using density estimators based on exact sampling methods \citep{propp1996exact,moller2006efficient,murray2007advances} and random series trunctation \citep{lyne2015russian} and approximate inference in simulator models where the density on the simulator outputs is only implicitly defined \citep{marjoram2003markov}. 
+
+In the discussion and experiments in this chapter we will concentrate on latent variable models and importance sampling density estimators of the form described in this section. Examples of applying the methods discussed here to inference in a doubly intractable distribution were discussed in the associated conference paper \citep{murray2016pseudo}. Although particle filtering based methods are a major use case of the pseudo-marginal framework, the associated models and estimators tend to be more complex and we have chosen to avoid further expanding the theoretical background material in this thesis by concentrating on simpler cases here. The use of pseudo-marginal \ac{MCMC} methods to perform inference in simulator models will be a major topic of the next chapter which specifically considers inference methods applicable in this setting so we will delay discussion of models of this form till then.
+
+%As mentioned above, typically the target density $\utgtdens$ will be the marginal density of a joint distribution on the target variables $\rvct{x}$ distributed according to $\tgtprob$ on a space $\set{X}$ and a set of auxiliary variables $\rvct{v}$ taking values in a space $\set{V}$ with a known (potentially unnormalised) joint density $\upden{\rvct{x},\rvct{v}} : \set{X} \times \set{V} \to [0,\infty)$, that is
+%\begin{equation}\label{eq:target-density-marginal}
+%  \utgtdens(\vct{x}) = \int_{\set{V}} \upden{\rvct{x},\rvct{v}}(\vct{x},\,\vct{v}) \,\dr\vct{v}
+%  \quad \forall \vct{x} \in \set{X}.
+%\end{equation}
+%The estimator $\esttgtdens$ will then generally be an importance sampling estimate of this integral using $N$ samples from an importance distribution with density $q^* : \set{V} \times \set{X} \to [0,\infty)$. As we are required to be able to generate independent samples from $q^*$ there must exist some function $\vctfunc{g} : \set{U}^* \times \set{X} \to \set{V}$ and a distribution 
+%, such that $\vct{u}$ is the concatenation of all $N$ auxiliary variable samples i.e. $\set{U} = \set{V}^N$ and $\vct{u} = \lsb \vct{v}^{(1)};\,\vct{v}^{(2)}\,\dots\,\vct{v}^{(N)}\rsb$ and $\esttgtdens$ and $q$ defined as
+%\begin{equation}\label{eq:target-density-importance-sampling-estimator}
+%  \esttgtdens(\vct{x}\gvn\vct{u}) = 
+%  	\frac{1}{N}\sum_{n=1}^N\lpa
+%  	  \frac{\upden{\rvct{x},\rvct{v}}(\vct{x},\,\vct{v}^{(n)})}{q^*(\vct{v}^{(n)}\gvn\vct{x})}
+%    \rpa,
+%   ~~
+%   q(\vct{u}\gvn\vct{x}) = \prod_{n=1}^N q^*(\vct{v}^{(n)}\gvn\vct{x}).
+%\end{equation}
+%In this case as the auxiliary variable samples in the estimate are independent the variance of the density estimate will be proportional to $\frac{1}{N}$ and so we can tradeoff between an increased number of samples $N$ and so lower variance estimator with the associated increased computational cost per density estimate. The importance distribution used will also be key in determining the variance of the estimator. If the joint density $\upden{\rvct{x},\rvct{v}}$ has a known factorisation $\upden{\rvct{x},\rvct{v}}(\vct{x},\vct{v}) = \upden{\rvct{x}|\rvct{v}}(\vct{x}\gvn\vct{v})\,\pden{\rvct{v}}(\vct{v})$ then distribution defined by the marginal density $\pden{\rvct{v}}$ will often be tractable to generate independent samples from and so is one possible choice. If there are strong dependencies between the target and auxiliary variables however this may lead to a high-variance estimator as in this case $\upden{\rvct{x}|\rvct{v}}$ will vary significantly for different sampled $\vct{v}$ values, and so a large number of importance samples $N$ may be needed to reduce the variance of the estimator $\esttgtdens$ to a desired level. 
+
+%The optimal choice of $q^*$ in terms of minimising the variance of the estimator $\esttgtdens$ would be to use the conditional density on the auxiliary variables given the target variables $\pden{\rvct{v}|\rvct{x}}$, where $\upden{\rvct{x},\rvct{v}}(\vct{x},\vct{v}) = \pden{\rvct{v}|\rvct{x}}(\vct{v}\gvn\vct{x})\,\utgtdens(\vct{x})$, as the importance distribution density $q^*$. This would give an zero-variance `estimate' of the unnormalised target density $\utgtdens$ however in general it will neither be possible to evaluate nor independently sample from $\pden{\rvct{v}|\rvct{x}}$. In some cases however we may be able to compute an \emph{approximation} to $\pden{\rvct{v}|\rvct{x}}$ to use for $q^*$ using for example an optimisation-based approximate inference approach such as Laplace's method; if this approximation $q$ is a good fit to the true $\pden{\rvct{v}|\rvct{x}}$ then we would expect an importance sampling estimate using $q^*$ to be low variance. Note that as $\pden{\rvct{v}|\rvct{x}}$ is a function of the target variables this method involves fitting a new approximation to $\pden{\rvct{v}|\rvct{x}}$ for each update to the target variables. Although computationally expensive as we will see in the later experiments in some cases the significant improvement in the estimator accuracy using such methods can make this overhead worthwhile.
+
+%with the assumption that the auxiliary variable distribution $R$ is tractable to generate independent samples from. The property \eqref{eq:density-unbiased-estimator-property} means that if $\rvct{u}$ is a random variable generated from $R$ then $\expc{\esttgtdens(\vct{x}\gvn\rvct{u})} = \utgtdens(\vct{x})$ i.e. $\esttgtdens(\vct{x}\gvn\rvct{u})$ is an unbiased estimator for $\utgtdens(\vct{x})$.
+
+\section{Pseudo-marginal Metropolis--Hastings}
+
+\begin{algorithm}[!t]
+\caption{Pseudo-marginal Metropolis--Hastings.}
+\label{alg:pseudo-marginal-metropolis-hastings}
+\begin{algorithmic}
+\small
+    \Require
+    $(\vct{x}_n, \hat{p}_n)$ : current target variables -- density estimate state pair,~
+    $\prob{\hat{\rvar{p}}|\rvct{x}}$ : density estimate conditional distribution,~
+    $r$ : proposal density for updates to target variables.
+    \Ensure\raggedright
+    $(\vct{x}_{n+1}, \hat{p}_{n+1})$ : new target variables -- density estimate state pair.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $\vct{x}^* \sim r(\cdot \gvn \vct{x}_n)$ \Comment{Propose new values for target variables.}
+  \State $\hat{p}^* \sim \prob{\hat{\rvar{p}}|\rvct{x}}(\cdot\gvn\vct{x}^*)$ \label{ln:density-estimate} \Comment{Estimate density at proposed $\vct{x}^*$.}
+  \State $u \sim \mathcal{U}(\cdot \gvn 0,1)$
+  \If{$ u <  \frac{r(\vct{x}_n\gvn\vct{x}^*)\,\hat{p}^*}{r(\vct{x}^*\gvn\vct{x}_n)\,\hat{p}_n}$}
+    \State $(\vct{x}_{n+1},\hat{p}_{n+1}) \gets (\vct{x}^*,\hat{p}^*)$ \Comment{Accept proposal.}
+  \Else
+    \State  $ (\vct{x}_{n+1},\hat{p}_{n+1}) \gets (\vct{x}_n,\hat{p}_n)$ \Comment{Reject proposal.}
+  \EndIf
+  \State \Return $(\vct{x}_{n+1},\hat{p}_{n+1})$
+\end{algorithmic}
+\end{algorithm}
+
+The pseudo-marginal Metropolis--Hastings method is summarised in Algorithm \ref{alg:pseudo-marginal-metropolis-hastings}. The term \emph{pseudo-marginal} was proposed by Andrieu and Roberts in \citep{andrieu2009pseudo}, with they also giving an extensive theoretical analysis of the framework. Andrieu and Roberts cite Beaumont \citep{beaumont2003estimation} as the original source of the algorithm. Special cases of the algorithm have also been independently proposed, for example in the statistical physics literature by Kennedy and Kuti \citep{kennedy1985noise} and a \ac{MCMC} method for doubly intractable distributions by Moller et al. \citep{moller2006efficient}.
+% The extensive theoretical analysis of the properties of the pseudo-marginal method in \citep{andrieu2009pseudo} was a major factor of the strong subsequent interest from the statistics community.
+
+The algorithm takes an intuitive form, with a very similar structure to the standard Metropolis--Hastings method (Algorithm \ref{alg:metropolis-hastings}) except for the ratio of densities in the accept probability calculation being replaced with a ratio of the density estimates. Importantly the stochastic density estimates are maintained as part of the chain state: if we reject a proposed update on the next iteration of the algorithm we reuse the same density estimate for the current state as in the previous iteration. This is required for the correctness of the algorithm, but also helps explain the sticking behaviour sometimes encountered with pseudo-marginal Metropolis--Hastings chains. If the density estimator distribution is heavy-tailed occassionally a estimate $\hat{p}_n$ will be sampled for the current target state $\vct{x}_n$ which is much higher than the expected value $\utgtdens(\vct{x}_n)$. Assuming for simplicity a symmetric proposal density $r$ is used such that the accept probability ratio in Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} reduces to $\hat{p}^* / \hat{p}_n$, for subsequent proposed $(\vct{x}^*,\hat{p}^*)$ pairs the $\hat{p}^*$ values will typically be much smaller than the outlier $\hat{p}_n$ value and so the accept probability low. This can cause a long sequence of proposed moves being rejected until a move is proposed to an $\vct{x}^*$ where the density is similar to $\hat{p}_n$ or another atypically high density estimate is proposed \citep{filippone2014pseudo,andrieu2009pseudo,sherlock2015efficiency}.
+
+The efficiency of the pseudo-marginal Metropolis--Hastings update depends on how noisy the density estimates are and so the choice of the number of Monte Carlo samples $N$ in the density estimate, for example the number of importance samples in \eqref{eq:pm-hierarchical-model-importance-sampling-estimator}. As $N$ increases, the variance decreases and the algorithm becomes increasingly similar to performing standard Metropolis--Hastings updates under the (marginal) target distribution. Generally a chain will therefore mix better for larger $N$, with fewer sticking events. Typically however the computational cost of density estimate and so Metropolis--Hastings updates also increases with $N$ and so there is a tradeoff between this improved mixing and increased per-update cost. Several theoretical studies have suggested guidelines for how to tune the parameters of the algorithm to optimise overall efficiency.
+
+For Monte Carlo estimators formed as an average of unbiased estimators (such as the importance sampling estimator discussed above) and under an assumption of that the computational cost of each density estimate scales linearly with the number of Monte Carlo samples $N$, it has been shown \citep{sherlock2016pseudo,bornn2017use} that it is close to optimal to choose $N = 1$. Although the variance reduction in the density estimates for larger $N$ generally gives higher acceptance rates and improved mixing, the gain in the number effective samples in this case is usually smaller than the increased computational cost per update.
+
+As noted in \citep{sherlock2016pseudo} in many practical settings cases the assumption of a linear increase in cost with the number of importance samples $N$ will not be valid, particularly for small $N$. For example most modern \acp{CPU} have some degree of parallel compute capability through multiple cores so (assuming the parallelism can be exploited) there will usually be a non-linear increase in cost until all cores are at full utilisation: a rough guideline in this case is to use one sample per core. Another situation in which the linear cost assumption may not hold is when there is a high fixed computational overhead in each density estimate independent of the number of samples. For example if a importance distribution is used which is dependent on the target variables there may be computational operations such as matrix decompositions that can be performed once and then their cost amortised over generation of multiple importance samples. %In an empirical investigation in \citep{sherlock2015efficiency} it is found in a Gaussian process inference problem with this property that the optimal computational efficiency was achieved roughly when the marginal cost of generating $N$ importance samples was roughly equal to the fixed overhead.
+
+%In addition to the hierarchical latent variable models considered previously, another common setting in which the pseudo-marginal framework is applied is inference in dynamical state space models using a particle filter estimator \citep{doucet2001sequential,gordon1993novel}. The 
+Particle filtering estimators do not take the form of a simple Monte Carlo average of independent unbiased estimates but are instead are formed as a product of (dependent) Monte Carlo estimates \citep{sherlock2016pseudo}. The result of \citep{sherlock2016pseudo} that using $N=1$ is close to optimal (with $N$ now the number of particles) is therefore not applicable in this case. 
+
+Under an alternative simplifying assumption relevant to the particle filtering setting that the noise in the logarithm of the density estimator is normally distributed and independent of the value of the target variables $\vct{x}$ and that the computational cost of each density estimate scales linearly with $N$, it is argued in \citep{doucet2015efficient} that $N$ should be chosen so as to make the standard deviation of the logarithm of the density estimator approximately equal to 1.2. In \citep{sherlock2015efficiency} a more specific case is considered of pseudo-marginal Metropolis--Hastings methods using a isotropic Gaussian random-walk Metropolis proposal $r(\vct{x}'\gvn\vct{x}) = \nrm{\vct{x}'\gvn\vct{x},\lambda^2\mathbf{I}}$ and the same assumptions as \citep{doucet2015efficient} made of additive normal noise in the logarithm of the density estimator which is independent of $\vct{x}$ and a computational cost for each density estimate which scales linearly with $N$. It is shown that for target distributions on a $D$ dimensional space which obey certain regularity assumptions as $D \to \infty$ that computational efficiency is maximised for a choice of $\lambda$ and $N$ which gives an average accept rate of approximately 0.07 and a noise standard deviation for the logarithm of the density estimator of approximately 1.8.
+
+%Although these theoretical results can provide useful guidelines for choosing the free-parameters of pseudo-marginal algorithms, in practice the tuning of pseudo-marginal Metropolis--Hastings can remain challenging. In the case of pseudo-marginal inference in latent variable models using importance sampling estimators that we concentrate on here, although the result of \citep{sherlock2016pseudo} gives a recommendation for the choice of the number of Monte Carlo samples $N$, it is
+
+%In practice the noise in the density estimator is usually dependent on $\vct{x}$ and so a suitable value (or values) to tune the estimator variance needs to be chosen. In the empirical studies in \citep{doucet2015efficient} the mean value of $\vct{x}$ under the target distribution is used, however in general this value will not be known a-priori. More practically we might use a short pilot chain to find a representative $\vct{x}$ sample from the target to use to tune the variance at, though this still requires choosing reasonable settings for this pilot chain with the propensity for chains to stick meaning poor choices can lead to chains which reject all proposed updates in a short run. Though the recommendations of \citep{doucet2015efficient} and \citep{sherlock2015efficiency} are therefore useful guidelines, in practice tuning pseudo-marginal Metropolis--Hastings methods can remain challenging and will often require significant user time which can reduce the impact of any gains in efficiency.
+
+%Further while the assumption of a linear scaling of computational cost of each density estimate $N$ will often be reasonable, in cases where there is a high fixed cost per density estimate, e.g. when fitting an approximation for the current $\vct{x}$ to use as an importance distribution as described in the previous section, the marginal cost of including additional samples may be relatively small and so the linear cost assumption made in \citep{doucet2015efficient} and \citep{sherlock2015efficiency} not applicable. Additionally most modern \acp{CPU} have some degree of parallel compute capability through multiple cores there will also usually be a non-linear increase in cost until all cores are at full utilisation in practice (assuming the parallelism can be exploited).
+
+\section{Reparametrising the density estimator}
+
+As a first step in considering how to apply alternative transition operators to pseudo-marginal inference problems, we define a reparameterisation of the density estimator in terms of a deterministic function of the auxiliary random variables used in computing the estimate. An equivalent reparameterisation has also been used in other work analysing the pseudo-marginal framework, for example \citep{doucet2015efficient}.
+
+In general the computation of a density estimate will involve sampling values from known distributions using a pseudo-random number generator and then applying a series of deterministic operations to these auxiliary random variables. Under the simplifying assumption that the estimator uses a fixed number of auxiliary random variables, we can therefore define a non-negative deterministic function $\esttgtdens : \set{X} \times \set{U} \to [0,\infty)$ and a distribution $R$ with known density $\rho = \pd{R}{\nu}$ such that if $\vct{u}$ is an independent sample from $R$, then $\hat{p} = \esttgtdens(\vct{x},\vct{u})$ is an independent sample from $\prob{\hat{\rvar{p}}|\rvct{x}}( \cdot \gvn \vct{x})$. Here $R$ represents the known distribution of the auxiliary variables and $\esttgtdens$ the operations performed by the remaining estimator code given values for the target and auxiliary variables. We can use this to reparameterise \eqref{eq:pm-density-unbiased-estimator} as
+\begin{equation}\label{eq:density-unbiased-estimator-property}
+  \utgtdens(\vct{x}) =
+  \int_{\set{U}} \esttgtdens(\vct{x},\vct{u})\,R(\dr\vct{u}) =
+  \int_{\set{U}} \esttgtdens(\vct{x},\vct{u})\,\rho(\vct{u})\,\nu(\dr\vct{u})
+  \quad \forall \vct{x} \in \set{X}.
+\end{equation}
+
+For example considering the importance-sampling density estimator for a hierachical latent variable model defined in \eqref{eq:pm-hierarchical-model-importance-sampling-estimator}, if we assume the importance distribution is chosen to be a multivariate normal with density $\nrm{\vct{\mu}_{\vct{x},\vct{y}},\mtx{\Sigma}_{\vct{x},\vct{y}}}$ then defining $\vct{u} = \lsb \vct{u}^{(1)}; \,\cdots\,; \vct{u}^{(n)}\rsb$ as the concatenated vector of standard normal variables used to generate the importance distribution samples, we have $\rho(\vct{u}) = \nrm{\vct{u}\gvn\vct{0},\mtx{I}}$ and
+\begin{equation}\label{eq:importance-sampling-density-estimator-reparameterisation}
+  \esttgtdens(\vct{x},\vct{u}) = \frac{1}{N} \sum_{n=1}^N
+  \frac
+    {\pden{\rvct{x},\rvct{y},\rvct{z}}(\vct{x},\vct{y},\mtx{L}_{\vct{x},\vct{y}}\vct{u}^{(n)} + \vct{\mu}_{\vct{x},\vct{y}})}
+    {\nrm{\mtx{L}_{\vct{x},\vct{y}}\vct{u}^{(n)} + \vct{\mu}_{\vct{x},\vct{y}} \gvn \vct{\mu}_{\vct{x},\vct{y}},\mtx{\Sigma}_{\vct{x},\vct{y}}}},
+\end{equation}
+where $\mtx{L}_{\vct{x},\vct{y}}$ is the lower triangular Cholesky factor of $\mtx{\Sigma}_{\vct{x},\vct{y}}$.
+
+%Our assumption that we can generate independent $\hat{\rvar{p}}$ values from $\prob{\hat{\rvar{p}}|\rvct{x}}$ means that there exists a non-negative deterministic function $\esttgtdens : \set{X} \times \set{U} \to [0,\infty)$ and a distribution $R$ with known density $\rho = \pd{R}{\nu}$ such that if $\vct{u}$ is an independent sample from $R$, then $\hat{p} = \esttgtdens(\vct{x},\vct{u})$ is an independent sample from $\prob{\hat{\rvar{p}}|\rvct{x}}$. 
+
+%We can consider $R$ as representing the known distribution of the random variables drawn from a \ac{PRNG} in the estimator code and $\epsilon$ as the operations performed by the remaining estimator code given the target state to estimate the density at and random inputs. We can use this to reparameterise \eqref{eq:pm-density-unbiased-estimator} as
+%In general the number of random variables used
+%Here $\set{U}$ is the space of all of the auxiliary random variables used in the density estimator - we can consider it as the space of all of the draws from a \ac{PRNG} in the estimator code.
+
+%More explicitly we assume we have access to an \emph{estimator} function $\esttgtdens : \set{X} \times \set{U} \to [0,\infty)$ and a distribution on $\set{U}$ with density\footnote{For notational simplicity we will assume the auxiliary variables are real-valued and the density $\rho$ is defined with respect to the Lebesgue measure.} %; the basic results extend naturally to more general measures though appropriate \ac{MCMC} transition operators for such spaces would also need to be identified}. 
+%$q$, such that
+
+Rather than defining the chain state in the pseudo-marginal Metropolis--Hastings update as the target state -- density estimate pair $(\vct{x},\hat{p})$, we can instead replace the density estimate $\hat{p}$ with the auxiliary random variables $\vct{u}$ drawn from $R$ used to compute the estimate. As $\hat{p}$ is a deterministic function of $\vct{x}$ and $\vct{u}$ these two parameterisations are equivalent. The implementation in Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} can be considered a practically motivated variant that avoids the $\vct{u}$ values needing to be stored in memory and in fact means they do not need to be explicitly defined in the algorithm at all.
+
+While the formulation of the update in Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} is the more useful for implementation purposes, showing the correctness of the update is simpler when considering the chain state as $(\vct{x},\vct{u})$. We will briefly go through this derivation now as it provides some useful insights in to the pseudo-marginal Metropolis--Hastings algorithm that will help motivate our alternative proposed approaches.
+
+From \eqref{eq:density-unbiased-estimator-property} we known that a distribution on $\set{X}\times\set{U}$ with density
+\begin{equation}\label{eq:auxiliary-pm-target-density}
+  \pi(\vct{x},\vct{u}) = \frac{1}{C} \,\esttgtdens(\vct{x},\vct{u})\,\rho(\vct{u})
+\end{equation}
+will have the target distribution on $\set{X}$ as its marginal distribution. Showing that the transition operator defined by Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} leaves a distribution with density corresponding to \eqref{eq:auxiliary-pm-target-density} invariant is therefore sufficient for ensuring the correctness of the algorithm.
+
+The transition operator corresponding to Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} has a density% transition density (as previously using Dirac deltas to represent the `density' of a singular measure)
+\begin{equation*}
+\begin{split}
+  \trans(\vct{x}'\kern-2pt,\vct{u}'\kern-1pt\gvn\vct{x},\vct{u}) =\,&
+  r(\vct{x}'\kern-1pt\gvn\vct{x}) \rho(\vct{u}') \alpha(\vct{x}'\kern-1pt,\vct{u}'\kern-1pt\gvn\vct{x},\vct{u}) +
+  \delta(\vct{x} - \vct{x}')\,\delta(\vct{u} -\vct{u}')\\
+  &
+  \lpa 
+    1 - \kern-3pt
+    \int_{\set{U}} \int_{\set{X}} 
+      r(\vct{x}'\kern-1pt\gvn\vct{x}) \rho(\vct{u}') \alpha(\vct{x}'\kern-2pt,\vct{u}'\kern-1pt\gvn\vct{x},\vct{u})
+    \,\mu(\dr\vct{x})\nu(\dr\vct{u})
+  \rpa,
+\end{split}
+\end{equation*}
+with the accept probability $\alpha$ being defined here as
+\begin{equation}
+  \alpha(\vct{x}',\vct{u}'\gvn\vct{x},\vct{u}) =
+  \min\lbr 1, \frac{r(\vct{x}\gvn\vct{x}')\esttgtdens(\vct{x}',\vct{u}')}{r(\vct{x}'\gvn\vct{x})\esttgtdens(\vct{x},\vct{u})}\rbr.
+\end{equation}
+As in Chapter \ref{ch:approximate-inference} it is sufficient to show the non self-transition term in this transition density satisfies detailed balance with respect to the target density \eqref{eq:auxiliary-pm-target-density} as self-transitions leave any distribution invariant. We have that for $\vct{x} \neq \vct{x}'$, $\vct{u} \neq \vct{u}'$
+\begin{equation}
+\begin{split}
+  &\trans(\vct{x}'\kern-1pt,\vct{u}'\gvn\vct{x},\vct{u}) \, \pi(\vct{x},\vct{u}) \\
+  &\qquad=
+  \frac{1}{C} \, r(\vct{x}'\gvn\vct{x}) \, \rho(\vct{u}')\, 
+  \alpha(\vct{x}',\vct{u}'\gvn\vct{x},\vct{u}) \,
+ \esttgtdens(\vct{x},\vct{u})\,\rho(\vct{u})\\
+  &\qquad=
+  \frac{1}{C} \,\rho(\vct{u}')\,\rho(\vct{u})\, 
+  \min\lbr 
+    r(\vct{x}'\gvn\vct{x})\,\esttgtdens(\vct{x},\vct{u}),
+    r(\vct{x}\gvn\vct{x}')\,\esttgtdens(\vct{x}',\vct{u}')
+  \rbr
+  \\
+  &\qquad=
+  \frac{1}{C} \, r(\vct{x}\gvn\vct{x}') \, \rho(\vct{u})\, 
+  \alpha(\vct{x},\vct{u}\gvn\vct{x}',\vct{u}') \,
+ \esttgtdens(\vct{x}',\vct{u}')\,\rho(\vct{u}')\\
+ &\qquad=
+ \trans(\vct{x},\vct{u}\gvn\vct{x}',\vct{u}') \, \pi(\vct{x}',\vct{u}'),
+\end{split}
+\end{equation}
+and so the transition operator corresponding to Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} leaves the target distribution invariant. 
+
+We can equivalently consider Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} as a standard Metropolis--Hastings transition operator on a target distribution with density  \eqref{eq:auxiliary-pm-target-density} using a proposal $r(\vct{x}'\gvn\vct{x})\rho(\vct{u}')$ i.e. perturbatively updating the $\vct{x}$ values and indepedently resampling the $\vct{u}$ values. Substituting this proposal density and target density into the standard Metropolis--Hastings accept ratio recovers the form used in the pseudo-marginal variant,
+\begin{equation}
+\frac
+  {r(\vct{x}\gvn\vct{x}')\rho(\vct{u})  \frac{1}{C} \,\esttgtdens(\vct{x}',\vct{u}')\,\rho(\vct{u}')}
+  {r(\vct{x}'\gvn\vct{x})\rho(\vct{u}')  \frac{1}{C} \,\esttgtdens(\vct{x},\vct{u})\,\rho(\vct{u})}
+  =
+\frac
+  {r(\vct{x}\gvn\vct{x}')\esttgtdens(\vct{x}',\vct{u}')}
+  {r(\vct{x}'\gvn\vct{x})\esttgtdens(\vct{x},\vct{u})}.
+\end{equation}
+This formulation highlights a potential source of some of the computational issues with the pseudo-marginal Metropolis--Hastings algorithm. In high-dimensional spaces generally we would expect independent resampling of a subset of the variables in a Markov chain state from their marginal distribution for a proposed Metropolis--Hastings move to perform poorly \citep{neal2015optimal}. Unless the variables being independently resampled have little or no dependency on the rest of the chain state, the marginal distribution will be significantly different from the conditional distribution given the remaining variables and proposed values from the marginal will be often be highly atypical under the conditional and so have a low probability of acceptance.
+
+%Generally making local perturbative updates around the current chain state is a safer option. In the next section we will consider alternative transition operators which leave the distribution defined by the density \eqref{eq:auxiliary-pm-target-density} on the joint target-auxiliary variable space invariant including methods which apply perturbative updates to the auxiliary variables.
+
+\section{Auxiliary pseudo-marginal methods}
+
+\begin{algorithm}[!t]
+\caption{Auxiliary pseudo-marginal framework.}
+\label{alg:auxiliary-pseudo-marginal}
+\begin{algorithmic}
+\small
+    \Require
+    $(\vct{x}_n, \vct{u}_n)$ : current target variables -- auxiliary variables pair,~
+    $\transop_1$ : transition operator updating only auxiliary variables $\vct{u}$ and leaving distribution with density in \eqref{eq:auxiliary-pm-target-density} invariant,~
+    $\transop_2$ : transition operator updating only target variables $\vct{x}$ and leaving distribution with density in \eqref{eq:auxiliary-pm-target-density} invariant.
+    \Ensure\raggedright
+    $(\vct{x}_{n+1}, \vct{u}_{n+1})$ : new target state  -- auxiliary variables pair.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $\vct{u}_{n+1} \sim \transop_1(\cdot \gvn \vct{x}_n,\,\vct{u}_n)$
+  \State $\vct{x}_{n+1} \sim \transop_2(\cdot \gvn \vct{x}_n,\,\vct{u}_{n+1})$
+  \State \Return $(\vct{x}_{n+1},\, \vct{u}_{n+1})$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[!t]
+\caption{Auxiliary pseudo-marginal MI + MH.}
+\label{alg:auxiliary-pseudo-marginal-mi-mh}
+\begin{algorithmic}
+\small
+    \Require
+    $(\vct{x}_n, \vct{u}_n)$ : current target -- auxiliary variables state pair,~
+    $\esttgtdens$ : estimator function for density of target distribution,~
+    $\rho$ : density of estimator's auxiliary variable distribution,~
+    $r$ : proposal density for updates to target state.
+    \Ensure\raggedright
+    $(\vct{x}_{n+1}, \vct{u}_{n+1})$ : new target -- auxiliary variables state pair.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $\vct{u}^* \sim \rho(\cdot)$ \Comment{$\transop_1$: MI update to auxiliary variables.}
+  \State $v \sim \mathcal{U}(\cdot \gvn 0,1)$
+  \If{$v < \frac{\esttgtdens(\vct{x}_n,\vct{u}^*)}{\esttgtdens(\vct{x}_n,\vct{u}_n)}$}
+    \State $\vct{u}_{n+1} \gets \vct{u}^*$
+  \Else
+    \State $\vct{u}_{n+1} \gets \vct{u}_n$
+  \EndIf
+  \State $\vct{x}^* \sim r(\cdot \gvn \vct{x}_n)$ \Comment{$\transop_2$: MH update to target variables.}
+  \State $w \sim \mathcal{U}(\cdot \gvn 0,1)$
+  \If{$ w <  \frac{r(\vct{x}_n\gvn\vct{x}^*)\,\esttgtdens(\vct{x}^*,\vct{u}_{n+1})}{r(\vct{x}^*\gvn\vct{x}_n)\,\esttgtdens(\vct{x}_n,\vct{u}_{n+1})}$}
+    \State $\vct{x}_{n+1} \gets \vct{x}^*$
+  \Else
+    \State  $\vct{x}_{n+1} \gets \vct{x}_n$
+  \EndIf
+  \State \Return $(\vct{x}_{n+1},\,\vct{u}_{n+1})$
+\end{algorithmic}
+\end{algorithm}
+\vspace{-2mm}
+
+The observation that the pseudo-marginal Metropolis--Hastings update corresponds to a special case of the standard Metropolis--Hastings algorithm with independent proposed updates to the auxiliary random variables suggests the possibility of using alternative transition operators within a pseudo-marginal context. A particularly simple framework is to alternate updates to the target state $\vct{x}$ given the auxiliary variables $\vct{u}$ and to the auxiliary variables $\vct{u}$ given the target state $\vct{x}$. We refer to this scheme as the \ac{APM} framework and summarise it in Algorithm \ref{alg:auxiliary-pseudo-marginal}.
+
+A simple example of an \ac{APM} method is formed by alternating \ac{MI} updates to the auxiliary variables given the target variables using $R$ as the proposal distribution with \ac{MH} updates to the target variables given the current auxiliary variables; this variant is described in Algorithm \ref{alg:auxiliary-pseudo-marginal-mi-mh}. Following the convention of \citep{murray2016pseudo} we name this method \ac{APM} \ac{MI}+\ac{MH} for short and will in general use the form \ac{APM} \textsc{[t1]}+\textsc{[t2]} to name \ac{APM} methods where \textsc{[t1]} and \textsc{[t2]} are abbreviations for the types of the transition operators $\transop_1$ and $\transop_2$ respectively. 
+
+The \ac{APM} \ac{MI}+\ac{MH} method retains the black-box nature of the original \ac{PM} \ac{MH} algorithm by requiring no explicit knowledge of the auxiliary random variables used in the density estimate providing we can read and write the internal state of the \ac{PRNG} used by the estimator. This can be achieved for example using the \texttt{.Random.seed} attribute in \texttt{R} and the \texttt{get\_state} and \texttt{set\_state} methods of a \texttt{NumPy} \texttt{RandomState} object. We then only need to store the \ac{PRNG} state associated with each target density estimator evaluation and restore a previous state if we wish to estimate the density at a new target state with the same set of auxiliary variables as used for a previous evaluation.
+
+Any \ac{PM} \ac{MH} implementation can easily be converted in to a \ac{APM} \ac{MI}+\ac{MH} method as the two algorithms require exactly the same input objects with the \ac{APM} \ac{MI}+\ac{MH} method simply splitting the original single \ac{MH} step into two separate propose-accept steps. The \ac{APM} \ac{MI}+\ac{MH} method introduces some overhead by requiring two new evaluations of the target density estimator per overall update (once for the new proposed auxiliary variables and once for the new proposed target variables) compared to the single evaluation required for the \ac{PM} \ac{MH} algorithm. 
+
+Importantly however the updates to the target variables in \ac{APM} \ac{MI}+\ac{MH} take the form of a standard perturbative \ac{MH} update. If we use a random-walk Metropolis update then this means we can automatically tune the step size of the updates by for example appealing to theoretical results suggesting tuning the step size to achieve an average acceptance rate of 0.234 is optimal (in terms of maximising the number of effective samples per computation time) when making perturbative moves in high-dimensions \citep{gelman1997weak}. The tuning can either be done in an initial warm-up phase of the chain with the samples from this initial phase not included in the final Monte Carlo estimates or by using online approaches which use vanishing adaptation \citep{andrieu2008tutorial,graves2011automatic}. %The non-perturbative independent proposed updates of the auxiliary variables in the standard pseudo-marginal \ac{MH} algorithm mean these guidelines for tuning the proposals are not applicable. 
+
+As discussed earlier for particle filtering estimators, under certain simplifying assumptions an alternative average acceptance rate of 0.07 has shown to be optimal for \ac{PM} \ac{MH} with a isotropic normal random-walk proposal in high-dimensional target distributions \citep{sherlock2015efficiency}. While this does provide a target for tuning the step-size of a standard \ac{PM} \ac{MH} update in the cases where it is relevant, the \ac{APM} \ac{MI}+\ac{MH} update may often be easier to tune in practice. The 0.07 target accept rate is predicated on the variance of the density estimator having been tuned, via the number of Monte Carlo samples, such that log density estimates have a standard deviation of approximately 1.8. In general tuning the density estimator variance can be non-straightforward as in real problems it will typically vary depending on $\vct{x}$ and it is not clear which value or values to use to measure the variance at, potentially requiring an additional preliminary run to find a suitable $\vct{x}$ value to tune at. Further the non-constant estimator variances found in practice will tend to give an accept rate which varies in mean and variance across the target space. This gives a noisy signal for adaptive algorithms to tune the step-size by, potentially requiring slow adaptation for stability. 
+
+In contrast the \ac{APM} \ac{MI}+\ac{MH} method decouples the \ac{MI} auxiliary updates, which have an acceptance rate controlled by the variance of the density estimate\footnote{During the \ac{MI} update to the auxiliary variables the target variables $\vct{x}$ are held fixed and a proposed new set of auxiliary variable values $\vct{u}^*$ and so density estimate $\hat{p}^* = \esttgtdens(\vct{x},\vct{u}^*)$ independently sampled. If the variance of the density estimate tends to zero the ratio of $\hat{p}^*$ to the previous estimate $\hat{p}$ which determines the accept probability of the \ac{MI} step tends to one.} and so $N$, and the \ac{MH} target variables updates which have an acceptance rate which is controlled by the proposal step-size $\lambda$.  The two distinct accept rates provide independent signals to tune the two free parameters $N$ and $\lambda$ by, and which individually will generally be less noisy than the single combined accept rate of the \ac{PM} \ac{MH} update. %Further the \ac{MI} step accept rate provides a signal closely related to the estimator variance that is already computed as part of the state update rather than requiring a separate routine to evaluate the variance of the (logarithm of the) density estimates and the associated problem of identifying a suitable value of $\vct{x}$ to tune the variance at. 
+
+In density estimators which are simple Monte Carlo averages and the cost of the estimator scales linearly with the number of Monte Carlo samples $N$ such that the results of \citep{sherlock2016pseudo} apply and a choice of $N=1$ close to optimal, the additional signal provided by the accept rate of the \ac{MI} updates to the auxiliary variables is of less direct relevance. However as noted previously, in practice often the linear estimator cost assumption will not hold for small $N$, due to utilisation of parallel computation or high fixed costs. In these cases we may still wish to use the \ac{MI} accept rate to adjust $N$ so that the accept rate is above some lower threshold: although a low $N$ (and so high estimator variance and low \ac{MI} step accept probability) may be preferable in the asymptotic regime as the number of samples tends to infinity, in practical settings with finite length chains it can be that an overly high density estimator variance can lead to very low accept rates for the auxiliary variable updates such that in a finite length chain the number of updates to the auxiliary variables is very low (or even zero), potentially leading to biases in the marginal distributions of the sampled target variables. %It is not necessarily clear however what to choose as a target accept rate for the auxiliary \ac{MI} updates. While there are results suggesting a target accept rate of 0.234 is also optimal for \ac{MI} updates to a subset of variables in a joint state under similar assumptions to the previously mentioned random-walk Metropolis result \citep{graves2011automatic}, this does not account for the increased cost per density estimate as $N$ increases. 
+
+ %importance sampling cases where the optimal number of Monte Carlo samples $N$ is assumed to be one (or an appropriate number based on maximising parallel compute utilisation or amortisation of fixed costs) and so will not necessarily seem to need tuning, the separate acceptance rate of the \ac{MI} updates to the auxiliary variables still provides a useful signal for monitoring convergence issues. Although a low $N$ may be preferable in the asymptotic regime as the number of samples tends to infinity, in practical settings with finite length chains it can be that an overly high density estimator variance can lead to very low accept rates for the auxiliary variable updates such that in a finite length chain the number of accepted updates to the auxiliary variables
+
+%It is not necessarily clear however what to choose as the target accept rate for the auxiliary \ac{MI} updates. While there are results suggesting a target accept rate of 0.234 is also optimal for \ac{MI} updates to a subset of variables in a joint state under similar assumptions to the previously mentioned random-walk Metropolis result \citep{graves2011automatic}, this does not account for the increased cost per density estimate as $N$ increases. 
+
+%This increased ease of tuning can increase the robustness of the approach and lead to more efficient updates in practice which outweigh the overhead from the additional estimator evaluations.
+
+\section{Pseudo-marginal slice sampling}
+
+Rather than using a \ac{MH} update to the target variables, the \ac{APM} framework also makes it simple to apply alternative transition operators to pseudo-marginal inference problems. A particularly appealing option are the linear and elliptical \ac{SS} algorithms discussed in Chapter \ref{ch:approximate-inference} (Algorithms \ref{alg:linear-slice-sampling} and \ref{alg:elliptical-slice-sampling}); when combined with \ac{MI} updates to the auxiliary variables we term such methods \ac{APM} \ac{MI}+\ac{SS}. Slice sampling algorithms automatically adapt the scale of proposed moves and so will generally require less tuning than random-walk Metropolis to achieve reasonable performance and also cope better in target distributions where the geometry of the density and so appropriate scale for proposed updates varies across the target variable space.
+
+Slice sampling updates will always lead to a non-zero move of the target variables on each update providing for fixed values of the auxiliary variables the estimator function $\esttgtdens$ is a smooth function of the target variables. In such cases \ac{APM} \ac{MI}+\ac{SS} chains will not show the `sticking' artifacts in the traces of the target variables common to \ac{PM} \ac{MH} chains. As the auxiliary variables are still being updated using Metropolis independence transitions however they will still be susceptible to having proposed moves rejected so the accept rate (and traces if available) of the auxiliary variables updates should also be monitored to check for convergence issues. %so while using slice-sampling updates for the target variables can potentially help treat the visible symptom of sticking artifacts it does not necessarily treat the underlying cause.
+	
+The \ac{APM} \ac{MI}+\ac{MH} and \ac{APM} \ac{MI}+\ac{SS} methods although offering advantages over the standard \ac{PM} \ac{MH} method do not address the issue that proposing new auxiliary variable values for fixed values of the target variables independent of the previous auxiliary variable values can perform poorly in high dimensions. Even weak dependence between the auxiliary variables and target variables will mean that in high-dimensions the typical set of the  marginal auxiliary variable distribution $R$ used as the proposal distribution will differ significantly from the typical set of the conditional distribution on the auxiliary variables given the target variables values used to decide acceptances and so the accept probability of proposed updates to the auxiliary variables will be small. %Although we can increase the accept probability of the \ac{MI} auxiliary variables updates by increasing the number of Monte Carlo samples $N$ in the density estimator, this comes with an associated increased computational cost and the results of \citep{sherlock2016pseudo}, although not directly relevant as they are specifically in the context of the \ac{PM} \ac{MH} update, suggest that at least in some cases the tradeoff is not worthwhile.
+
+%The dependence between the auxiliary and target variables is closely linked to the variance of the density estimator. If the auxiliary variables were independent of the target variables under the distribution defined by the density \eqref{eq:auxiliary-pm-target-density}, then the estimator would necessarily have zero variance. Likewise if the estimator is high-variance this means the estimator $\esttgtdens$ is highly sensitive to the value of the auxiliary variables and so will induce a tight coupling between the auxiliary and target variables under the joint distribution defined by \eqref{eq:auxiliary-pm-target-density}.
+
+One way of increasing the probability of proposed updates to the auxiliary variables from $R$ being accepted is to increase the number of Monte Carlo samples $N$ used in the estimator. For concreteness we will assume we use the importance sampling estimator \eqref{eq:pm-hierarchical-model-importance-sampling-estimator} for inference in a hierarchical latent variable model with a multivariate normal importance distribution $q(\vct{z}\gvn\vct{x},\vct{y}) = \nrm{\vct{z}\gvn\vct{\mu},\mtx{L}\mtx{L}\tr}$ (in general $\vct{\mu}$ and $\mtx{L}$ will depend on $\vct{x}$ and $\vct{y}$ but we leave this dependence implicit for notational simplicity). Using the reparametrisation of the estimator in \eqref{eq:importance-sampling-density-estimator-reparameterisation}, the target density \eqref{eq:auxiliary-pm-target-density} on the auxiliary and target variables takes the form
+\begin{equation}
+  \pi(\vct{x},\vct{u}) = \frac{1}{NC} 
+  \sum_{n=1}^N \frac{\pden{\rvct{x},\rvct{y},\rvct{z}}(\vct{x},\vct{y},\mtx{L}\vct{u}^{(n)} + \vct{\mu})}{\nrm{\mtx{L}\vct{u}^{(n)} + \vct{\mu} \gvn \vct{\mu},\mtx{L}\mtx{L}\tr}}
+  \prod_{n=1}^N \nrm{\vct{u}^{(n)} \gvn \vct{0},\mathbf{I}}.
+\end{equation}
+Using that $C = \pden{\rvct{y}}(\vct{y})$ and $\nrm{\mtx{L}\vct{u} + \vct{\mu} \gvn \vct{\mu},\mtx{L}\mtx{L}\tr} = |\mtx{L}|^{-1} \nrm{\vct{u} \gvn \vct{0},\mathbf{I}}$ this can be manipulated into the form
+\begin{equation*}
+  \pi(\vct{x},\vct{u}) = \frac{\pden{\rvct{x}|\rvct{y}}(\vct{x}\gvn\vct{y})}{N|\mtx{L}|^{-1}} 
+  \sum_{n=1}^N \frac{\pden{\rvct{z}|\rvct{x},\rvct{y}}(\mtx{L}\vct{u}^{(n)} + \vct{\mu}\gvn \vct{x},\vct{y})}{\nrm{\vct{u}^{(n)} \gvn \vct{0},\mathbf{I}}}
+  \prod_{n=1}^N \nrm{\vct{u}^{(n)} \gvn \vct{0},\mathbf{I}}.
+\end{equation*}
+By separating out the terms involving a single auxiliary variable sample $\vct{u}^{(m)}$, the conditional density on $\vct{u}^{(m)}$ given the remaining auxiliary variable samples can be shown to take the form of a mixture
+\begin{equation}
+\begin{split}
+  &\pi\lpa\vct{u}^{(m)} \gvn \vct{x},\lbrace \vct{u}^{(n)} \rbrace_{n\neq m} \rpa \propto \\
+  &\qquad  
+  \pden{\rvct{z}|\rvct{x},\rvct{y}}(\mtx{L}\vct{u}^{(m)} + \vct{\mu} \gvn \vct{x},\vct{y}) +
+  w\lpa\vct{x},\lbrace \vct{u}^{(n)} \rbrace_{n\neq m}\rpa \nrm{\vct{u}^{(m)}\gvn \vct{0},\mathbf{I}}
+\end{split}
+\end{equation}
+with \(\displaystyle
+  w\lpa\vct{x},\lbrace \vct{u}^{(n)} \rbrace_{n\neq m}\rpa =
+  \sum_{n\neq m}\lpa 
+  \frac
+    {\pden{\rvct{z}|\rvct{x},\rvct{y}}(\mtx{L}\vct{u}^{(n)} + \vct{\mu} \gvn \vct{x},\vct{y})}
+    {\nrm{\vct{u}^{(n)}\gvn \vct{0},\mathbf{I}}}  
+  \rpa.\)
+
+The sum of the importance weights in $w$ will grow with $N$ (for independent $\vct{u}^{(n)} \sim \nrm{\cdot \gvn \vct{0},\mathbf{I}} ~\forall n \neq m$ it would have an expected value $(N-1)|\mtx{L}|$) and so for large $N$ the second term in the mixture will increasingly dominate and the conditional density on $\vct{u}^{(m)}$ will tend to $\nrm{\vct{u}^{(m)}\gvn\vct{0},\mathbf{I}}$ and independence from $\vct{x}$. Therefore as we increase $N$ we would expect independently re-sampling the auxiliary variables from $R$ in a \ac{MI} step to have an increasing probability of acceptance.
+
+Although non-rigorous, this analysis also gives an intution to why the pseudo-marginal method can provide an advantage over directly performing \ac{MCMC} in the joint space of $\rvct{x}$ and $\rvct{z}$ in hierachical latent variable models: if the conditional density on the local latent variables $\pden{\rvct{z}|\rvct{x},\rvct{y}}$ has a challenging geometry, for example it is multimodal, then \ac{MCMC} transition operators based on local moves working in the $(\rvct{x},\rvct{z})$ are likely to mix poorly for example by getting stuck in a single mode or only being able to make very small moves per update. If we instead reparameterise in terms of a set of auxiliary variables $\lbrace \vct{u}^{(n)} \rbrace_{n=1}^N$, then we are able to maintain the correct marginal distribution on the target variables $\rvct{x}$ while working with a distribution on an extended space which becomes increasingly tractable to sample from as we increase $N$, with the individual auxiliary variable samples $\vct{u}^{(n)}$ individually having conditional densities which only weakly depend on $\pden{\rvct{z}|\rvct{x},\rvct{y}}$.
+
+While we can always increase $N$ to the point where independently proposing updates to the auxiliary variables from $R$ will have a reasonable probability of acceptance, this will also increase the computational expense of each update. Rather than proposing new values for the auxiliary variables independently of their previous values, an obvious idea is to take a more standard \ac{MCMC} approach by using local perturbative updates which leave the overall target distribution \eqref{eq:auxiliary-pm-target-density} invariant. For $N=1$ this equivalent to performing \ac{MCMC} directly in a non-centred reparameterisation \citep{papaspiliopoulos2003non} of the joint $(\rvct{x},\rvct{z})$ space by alternating updates of the target and auxiliary (latent) variables. For $N > 1$ we potentially gain from the conditional distribution on the auxiliary variables being easier for \ac{MCMC} algorithms to explore though with an increased computational cost per update.
+
+One option is to use a \ac{MH} method such as random-walk Metropolis to update the auxiliary variables. While with a well tuned proposal distribution this approach could work well, it adds further tuning burden to the user which might outweigh any efficiency gains. For problems in which we can reparametrise the density estimator as a deterministic function of a vector of standard normal draws so that $\rho(\vct{u}) = \nrm{\vct{u} \gvn \vct{0},\mathbf{I}}$, an appealing option is to use elliptical slice sampling (Algorithm \ref{alg:elliptical-slice-sampling}) to update the auxiliary variables. The elliptical slice sampling algorithm has no free parameters for the user to choose and initially proposes moves to points nearly independent of the current values \citep{murray2010elliptical} so if the conditional distribution of the auxiliary variables is well approximated by the normal marginal distribution $R$, elliptical slice sampling should perform similarly to a \ac{MI} update. Using the adaptive bracket shrinking procedure discussed in Chapter \ref{ch:approximate-inference} the elliptical slice sampler is also however able to exponentially back-off to smaller proposed moves around the current state if the bold initial proposal is not on the slice. Providing for fixed values of the target variables the target density \eqref{eq:auxiliary-pm-target-density} is a smooth function of the auxiliary variables, the slice sampling procedure will always lead to a non-zero update of the auxiliary variables. %This combination of an ability to continue to propose bold near-independent moves with backing off to more local proposals makes elliptical slice sampling an ideal choice for improving the robustness of the auxiliary variable updates when the estimator variance remains high, while maintaining good efficiency for low-variance estimators.
+
+\begin{figure}[t]
+\centering
+\includetikz{reflective-slice-sampling}
+\caption[Reflective linear slice sampling.]{Illustration of reflective linear slice sampling in two dimensions. The orange circular marker represents the current state and the light filled orange region the density slice at the sampled slice height (see explanation of Algorithm \ref{alg:linear-slice-sampling} in Chapter \ref{ch:approximate-inference} for details). A random slice line direction vector $\vct{v}$ is sampled from some distribution as in Algorithm \ref{alg:linear-slice-sampling}, for example with elements independently sampled from $\nrm{0,1}$ or $\mathcal{U}(-1,1)$. This defines a line passing through the current point (green-blue line in Figure), with importantly in this case the line \emph{reflected} at the boundaries of the hypercube (square in this two-dimensional case). An initial bracket of a specified width is randomly placed around the current point on the line. The algorithm then proceeds as in the standard linear slice sampling algorithm by repeatedly proposing a point in the current bracket and accepting if on the slice (in orange region, for example the green circle) or rejecting and shrinking the bracket if off the slice (outside orange region, for example the red cross).}
+\label{fig:reflective-linear-slice-sampling}
+\end{figure}
+
+If the auxiliary variables are instead marginally distributed as independent standard uniform variables\footnote{The auxiliary variables in this case could for example represent all the standard uniform draws from the \ac{PRNG} that are used to generate random variables in the estimator using the rejection and transform sampling routines discussed in Chapter \ref{ch:approximate-inference}.} i.e. $\rho(\vct{u}) = \prod_{i}\mathcal{U}(u_i \gvn 0, 1)$, one option is to reparameterise these as independent standard normal variables which are then mapped through the normal \ac{CDF}. We can then run elliptical slice sampling in the transformed normal space. In general evaluation of the normal \ac{CDF} is a relatively expensive operation and the distortion induced by pushing through the \ac{CDF} may in some case map a distribution with a density with relatively simple geometry in the uniform space to a density with more complex geometry in the normal space. An alternative is to therefore perform linear slice sampling directly in the uniform auxiliary variable space. 
+
+A small subtlety is that the target distribution on the auxiliary variables will only have support on the unit hypercube in this case. We can adjust Algorithm \ref{alg:linear-slice-sampling} for this setting by replacing Line \ref{algline:slice-line-1} in the Algorithm with $\vct{x}^* \gets \textsc{Reflect}(\vct{x}_n + \lambda \vct{v})$ (and the likewise the corresponding equivalent expressions in the step-out routine in Lines \ref{algline:slice-line-2} and \ref{algline:slice-line-3}), where the \textsc{Reflect} function is defined elementwise by 
+{
+\vspace{5mm}
+\hrule
+\small
+\vspace{1mm}
+\begin{algorithmic}
+  \Function{Reflect}{$u$}
+    \State $v \gets u \,\textrm{mod}\, 2$
+    \State \Return $v \ind{[0,1)}(v) + (2-v) \ind{[1,2)}(v)$
+%    \If{$v < 1$} \Return $v$
+%    \Else ~\Return $2 - v$
+%    \EndIf
+  \EndFunction
+\end{algorithmic}
+\vspace{2mm}
+\hrule
+\vspace{3mm}
+}
+The reflection transformation defined by this function has a unit Jacobian determinant and maintains reversibility and so the reflective slice sampling transition leaves the uniform distribution on the slice invariant. An illustrative schematic of a reflective linear slice sampling transition in two dimension is shown in Figure \ref{fig:reflective-linear-slice-sampling}. Reflective variants of slice sampling are discussed in \citep{neal2003slice} and \citep{downs2000nonnegative}.
+
+
+%If we increase the number of importance samples used in the density estimator, the dependence of each auxiliary variable sample $\vct{v}^{(n)}$ on the target variable decreases and its marginal becomes increasingly close to the importance distribution $q^*$ and so independently proposing new values from this distribution will become increasingly reasonable. If we are prepared to increase the implementation demands slightly by requiring explicit access to the auxiliary variables used in the estimator however we can also apply perturbative updates to the auxiliary variables. In general we would expect this to perform significantly better when
+
+\section{Numerical experiments}
+
+We will now discuss the results of two empirical studies in to the performance of the proposed auxiliary pseudo-marginal methods. Further experiments applying some of the proposed methods in a simulator model inference setting will be discussed in Chapter \ref{ch:differentiable-generative-models}.
+
+\subsection{Gaussian latent variable model}\label{subsec:pm-normal-latent-model-exp}
+
+As a first numerical example we consider inference in a hierarchical Gaussian latent variable model. In particular we assume a model with the factorisation structure shown in Figure \ref{fig:global-local-latent-variable-model} with
+\begin{equation}
+\begin{split}
+\pden{\rvct{x}}(\vct{x}) = \nrm{\vct{x}\gvn\vct{0},\mathbf{I}},
+\quad
+\pden{\rvct{z}|\rvct{x}}(\vct{z}\gvn\vct{x}) &= \prod_{m=1}^M \nrm{\vct{z}^{(m)}\gvn\vct{x},\sigma^2\mathbf{I}},\\
+\quad\textrm{and}\quad
+\pden{\rvct{y}|\rvct{x},\rvct{z}}(\vct{y}\gvn\vct{x},\vct{z}) &= \prod_{m=1}^M \nrm{\vct{y}^{(m)}\gvn\vct{z}^{(m)},\epsilon^2\mathbf{I}}.
+\end{split}
+\end{equation}
+We used $\sigma=1$ and $\epsilon=2$ in the experiments and generate $M=10$ simulated observed values $\lbrace \vct{y}^{(m)}\rbrace_{m=1}^M$, each of dimensionality $D=10$. We assume we wish to infer plausible values for the $D$-dimensional vector $\rvct{x}$ consistent with the observed $\rvct{y}$ and so the target distribution for inference has density $\tgtdens(\vct{x}) = \pden{\rvct{x}|\rvct{y}}(\vct{x}\gvn\vct{y})$. Here because of the self-conjugacy of the Gaussian distribution, the marginalisation over the local latent variables $\rvct{z}$ can be performed analytically to give
+\begin{equation}\label{eq:gaussian-latent-model-analytic-posterior}
+  \pden{\rvct{x}|\rvct{y}}(\vct{x}\gvn\vct{y}) =
+  \nrm{\vct{x} \,\middle|\, \frac{1}{M + \sigma^2 + \epsilon^2} \sum_{m=1}^M \vct{y}^{(m)}, \frac{\sigma^2+\epsilon^2}{N + \sigma^2 + \epsilon^2} \mathbf{I}}.
+\end{equation}
+Although exact inference is therefore tractable in this case, we apply pseudo-marginal \ac{MCMC} methods to allow us to study the performance of the methods in a case where we have a ground-truth for the inferences to check convergence against.
+
+We use an importance sampling estimator of the form given in \eqref{eq:pm-hierarchical-model-importance-sampling-estimator} using $\prob{\rvct{z}|\rvct{x}}$ as the importance distribution  i.e.
+\begin{equation}
+  q\lpa\lbrace \vct{z}^{(m)} \rbrace_{m=1}^M \gvn \vct{x}, \lbrace \vct{y}^{(m)} \rbrace_{m=1}^M\rpa 
+  = \prod_{m=1}^M \nrm{\vct{z}^{(m)} \gvn \vct{x}, \sigma^2 \mathbf{I}}.
+\end{equation}
+As this importance distribution does not take in to account the observed values $\lbrace \vct{y}^{(m)}\rbrace_{m=1}^M$ it results in a relatively high-variance importance sampling estimator of the density with a variance which depends on the values of the target variables $\vct{x}$. Therefore although exact inference in this example is tractable and the target distribution has a simple isotropic geometry, in this pseudo-marginal formulation the model still has some of the key features which can pose challenges to pseudo-marginal inference algorithms.
+
+For the auxiliary pseudo-marginal methods, we use a reparameterisation of the estimator equivalent to \eqref{eq:importance-sampling-density-estimator-reparameterisation}, using the standard normal variables used to generate samples from $\prob{\rvct{z}|\rvct{x}}$ as the auxiliary variables, resulting in an auxiliary variable marginal distribution with density $\rho(\vct{u}) = \nrm{\vct{u}\gvn\vct{0},\mathbf{I}}$ and an estimator function $\esttgtdens$
+\begin{equation}
+  \esttgtdens(\vct{x},\vct{u}) =
+  \frac{\nrm{\vct{x} \gvn \vct{0},\mathbf{I}}}{N} \sum_{n=1}^N 
+  \prod_{m=1}^M \nrm{\vct{y}^{(m)} \gvn \sigma \vct{u}^{(n,m)} + \vct{x}, \epsilon^2\mathbf{I}},
+\end{equation}
+with $\vct{u} = \lsb \vct{u}^{(1,1)}; \,\dots\, \vct{u}^{(1,M)}; \vct{u}^{(2,1)}\,\dots\,\vct{u}^{(N,M)}\rsb \in \reals^{NM}$.
+
+\subsubsection{Pseudo-marginal Metropolis--Hastings}
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-pmmh-1-time}
+  \includetikz{gaussian-latent-variable-pmmh-1-eval}
+  \caption{$N=1$}
+  \label{sfig:pm-mh-1-gaussian-latent}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-pmmh-8-time}
+  \includetikz{gaussian-latent-variable-pmmh-8-eval}
+  \caption{$N=8$}
+  \label{sfig:pm-mh-8-gaussian-latent}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-pmmh-32-time}
+  \includetikz{gaussian-latent-variable-pmmh-32-eval}
+  \caption{$N=32$}
+  \label{sfig:pm-mh-32-gaussian-latent}
+\end{subfigure}
+\caption[\acs{PM} \acs{MH} Gaussian model results.]{
+Results of Gaussian latent variable model \ac{PM} \acs{MH} chains. The plots in each row show both the estimated \ac{ESS} normalised by either the compute time (green, left column) or number of density estimator evaluations (green, right column) and average acceptance rate of \ac{MH} updates (orange), versus the isotropic random-walk proposal step-size $\lambda$ for the \ac{MH} updates to the target variables. The top row shows the case for a density estimator using $N=1$ importance sample, middle row for $N=8$ and the bottom row for $N=32$. In all cases the curves show mean values across 10 independent chains initialised from the prior and filled region show $\pm 1$ standard deviation.}
+\label{fig:pmmh-gaussian-latent-results}
+\end{figure}
+
+We first applied the \ac{PM} \ac{MH} algorithm to perform inference in this model, using an isotropic normal random-walk proposal distribution for the updates to the target variables, i.e. $r(\vct{x}'\gvn\vct{x}) = \nrm{\vct{x}'\gvn\vct{x},\lambda^2\mathbf{I}}$. To assess the impact of the choice of the proposal step size parameter $\lambda$ on sampling efficiency, we ran 10 independent chains initialised from the prior $\nrm{\vct{0},\mathbf{I}}$ for $\lambda$ values on a equispaced grid of 40 points between 0.025 and 1, running each chain for 50\,000 iterations. We ran all experiments for the cases of density estimators using $N=1$, $N=8$ and $N=32$ importance samples, with the logarithm of the density estimate at the value of the target variables $\vct{x}$ used to generate the observed values $\vct{y}$ having standard deviation 3.6 for $N=1$, 1.8 for $N=8$ and 1.2 for $N=32$.
+
+For all combinations of $N$ and $\lambda$ we estimated the \acf{ESS} (as defined for a geometrically ergodic Markov chain in Equation \ref{eq:effective-sample-size-mcmc} of Chapter \ref{ch:approximate-inference}) for the posterior mean of each chain using the \texttt{R} \texttt{CODA} package \citep{plummer2006coda}. We then derived two overall measures of computational efficiency from these \ac{ESS} estimates by normalising either by the number of joint density evaluations in the density estimator (which increases per iteration with the number of importance samples $N$) or the wall clock run time of the chains in seconds. The results are plotted in Figure \ref{fig:pmmh-gaussian-latent-results}. Each pair of plots in a row corresponds to a particular number of importance samples. In each row the left column shows the \acp{ESS} normalised by the run time and the right column by the number of density evaluations, with the green curves representing the mean of these values across all the chains and the filled region plus and minus one standard deviation (note the standard deviation rather than standard error of mean was used as in some of the plots the standard error was too small to be easily visible). On each axis as well as the normalised \ac{ESS}, the average accept rate across the chains is also plotted in orange (with scale shown on the right vertical axis), with again the curves showing the mean value across the chains and the filled regions plus and minus one standard deviation.
+
+The results of \citep{sherlock2016pseudo} suggest that asymptotically using $N=1$ importance sample should be optimal in this case assuming a linear increase in the cost of generating each sample with $N$. The measure of computational efficiency used in \citep{sherlock2016pseudo} therefore most closely corresponds to the estimated \ac{ESS} normalised by the number of density evaluations (which scales linearly with $N$), and indeed on this measure (green curves in right column of Figure \ref{fig:pmmh-gaussian-latent-results}) we see that the chains using $N=1$ outperforms the $N=8$ and $N=32$ cases.
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-pmmh-1-trace-and-hist}
+  \vspace{-5mm}
+  \caption{$N=1, \lambda=0.550$}
+  \label{sfig:pm-mh-1-gaussian-latent-trace}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-pmmh-8-trace-and-hist}
+  \vspace{-5mm}
+  \caption{$N=8, \lambda=0.375$}
+  \label{sfig:pm-mh-8-gaussian-latent-trace}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-pmmh-32-trace-and-hist}
+  \vspace{-5mm}
+  \caption{$N=32, \lambda=0.400$}
+  \label{sfig:pm-mh-32-gaussian-latent-trace}
+\end{subfigure}
+\caption[\acs{PM} \acs{MH} Gaussian model traces.]{
+Example traces and histograms of \ac{PM} \ac{MH} chains in Gaussian latent variable model inference task. In each row a trace of the sampled values for the $x_1$ target variable in the last 10000 iterations of a \ac{PM} \ac{MH} Markov chain using the optimal step size for the relevant $N$ found from Figure \ref{fig:pmmh-gaussian-latent-results} is shown in the left plot, while the right plot shows a histogram of the samples values from the full chain (green filled region) against the exact marginal posterior density (orange curve). In the histogram plots the number of samples in the chain used to produce the plot have been adjusted to account for the increased number of density evaluations for higher $N$, so the $N=1$ plot is of a chain of $3.2\times 10^6$ samples, the $N=8$ plot is of $8\times 10^5$ samples as the $N=32$ plot of $1 \times 10^5$ samples.}
+\label{fig:pmmh-gaussian-latent-traces}
+\end{figure}
+
+The plots in Figure \ref{sfig:pm-mh-1-gaussian-latent} and to a lesser extent \ref{sfig:pm-mh-8-gaussian-latent} show a spurious appearing behaviour for the smallest step sizes that the accept rate (orange curve) seems to initially \emph{increase} as the step size is made larger, contrary to what we would reasonably expect. This anomaly can be ascribed to a lack of convergence in the chains with small step sizes due to the sticking behaviour discussed previously. For the $N=1$ case, because of the relatively high density estimator variance, the chains are prone to getting stuck for thousands of iterations at a time. The estimator variance is dependent on the values of the target variables $\vct{x}$ and generally seems to be lower for values typical under the posterior. As the chains are initialised from the prior, they tend to therefore initialised in regions in which the estimator variance is higher than typical often leading to long sticking periods near the start of the chain. For the chains with small step sizes the chain is slower to `warm-up' and converge towards the typical set of the posterior distribution on the target variables and so this propensity for sticking during the initial warm-up period has a larger effect, leading to some chains rejecting nearly all updates even though the step size is very small. This counter intuitive behaviour of the empirical accept rates for small step sizes and general noisiness of the dependency of the accept rate on the step size, particularly for small $N$, highlights the difficulty of tuning the \ac{PM} \ac{MH} updates: the low accept rates here would intuitively indicate the step size should be made smaller but in some cases this would actually make the measured accept rate even worse.
+
+Figure \ref{fig:pmmh-gaussian-latent-traces} shows example traces of the $x_1$ variable samples for chains using density estimates with $N=1$, $N=8$ and $N=32$ importance samples. In each case the step size suggested to be optimal by the results in Figure \ref{fig:pmmh-gaussian-latent-results} (in terms of effective samples per density evaluation) has been used, and the traces shown are the last 10\,000 iterations of a longer run. Also shown are histogram estimates of the posterior marginal densities on the $x_1$ variable using the sampled states from the whole chain, with the total number of samples in each chain adjusted to account for the extra computational cost of using more importance samples, along with a curve showing the true posterior marginal density. The propensity of the chains to stick is clearly visible in the traces particularly for the $N=1$ case, with long series of thousands of rejected updates at a time. This is also reflected in the noisiness of the marginal density estimates with spurious peaks appearing around the states where the chain gets stuck.
+
+When comparing instead in terms of the estimated \ac{ESS} normalised by actual chain run time (green curves in left column of Figure \ref{fig:pmmh-gaussian-latent-results}) the results no longer suggest $N=1$ is optimal, with the $N=8$ and $N=32$ cases both performing better on this measure for all step sizes. This can be explained by the non-linear scaling of the computational cost per update with the number of importance samples due to both overhead from the implementation of the rest of the operations in the transition and only partial utilisation of the parallel compute resource available (the \ac{CPU} used in the experiments had 4 cores). Although the increase in efficiency per actual run time for $N\neq 1$ is implementation and device dependent, a possibly stronger reason suggested by the results to use $N > 1$ is the less brittle nature of the chains behaviour, with the very low accept rates in the $N=1$ case needing long runs to smooth out the effects of long series of rejections.
+
+The results in Figure \ref{fig:pmmh-gaussian-latent-results} also highlight the difficulty of tuning the proposal step size when using a random-walk Metropolis \ac{PM} \ac{MH} update. The optimal step size appears to possibly weakly depend on the number of importance samples used (though the noisiness of the curves make this difficult to determine). Further there is not a clear relationship between the average accept rate and optimal step size. As previously stated the result of \citep{gelman1997weak} that a step size giving an accept rate of 0.234 is close to optimal is not applicable to the update here, with this confirmed empirically by the fact that only the chains with the smallest step sizes for the $N=32$ case are even able to achieve an accept rate close to 0.234 (and are far from optimal in efficiency). In practice we therefore we do not have an obvious signal to tune the step size by beyond running pilot chains and computing \ac{ESS} estimates which is likely to add too much cost to justify any gain in efficiency from choosing a better step size for subsequent chains.
+
+\subsubsection{Splitting the update}
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-apm-mi-mh-1-time}
+  \includetikz{gaussian-latent-variable-apm-mi-mh-1-eval}
+  \caption{$N=1$}
+  \label{sfig:apm-mi-mh-1-gaussian-latent}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-apm-mi-mh-8-time}
+  \includetikz{gaussian-latent-variable-apm-mi-mh-8-eval}
+  \caption{$N=8$}
+  \label{sfig:apm-mi-mh-8-gaussian-latent}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-apm-mi-mh-32-time}
+  \includetikz{gaussian-latent-variable-apm-mi-mh-32-eval}
+  \caption{$N=32$}
+  \label{sfig:apm-mi-mh-32-gaussian-latent}
+\end{subfigure}
+\caption[\acs{APM} \acs{MI}+\acs{MH} Gaussian model results.]{
+Results of Gaussian latent variable model \acs{APM} \acs{MI}+\acs{MH} chains. The plots in each row show both the estimated \ac{ESS} normalised by either the total compute time (green, left column) or number of density estimator evaluations (green, right column) and average acceptance rate for the \ac{MH} updates (orange), versus the isotropic random-walk proposal step-size for the \ac{MH} updates to the target variables. The top row shows the case for a density estimator using $N=1$ importance sample and the bottom row for $N=8$. The top row shows the case for a density estimator using $N=1$ importance sample, middle row for $N=8$ and the bottom row for $N=32$. In all cases the curves show mean values across 10 independent chains initialised from the prior and filled region show $\pm 1$ standard deviation. The horizontal dashed lines indicate an accept rate of 0.234 and the vertical dashed lines the corresponding proposal step size.}
+\label{fig:apm-mi-mh-gaussian-latent-results}
+\end{figure}
+
+We next applied the proposed \ac{APM} \ac{MI}+\ac{MH} algorithm to perform inference in the Gaussian latent variable model. From an implementation perspective this simply requires the original combined update to the auxiliary and target variables in the \ac{PM} \ac{MH} case to be split in to separate \ac{MI} updates of the auxiliary variables given fixed target variables and \ac{MH} updates of the target variables for fixed auxiliary variables. Despite the seemingly minor change to the form of the update, the difference in the results is dramatic.
+
+Figure \ref{fig:apm-mi-mh-gaussian-latent-results} shows plots of results of an equivalent series of experiments as used to produce Figure \ref{fig:pmmh-gaussian-latent-results}. In this case the horizontal axes on the plots shows the proposal step size for the \ac{MH} updates to the target variables which as previously use an random-walk Metropolis proposal $r(\vct{x}'\gvn\vct{x}) = \nrm{\vct{x}'\gvn\vct{x},\lambda^2\mathbf{I}}$. Again 10 independent chains initialised from the prior were run for each step size $\lambda$ and number of importance samples $N$ pair, with in this case shorter chains of 20\,000 iterations used (with the known posterior means and standard deviations used to establish that the chains had adequately converged). Again the estimated \acp{ESS} for estimates of the posterior mean were computed for each chain, with the green curves in the left column of plots in Figure \ref{fig:apm-mi-mh-gaussian-latent-results} showing the mean of these estimated \acp{ESS} across the chains normalised by the total wall clock run time for the chain, and the right column the \acp{ESS} normalised by the number of joint density evaluations. The average accept rate shown by the orange curves in Figure \ref{fig:apm-mi-mh-gaussian-latent-results} is for the \ac{MH} update to the target variables. A separate average accept rate was recorded for the \ac{MI} updates to the auxiliary variables and was found to not show any obvious dependency on the target variable proposal step size, with an average accept rate of approximately 0.025 for chains with $N=1$ importance sample in the density estimates, an average accept rate of 0.11 for chains with $N=8$ and an average accept rate of 0.23 for chains using $N=32$. %In this case chains were only run for estimators using $N=1$ and $N=8$ importance samples.
+
+On both the time and density evaluation normalised measures of efficiency the \ac{APM} \ac{MI}+\ac{MH} chains perform significantly better than the \ac{PM} \ac{MH} chains. The peak \ac{ESS} per density evaluation value for the $N=1$ and $\lambda=0.425$ case is around a factor of ten higher than the corresponding peak value for the \ac{PM} \ac{MH} chains, while in terms of the \ac{ESS} per run time metric the best \ac{APM} \ac{MI}+\ac{MH} chains show around a factor four improvement over the \ac{PM} \ac{MH} chains. While other experiments have suggested this level of improvement is atypical, it seems reasonable to conclude that at least in some cases the extra overhead introduced by requiring two density estimates per overall update is worthwhile.
+
+More importantly perhaps the curves in Figure \ref{fig:apm-mi-mh-gaussian-latent-results} suggest the \ac{APM} \ac{MI}+\ac{MH} update is signicantly easier to tune. The average accept rate of the \ac{MH} updates to the target variables shows the expected monotonically decreasing behaviour as the step size is increased and in general the measured accept rates are significantly less noisy than the corresponding accept rates for the \ac{PM} \ac{MH} updates. The horizontal dashed lines in Figure \ref{fig:apm-mi-mh-gaussian-latent-results} indicate an average accept rate of 0.234 with the corresponding vertical dashed lines showing the estimated proposal step size corresponding to this acceptance rate. As can be seen by both the compute time and density evaluation normalised measures of sampling efficiency, the chains with proposal step sizes giving accept rates near to 0.234 are close to optimal in efficiency, suggesting the theoretical result of \citep{gelman1997weak} holds here as suggested earlier. Further in this model at least, this relationship seems to hold for a range of different numbers of importance samples and so density estimator variances. This suggests it is valid to use standard adaptive approaches which use the average accept rate as a control signal to tune the step size of the target variables \ac{MH} proposal distribution when using the \ac{APM} \ac{MI}+\ac{MH} update.
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-apm-mi-mh-1-trace-and-hist}
+  \vspace{-5mm}
+  \caption{$N=1, \lambda=0.425$}
+  \label{sfig:apm-mi-mh-1-gaussian-latent-trace}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-apm-mi-mh-8-trace-and-hist}
+  \vspace{-5mm}
+  \caption{$N=8, \lambda=0.425$}
+  \label{sfig:apm-mi-mh-8-gaussian-latent-trace}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-apm-mi-mh-32-trace-and-hist}
+  \vspace{-5mm}
+  \caption{$N=32, \lambda=0.425$}
+  \label{sfig:apm-mi-mh-32-gaussian-latent-trace}
+\end{subfigure}
+\caption[\acs{APM} \acs{MI}+\acs{MH} Gaussian model traces.]{
+Example traces and empirical histograms of \ac{APM} \ac{MI}+\ac{MH} chains in Gaussian latent variable model inference task. In each row a trace of the sampled values for the $x_1$ target variable in the last 10\,000 iterations of a \ac{APM} \ac{MI}+\ac{MH} Markov chain using the optimal step size for the relevant $N$ found from Figure \ref{fig:apm-mi-mh-gaussian-latent-results} is shown in the left plot, while the right plot shows an empirical histogram of the samples values from the full chain (green filled region) against the exact marginal posterior density (orange curve). In the histogram plots the number of samples in the chain used to produce the plot have been adjusted to account for the increased number of density evaluations for higher $N$ and to account for the 2 evaluations per update compared to \ac{PM} \ac{MH} to allow fair comparison with Figure \ref{fig:pmmh-gaussian-latent-traces}, so the $N=1$ plot is of a chain of $1.6\times 10^6$ samples, the $N=8$ plot is of $2\times 10^5$ samples as the $N=32$ plot of $5 \times 10^4$ samples.}
+\label{fig:apm-mi-mh-gaussian-latent-traces}
+\end{figure}
+
+In further contrast to the \ac{PM} \ac{MH} results, the results for the \ac{APM} \ac{MI}+\ac{MH} chains seem to unambiguously support using $N=1$ importance sample. On both the computation time and density evaluation normalised measures of efficiency, the chains using one importance sample dominate over the $N=8$ and $N=32$ cases. The \ac{APM} \ac{MI}+\ac{MH} chains using a single importance sample do not show the pathological sticking behaviour evident in the \ac{PM} \ac{MH} chains, with an example trace shown for a step size of $\lambda = 0.425$ (which Figure \ref{fig:apm-mi-mh-gaussian-latent-results} suggests is close to optimal) in Figure \ref{sfig:apm-mi-mh-1-gaussian-latent-trace}. Unlike the $N=1$ \ac{PM} \ac{MH} trace, over the 10\,000 iterations shown the \ac{APM} \ac{MI}+\ac{MH} seems to mix well with no obvious sticking periods. The example traces for the $N=8$ and $N=32$ \ac{APM} \ac{MI}+\ac{MH} chains in Figure \ref{fig:apm-mi-mh-gaussian-latent-traces} also seem to follow this pattern. Comparing the posterior marginal density estimates for the $x_1$ target variable shown in the right column of Figure \ref{fig:apm-mi-mh-gaussian-latent-traces}, the marginal estimates for the $N=1$ case appear the smoothest, almost indistinguishable from the curve of the true density (to normalise for the additional density evaluations required for the $N=8$ and $N=32$ cases the number of samples in the chains used to produce the histograms was reduced accordingly). This again suggests that any improvement in mixing by using $N > 1$ in this case is outweighed by the cost of the additional density evaluations.
+
+\subsubsection{Slice sampling the auxiliary variables}
+
+\begin{figure}
+\centering
+  \includetikz{gaussian-latent-variable-apm-ss-mh-1-time}
+  \includetikz{gaussian-latent-variable-apm-ss-mh-1-eval}
+\caption[\acs{APM} \acs{SS}+\acs{MH} Gaussian model results.]{
+Results of Gaussian latent variable model \acs{APM} \acs{SS}+\acs{MH} chains (using $N=1$ importance sample). The plots in each row show both the estimated \ac{ESS} normalised by either the total compute time (green, left column) or number of density estimator evaluations (green, right column) and average acceptance rate for the \ac{MH} updates (orange), versus the isotropic random-walk proposal step-size $\lambda$ for the \ac{MH} updates to the target variables. The curves show mean values across 10 independent chains initialised from the prior and filled region show $\pm 1$ standard deviation.}
+\label{fig:apm-ss-mh-gaussian-latent-results}
+\end{figure}
+
+For the \ac{APM} \ac{MI}+\ac{MH} chains discussed in the previous subsection, when using $N=1$ importance sample the \ac{MI} updates to the auxiliary variables were only accepted 2.5\% of the time. Although this did not appear to impede convergence of the chain in this example, more generally low accept rates for the \ac{MI} updates to the auxiliary variables may be a cause for concern as in shorter chains this will mean the auxiliary variables are only updated a small number of times across the chain. As convergence of the distribution on the target variables in the chain state to their marginal target distribution is reliant on the distribution of the auxiliary variables in the chain state also converging, very infrequent updates of the auxiliary variables could potentially lead to difficult to diagnose convergence issues in the chains. Although increasing the number of importance samples in the estimator can increase the \ac{MI} step accept rate as seen in the \ac{APM} \ac{MI}+\ac{MH} experiments above, there is a diminishing returns behaviour to the increase of acceptance rate with the number of samples.%- going from $N=1$ to $N=8$ samples gives a roughly four-fold improvement in acceptance rate, while going from $N=8$ to $N=32$ approximately doubles the accept rate again.
+
+The earlier suggestion to use perturbative updates to the auxiliary variables provides an alternative approach to improve the auxiliary variable mixing. We test specifically here the proposal to use elliptical slice sampling updates to the auxiliary variables, which is a natural choice in this case due to their Gaussian marginal distribution. We use the same \ac{MH} update to the target variables as in the experiments in the previous two subsections, and again measure sampling efficiency for different proposal step sizes $\lambda$. We only run chains using a estimator taking $N=1$ importance sample in this case as we are mainly interested in using perturbative updates to the auxiliary variables as an alternative to having to increase the number of importance samples to achieve reasonable acceptance rates for \ac{MI} updates to the auxiliary variables.
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-apm-mi-mh-1-u0-trace-and-hist}
+  \vspace{-5mm}
+  \caption{\ac{APM} \ac{MI}+\ac{MH} $N=1, \lambda=0.425$}
+  \label{sfig:apm-mi-mh-1-gaussian-latent-u-trace}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-apm-ss-mh-1-u0-trace-and-hist}
+  \vspace{-5mm}
+  \caption{\ac{APM} \ac{SS}+\ac{MH} $N=1, \lambda=0.425$}
+  \label{sfig:apm-ss-mh-1-gaussian-latent-u-trace}
+\end{subfigure}
+\caption[\acs{APM} Gaussian model auxiliary variable traces.]{
+Example traces and histograms of an auxiliary variable in \ac{APM} \ac{MI}+\ac{MH} and \ac{APM} \ac{SS}+\ac{MH} chains in Gaussian latent variable model inference task. In each row a trace of the sampled values for the $u_1$ auxiliary variable in the last 10000 iterations of a Markov chain using the optimal step size $\lambda=0.425$ and $N=1$ is shown in the left plot, while the right plot shows a histogram of the sample values from the full chain (green filled region) against the exact marginal posterior density (orange curve). In the histogram plots the number of samples in the chain used to produce the plot have been adjusted to account for the roughly two times increase in the number of density evaluations per sample for the  
+\ac{APM} \ac{SS}+\ac{MH} updates compared to \ac{APM} \ac{MI}+\ac{MH}, so the \ac{APM} \ac{MI}+\ac{MH} plot is of a chain of $10^5$ samples and the \ac{APM} \ac{SS}+\ac{MH} plot is of $5\times 10^4$ samples.}
+\label{fig:apm-mh-gaussian-latent-u-traces}
+\end{figure}
+
+Results for an equivalent series of experiments as discussed in the previous two subsections for \ac{APM} \ac{SS}+\ac{MH} chains using elliptical slice sampling updates to the auxiliary variables are shown in Figure \ref{fig:apm-ss-mh-gaussian-latent-results}. In this case as the \ac{MI} updates to the auxiliary variables for the $N=1$ case seemed to be sufficient to achieve convergence, the elliptical slice sampling updates do not seem to significantly improve mixing of the target variables. The extra overhead from the adaptive slice sampling updates means overall computational efficiency decreases by roughly a factor of two across all proposal step sizes $\lambda$ compared to the corresponding \ac{APM} \ac{MI}+\ac{MH} results for $N=1$ in Figure \ref{sfig:apm-mi-mh-1-gaussian-latent}, with this consistent across both the density evaulation normalised efficiency metric and run time normalised measure. 
+
+Although the slice sampling updates do not help improve the sampling of the target variables here, the resulting auxiliary variables samples are much more representative of their true posterior distribution (which again can be found analytically) compared to when using \ac{MI} updates. Figure \ref{fig:apm-mh-gaussian-latent-u-traces} shows traces and histograms of one of the auxiliary variables for chains computed using both the \ac{APM} \ac{MI}+\ac{MH} and \ac{APM} \ac{SS}+\ac{MH} updates. The slice sampling updates give significantly better mixing of the auxiliary variables than the \ac{MI} updates which due to the low accept rate remain fixed for many iterations. Although in this case this does seem to translate to an obvious improvement in convergence of the target variables, more generally a factor two increase in run time for the added robustness of significantly improved mixing of the auxiliary variables seems like it will often be a worthwhile tradeoff to avoid possible convergence issues.
+
+\subsubsection{Slice sampling the target variables}
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-apm-mi-ss-1-time}
+  \includetikz{gaussian-latent-variable-apm-mi-ss-1-eval}
+  \caption{\ac{APM} \ac{MI}+\ac{SS} ($N=1$)}
+  \label{sfig:apm-mi-ss-1-gaussian-latent}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gaussian-latent-variable-apm-ss-ss-1-time}
+  \includetikz{gaussian-latent-variable-apm-ss-ss-1-eval}
+  \caption{\ac{APM} \ac{SS}+\ac{SS} ($N=1$)}
+  \label{sfig:apm-ss-ss-1-gaussian-latent}
+\end{subfigure}
+\caption[\acs{APM} \acs{SS} Gaussian model results.]{
+Results of Gaussian latent variable model \acs{APM} chains using linear \ac{SS} to update target variables and either \ac{MI} updates to auxiliary variables (top row) or elliptical \ac{SS} updates (bottom row). The plots in each row show both the estimated \ac{ESS} normalised by either the total compute time (left column) or number of density estimator evaluations (right column), versus the slice sampler initial bracket width for the linear \ac{SS} updates to the target variables. The curves show mean values across 10 independent chains initialised from the prior and filled region show $\pm 1$ standard deviation.}
+\label{fig:apm-ss-gaussian-latent-results}
+\end{figure}
+
+As a final set of experiments for this model, we explored the use of slice sampling updates to the target variables with an auxiliary pseudo-marginal framework, specifically linear slice sampling updates along an isotropically sampled direction. To test the claim that the efficiency of slice sampling updates is less sensitive to the choice of the free initial bracket width parameter $w$ of the algorithm than random-walk Metropolis updates are to the choice of the proposal step size parameter $\lambda$, we ran a similar series of experiments as in the previous sub-sections to analyse the dependency of sampling efficiency on $\lambda$ by instead varying the initial bracket width $w$. 
+
+For each of 50 initial bracket width $w$ values on an equispaced grid between 0.2 and 10, we ran 10 independent \ac{APM} \ac{MI}+\ac{SS} and \ac{APM} \ac{SS}+\ac{SS} chains (with elliptical slice sampling updates to the auxiliary variables) initialised from the prior of 20\,000 iterations each. As previously for each set of chains for a particular $w$ value we computed the estimated \acp{ESS} of the chains for the estimate of the posterior mean and normalised this value by both the total wall-clock run time in seconds and total number of joint density evaluations to give two measures of overall efficiency. The means and one standard deviation intervals of these values across the 10 chains are shown for the \ac{APM} \ac{MI}+\ac{SS} chains in Figure \ref{sfig:apm-mi-ss-1-gaussian-latent} and for the \ac{APM} \ac{SS}+\ac{SS} chains in Figure \ref{sfig:apm-ss-ss-1-gaussian-latent}. In all cases zero linear step-out iterations were used in the slice sampling updates to the target variables.
+
+The peak efficiency achieved by the \ac{APM} \ac{MI}+\ac{SS} chains on this problem is less than that for the best \ac{APM} \ac{MI}+\ac{MH} chains by a factor of around 1.5 on both measures of efficiency. As the slice sampling updates do more work per iteration than the \ac{MH} updates this is not unexpected as a well-tuned \ac{MH} update will generally perform better than a slice sampling update when the geometry of the target distribution is simple (as is the case here). Importantly however the slice sampling updates maintain a computational efficiency that is within around 10\% of the optimal efficiency across a wide range of intial bracket width values, with values from $w=2$ to $w=10$ all seeming to perfom reasonably well in this problem. This is in contrast to the much tighter range of proposal step size values required to get good performance with \ac{MH} updates to the target variables. The exponential back-off to smaller proposals provided by the adaptive bracket shrinking procedure in the slice sampling transition means that the penalty for using an overly large scale parameter $w$ is much less severe than the corresponding situation for using an overly large $\lambda$ in a \ac{MH} update.
+
+The results for the \ac{APM} \ac{SS}+\ac{SS} show a similar pattern compared to the \ac{APM} \ac{SS}+\ac{MH} results, except for that the best \ac{APM} \ac{SS}+\ac{MH} chains perform almost identically to the best \ac{APM} \ac{SS}+\ac{SS} chains. This is due to the extra overhead introduced by the elliptical slice sampling updates to the auxiliary variables having a larger effect than the slightly more efficient updates to the target variables by the optimally tuned \ac{MH} updates in this case. This also explains the even slower drop-off in efficiency for the \ac{APM} \ac{SS}+\ac{SS} for large values of the initial bracket width $w$, with the extra density evaluations this requires on average having a smaller overall effect on efficiency due to the higher baseline number of evaluations because of the elliptical slice sampling updates.
+
+\subsection{Gaussian process probit regression}\label{subsec:pm-gaussian-process-classifier-exp}
+
+As a second experiment we consider a more challenging problem of inferring the parameters of the covariance function of a latent Gaussian process used to model the relationship between pairs of feature vectors and binary target outputs. The use of \ac{PM} \ac{MH} for this task was considered in \citep{filippone2014pseudo} and shown to give signficant improvements over competing \ac{MCMC} methods. 
+
+As an example data set we used the Wisconsin breast cancer prediction data set \citep{mangasarian1995breast} from the UCI machine learning dataset repository \citep{lichman2013uci} as also used for experiments in \citep{filippone2014pseudo}. The data $\lbrace \vct{d}^{(m)},y_m \rbrace_{m=1}^M$ consists of pairs of vectors $\vct{d}^{(m)}$ of $K=9$ integer descriptors of individual cells found in a fine needle aspiration biopsy of suspect breast lumps, and a binary class $y_m$ indicating whether the lump was later found to malignant or benign. The original dataset contains 699 data-points, however 17 data-points have missing atrributes so $M=682$ data-points were used in the experiments here.
+
+To model the unknown relationship between the input descriptors and binary class label output, a zero-mean Gaussian process prior \citep{rasmussen2006gaussian} was placed on a set of latent real-valued function values $\rvct{z} \in \reals^M$. A squared exponential covariance function was used with per-feature length scales $\rvct{\ell} \in \reals_{>0}^K$ and output scale $\rvar{s} \in \reals_{>0}$, with the covariance function specifically defined as
+{
+\vspace{2mm}
+\hrule
+\small
+\vspace{1mm}
+\begin{algorithmic}
+  \Function{SqExpCov}{$\lbrace \vct{d}^{(m)} \rbrace_{m=1}^M, \rvar{s}, \rvct{\ell}, \epsilon=10^{-8}$}
+%    \State $mtx{C} \gets \mathbf{0}$
+    \For{$i \in \fset{1\,...\,M}$}
+      \State $\rvar{C}_{i,i} \gets \rvar{s} + \epsilon$
+      \For{$j \in \fset{1\,..\,j-1}$}
+        \State $\rvar{C}_{i,j} \gets \rvar{s} \exp\lpa -\frac{1}{2} \sum_{k=1}^D \lpa \frac{d_k^{(i)} - d_k^{(j)}}{\rvar{\ell}_d} \rpa^2 \rpa$
+        \State $\rvar{C}_{j,i} \gets \rvar{C}_{i,j}$
+      \EndFor
+    \EndFor
+    \State\Return $\rvct{C}$
+  \EndFunction
+\end{algorithmic}
+\vspace{2mm}
+\hrule
+\vspace{1mm}
+}
+The $\epsilon$ value is a `jitter' parameter to improve numerical stability \citep{rasmussen2006gaussian}. This covariance functions represents an assumption that nearby $\vct{d}^{(m)}$ points correspond to similar $\rvct{z}$ values, with the typical length-scales in the feature space over which correlations are high determined by the elements of $\rvct{\ell}$. The latent variables $\rvct{z}$ are assumed to determine the probability of the observed binary class outputs $\rvct{y}$ being one or zero by a probit link function i.e. given $\rvct{z}=\vct{z}$ the binary outputs are modelled as having a Bernoulli distribution $\textrm{Ber}(\Phi(\vct{z}))$ where $\Phi$ is the standard normal \ac{CDF} function. Following \citep{filippone2014pseudo} Gamma prior distributions were placed on both the per-feature length-scales $\rvct{\ell}$ and output scale $\rvar{s}$ covariance function parameters. The overall model is shown as a directed factor graph in Figure \ref{fig:gaussian-process-probit-regression-factor-graph}.
+
+\begin{figure}[!t]
+\centering
+\includetikz{gaussian-process-probit-regression-factor-graph}
+\caption{Gaussian process probit regression factor graph.}
+\label{fig:gaussian-process-probit-regression-factor-graph}
+\end{figure}
+
+For inference we assume we are interested in inferring the posterior distribution on the $\rvct{\ell}$ and $\rvar{s}$ covariance function parameters given the observed input-output pairs, such that we could then use the inferred plausible $\rvct{\ell}$ and $\rvar{s}$ values to make predictions of the outputs corresponding to unlabelled inputs. We define the target variables for inference $\rvct{x}$ as the logarithms of $\rvct{\ell}$ and $\rvar{s}$ so that the target distribution has support on an unbounded space i.e. $\rvct{x} = [\log\rvar{s};\,\log\rvct{\ell}]$ and $\rvct{x} \in \reals^{10}$, with a Jacobian determinant factor accounting for the change of variables being included in the transformed prior (marginal) density $\pden{\rvct{x}}$
+\begin{equation}\label{eq:gp-model-target-prior}
+  \pden{\vct{x}}(\vct{x}) \propto 
+  \exp\lpa\frac{11 x_1}{10} -\frac{\exp(x_1)}{10}\rpa \prod_{i=2}^{10} \exp\lpa x_i -\frac{\exp(x_i)}{3}\rpa.
+\end{equation}
+The unnormalised target density is then $\utgtdens(\vct{x}) = \pden{\rvct{x},\rvct{y}}(\vct{x},\vct{y}) = \pden{\rvct{y}|\rvct{x}}(\vct{y}\gvn\vct{x})$. We cannot evaluate $\pden{\rvct{y}|\rvct{x}}$ as it involves an intractable marginalisation over the latent function values $\rvct{z}$
+\begin{equation}\label{eq:gp-probit-regression-marginal-lik}
+\begin{split}
+  \pden{\rvct{y}|\rvct{x}}(\vct{y}|\vct{x}) =
+  \int_{\set{Z}} 
+    \prod_{m=1}^M\lpa \Phi(z_m)^{y_m} (1 - \Phi(z_m))^{1-y_m} \rpa
+    \nrm{\vct{z} \gvn \vct{0}, \rvct{C}}
+  \,\dr\vct{z}.
+\end{split}
+\end{equation}
+One option would be to construct a Markov chain on the joint $(\rvct{x},\rvct{z})$ space with an unnormalised target density $\pden{\rvct{x},\rvct{y},\rvct{z}}$, however strong dependencies between the (transformed) covariance function parameters $\rvct{x}$ and the latent variables $\rvct{z}$ makes the joint distribution difficult for \ac{MCMC} dynamics to explore effectively \citep{filippone2014pseudo}. As an alternative \citep{filippone2014pseudo} proposes to use the pseudo-marginal framework to construct a Markov chain using an unbiased importance sampling estimator of $\utgtdens$.
+
+Though a Monte Carlo estimate of \eqref{eq:gp-probit-regression-marginal-lik} can be formed by sampling latent values $\rvct{z}$ from the Gaussian proccess prior $\pden{\rvct{z}|\rvct{x}}$, as this ignores the observed output values $\vct{y}$ this will tend to lead to a density estimator with unusably high variance for the purposes of use in a pseudo-marginal update. A key insight in \citep{filippone2014pseudo} was that much lower variance density estimates can be computed by using an optimisation-based approximate inference method to fit a Gaussian approximation to $\pden{\rvct{z}|\rvct{x},\rvct{y}}$ (which as discussed previously is the optimal choice for the importance distribution in terms of minimising variance) to use as the importance distribution. In \citep{filippone2014pseudo} both Laplace's method and expectation propagation are considered within this context; we concentrate on Laplace's method here for simplicity.
+
+As discussed in Appendix \ref{app:optimisation-based-approximate-inference}, Laplace's method involves finding the mode of the density being approximated and then evaluating the Hessian matrix of the log density at this point. An efficient and numerically stable implementation of a Newton--Raphson method can be used to find the mode of the latent posterior for this probit regression Gaussian process model \citep[\S 3.4]{rasmussen2006gaussian} with the latent posterior density guaranteed to have a unique mode. Each Newton--Raphson step involves computing a Cholesky factorisation of the Hessian of the log density at the current point which has a $\mathcal{O}(M^3)$ computational cost. In the experiments around 10 Newton steps were needed to achieve convergence when finding the mode. Evaluating the density of the Gaussian process prior on the latent function values $\rvct{z}$ also requires computing a Cholesky decomposition of the Gaussian process covariance matrix which again has $\mathcal{O}(M^3)$ cost. As $M=682$ these cubic cost operations will tend to be the dominant contributor to the overall run time. As the Gaussian process covariance and Laplace approximation to the latent posterior both depend on the value of the covariance function parameters, the cubic operations have to be performed each time a density estimate is computed at a new value for the target variables.
+
+Once an approximate Gaussian latent posterior $\nrm{\vct{\mu}_{\vct{x},\vct{y}},\mtx{\Sigma}_{\vct{x},\vct{y}}}$ has been fitted using Laplace's method, it can then be used as the importance distribution in an importance sampling estimator of the form shown in \eqref{eq:pm-hierarchical-model-importance-sampling-estimator}. The Cholesky factorisation $\mtx{L}_{\vct{x},\vct{y}}= \chol\mtx{\Sigma}_{\vct{x},\vct{y}}$ is computed as part of the Laplace's method iteration, and so can be reused to efficiently evaluate the importance distribution density at a $\mathcal{O}(M^2)$ cost for each importance sample and to generate samples from the importance distribution using $\vct{z}^{(n)} = \mtx{L}_{\vct{x},\vct{y}}\vct{u}^{(n)} + \vct{\mu}_{\vct{x},\vct{y}}$ where $\vct{u}^{(n)}$ is a sampled standard normal vector from $\nrm{\vct{0},\mathbf{I}}$, this again having a $\mathcal{O}(M^2)$ cost. This same expression can also be used to reparameterise the estimator as a deterministic function of a set of independent standard normal values $\vct{u} = [\vct{u}^{(1)};\,\vct{u}^{(2)}\,\dots\,\vct{u}^{(N)}]$ as shown previously in \eqref{eq:importance-sampling-density-estimator-reparameterisation} and as required for the proposed auxiliary pseudo-marginal methods.
+
+Due to the high overhead of the cubic operations the result of \citep{sherlock2016pseudo} that a choice of $N=1$ is close to optimal does not apply here. In experiments in \citep{sherlock2016pseudo} with a similar Gaussian process classifier model (in their case using a logistic link function and using a dataset with $M=144$) it was found computational efficiency was approximately maximised by using $N=200$ importance samples with it noted that this is around the number required for the $\mathcal{O}(M^2 N)$ cost of sample generation to be of comparable magnitude to the cubic operation cost. In the example of \citep{sherlock2016pseudo} a non-iterative approach is used to find a Gaussian importance distribution hence only a single Cholesky decomposition of the importance distribution covariance matrix is required. The use of an iterative Laplace method approximation for the importance distribution here as proposed in \citep{filippone2014pseudo} makes it unclear whether a similar choice of the number of importance samples is reasonable here. While the even higher overhead of the multiple cubic operations per estimator evaluation supports possibly using $N \geq M$, part of the justification of using an expensive procedure to fit the importance distribution is that it means fewer importance samples are needed to achieve a low-variance density estimator. In the experiments with the same dataset in \citep{filippone2014pseudo} $N=1$ importance sample was used and found to work well, though in that case an isotropic covariance function was used with a single length scale parameter such that the dimensionality of the target space was two rather than ten as here.
+
+In preliminary runs we found that the \ac{PM} \ac{MH} update had very low accept rates however small we set the proposal step-size when using $N=1$ importance sample in the density estimator. Increasing the number of importance samples to $N=50$ gave a signficant improvement in performance and overall stability with a negligible increase in run time per update. Increasing the number of importance samples further to $N=500$ gave a further increase in efficiency but also increased the run time in our implmentation by around one third which outweighed the per iteration sampling efficiency gains made. We therefore used $N=50$ importance samples for the main experiments with all methods; given the limited number of values tested this is unlikely to be optimal but in most practical situations we would be unlikely to perform an exhaustive search for the optimal $N$. Interestingly the auxiliary pseudo-marginal methods appeared to still be able to mix when using $N=1$ importance sample with \ac{APM} \ac{MI}+\ac{MH} chains still able to achieve a target accept rate of $\sim 0.15-0.3$ for the \ac{MH} updates to the target variables. Due to the negligible increase in run time however when using $N=50$ importance samples we performed the experiments for the \ac{APM} methods with $N=50$ also.
+
+We generated Markov chains for the model using each of \ac{PM} \ac{MH}, \ac{APM} \ac{MI}+\ac{MH}, \ac{APM} \ac{SS}+\ac{MH} and \ac{APM} \ac{SS}+\ac{SS} for the updates. For the \ac{MH} updates to the target variables in the first three methods we used a Gaussian random-walk Metropolis proposal distribution $r(\vct{x}'\gvn\vct{x}) = \nrm{\vct{x}'\gvn\vct{x},\lambda^2\mathbf{I}}$. To set the proposal step size $\lambda$ we followed the adaptive approach used in \citep{filippone2014pseudo}, with the step size adjusted over an initial warm-up phase of 2000 iterations, with the average accept rate over every 100 iterations used as a control signal to decide whether to increase or decrease the step size. Also following \citep{filippone2014pseudo} a target average accept rate range of $[0.15,0.3]$ was used\footnote{Although in the published version of \citep{filippone2014pseudo} it is stated a target range of $[0.2,0.3]$ was used, the code accompanying the paper suggests a range of $[0.15,0.3]$ was used in the experiments so we follow that instead.}, with the step size made smaller or larger, if the average accept rate is below or above this range respectively during the adaptive phase. As noted in the previous experiments, while a target rate of 0.234 for the \ac{MH} updates to the target variables in \ac{APM} methods can be justified theoretically and empirically, it is not clear what the optimal choice is for \ac{PM} \ac{MH} updates, with this seeming to be dependent on the estimator variance and so number of importance samples $N$. While the $[0.15,0.3]$ target accept rate range therefore seems reasonable for the \ac{APM} methods it is unclear whether it is a good choice for the pseudo-marginal method, however as it was used with some success in \citep{filippone2014pseudo} and given a lack of obvious alternative methods for choosing the target rate, we use it for the \ac{PM} \ac{MH} updates here.
+
+For the \ac{APM} \ac{SS}+\ac{MH} and \ac{APM} \ac{SS}+\ac{SS} methods we used elliptical slice sampling for the updates to the auxiliary variables. For the slice sampling update to the target variables in the \ac{APM} \ac{SS}+\ac{SS} chains we used linear slice sampling along a random direction vector (sampled isotropically) with a fixed initial bracket width of $w=4$ and no linear step out iterations. To account for the 2000 adaptive warm up iterations performed before the main \ac{PM} \ac{MH}, \ac{APM} \ac{MI}+\ac{MH} and \ac{APM} \ac{SS}+\ac{MH} chains, for the \ac{APM} \ac{SS}+\ac{SS} chains we ran 1000 warm up iterations before the main chain runs. For all four methods, 10 chains independently initialised from the prior were run for 10\,000 iterations, with both the total number of cubic operations performed and overall run time recorded to allow for adjustment for different per iteration costs in the results.
+
+\begin{figure}[!t]
+\centering
+\begin{subfigure}[b]{\linewidth}
+\centering
+\includetikz{gaussian-process-probit-regressions-pm-ess-plot}
+\caption{Sampling efficiency. \ac{ESS} estimates for each of 10 target variables normalised by the number of cubic cost operations performed per chain. The bars show the means values across 10 independent chains with markers for $\pm 1$ standard error of mean.}
+\label{sfig:gaussian-process-probit-regressions-pm-ess-plot}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+\includetikz{gaussian-process-probit-regressions-pm-prsf-plot}
+\caption{Chain convergence. Plots of \acs{PSRF} $\hat{R}$ statistic on a log scale computed across 10 independent chains initialised from the prior for increasing number of chain iterations (normalised by mean total run time for each method to adjust for different per iteration run times) for each of four transition operators tested. Curves show median value and filled regions indicate confidence interval to upper 95th percentile of computed estimate. A $\hat{R}$ value of unity is indicative of chains having converged to stationarity, so for the plotted $\log(\hat{R} - 1)$ values, more negative values indicate approaching convergence.}
+\label{sfig:gaussian-process-probit-regressions-pm-prsf-plot}
+\end{subfigure}
+\caption[Gaussian process probit regression results.]{Gaussian process probit regression results.}
+\label{fig:pm-gp-probit-regression-results}
+\end{figure}
+
+Results of the experiments are summarised in Figure \ref{fig:pm-gp-probit-regression-results}. As a first measure of performance we consider the relative estimated sampling efficiency of the different methods. For each of the 10 target variables we estimated the \ac{ESS} for the estimated mean of the variable using \texttt{R} \texttt{CODA} \citep{plummer2006coda} and normalised these values by the total number of cubic operations performed in each chain\footnote{The mean chain run time per cubic operation performed was $0.0184 \pm 0.00007$\,s for \ac{PM} \ac{MH}, $0.0187 \pm 0.00014$\,s for \ac{APM} \ac{MI}+\ac{MH}, $0.0196 \pm 0.00012$\,s for \ac{APM} \ac{SS}+\ac{MH} and $0.0184 \pm 0.00013$\,s for \ac{APM} \ac{SS}+\ac{SS} so using the cubic operation count as a proxy for overall computational cost seems reasonable here and removes the effect of any variable background system processes on the wall-clock run times.}. The means of these values across the 10 chains per method (and standard errors) are shown for each of the target variables in the bar plot in Figure \ref{sfig:gaussian-process-probit-regressions-pm-ess-plot}.
+
+By this \ac{ESS} measure of efficiency, the \ac{APM} \ac{MI}+\ac{MH} and \ac{APM} \ac{SS}+\ac{MH} chains both consistently perform better than the \ac{PM} \ac{MH} chains, with they performing very similarly to each other, and the \ac{APM} \ac{SS}+\ac{SS} chains perform worse than all other methods. Note that as the updates to the auxiliary variables to do not require any cubic operations (providing the Cholesky factorisations of the Gaussian process prior covariance and importance distribution covariance at the current target variable values are cached from the target variable update), there is little effect on the overall run time from using elliptical \ac{SS} updates to the auxiliary variables as opposed to \ac{MI} updates, hence the much closer performance here of \ac{APM} \ac{MI}+\ac{MH} and \ac{APM} \ac{SS}+\ac{MH} compared to the previous Gaussian latent variable experiments. The average accept rate of the \ac{MI} updates to the auxiliary variables in the \ac{APM} \ac{MI}+\ac{MH} chains was 0.24 here suggesting there is probably a limited gain from using elliptical \ac{SS} updates to the auxiliary variables in this case as the \ac{MI} updates are likely to be mixing the auxiliary variables sufficiently well.% If using a smaller number of importance samples, in which case we would expect the \ac{MI} accept rate to be lower, the increased robustness from using elliptical slice sampling would seem to be preferable given the negligible effect on run times.
+
+Although \ac{PM} \ac{MH} seems to outperform the \ac{APM} \ac{SS}+\ac{SS} method here, other results suggest the estimated \ac{ESS} measures of performance should be treated with some caution, with in general estimated \acp{ESS} being susceptible to giving misleading results when chains have poorly converged. Figure \ref{sfig:gaussian-process-probit-regressions-pm-prsf-plot} shows plots of the \ac{PSRF} convergence diagnostic proposed by Gelman and Rubin in \citep{gelman1992inference}, also often termed the $\hat{R}$ statistic. This is a heuristic measure of Markov chain convergence computed from multiple independent chains initialised from a distribution which should be over-dispersed compared to the (common) target distribution (we use the prior here). The diagnostic compares the between-chain and within-chain variance of each variable in the chain state, with a necessary but not sufficient condition for convergence being that these converge to being equal, corresponding to a $\hat{R}$ value of one. We used \texttt{CODA} to estimate the $\hat{R}$ values from the 10 independent chains run for each method as a function of an increasing number of iterations in the chain sequences used to compute the $\hat{R}$ estimates. We then accounted for the different per iteration run time of the different methods (in particular the \ac{APM} \ac{SS}+\ac{SS} chains took on average $\sim 2.5\times$ longer per iteration than the other methods) by plotting these $\hat{R}$ values for increasing chain iterations against the estimated run time to complete that number of iterations, the resulting curves shown in Figure \ref{sfig:gaussian-process-probit-regressions-pm-prsf-plot}. The darker coloured curves show the median of the estimated $\hat{R}$ interval and the lighter filled regions of the same colour show the 50th--95th percentile range of the estimate. To allow the curves to be more clearly distinguished, the $\hat{R}$ values are plotted on a shifted log scale i.e. $\log(\hat{R} - 1)$, with more negative values therefore corresponding to $\hat{R}$ values closer to one and so indicative of the chains being closer to convergence.
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gp-probit-regression-pm-mh-x0-trace-and-hist}
+  \vspace{-5mm}
+  \caption{\ac{PM} \ac{MH}}
+  \label{sfig:pmmh-gaussian-process-x0-trace}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gp-probit-regression-apm-mi-mh-x0-trace-and-hist}
+  \vspace{-5mm}
+  \caption{\ac{APM} \ac{MI}+\ac{MH}}
+  \label{sfig:apm-mi-mh-gaussian-process-x0-trace}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gp-probit-regression-apm-ss-mh-x0-trace-and-hist}
+  \vspace{-5mm}
+  \caption{\ac{APM} \ac{SS}+\ac{MH}}
+  \label{sfig:apm-ss-mh-gaussian-process-x0-trace}
+\end{subfigure}
+\\[3mm]
+\begin{subfigure}[b]{\linewidth}
+\centering
+  \includetikz{gp-probit-regression-apm-ss-ss-x0-trace-and-hist}
+  \vspace{-5mm}
+  \caption{\ac{APM} \ac{SS}+\ac{SS}}
+  \label{sfig:apm-ss-ss-gaussian-process-x0-trace}
+\end{subfigure}
+\caption[Gaussian process probit regression traces.]{
+Example traces and histograms of target variable $\rvar{x}_1 = \log\rvar{s}$ from chains sampled using pseudo-marginal and auxiliary pseudo-marginal approaches in Gaussian process probit regression model inference task. In each row a trace of the sampled values for the $\rvar{x}_1$ variable for a single 10000 iteration Markov chain is shown in the left plot, while the right plot shows a histogram of the sampled values from all 10 chains. In the histogram plots the number of samples in the chain used to produce the plot have been adjusted to account for the roughly 2.5 times increase in run time for the \ac{APM} \ac{SS}+\ac{SS} chains compared to the other methods.}
+\label{fig:pm-gaussian-process-traces}
+\end{figure}
+
+On this measure of performance the \ac{PM} \ac{MH} chains seem to perform more poorly, showing a slower convergence rate than the other methods, inclduing the \ac{APM} \ac{SS}+\ac{SS} chains. The non-montonically decreasing behaviour seen in the $\hat{R}$ curve for the \ac{PM} \ac{MH} chains seems to be the result of the chains suffering the earlier discussed sticking behaviour, with one of the 10 chains found to have stuck for a run of over 2000 iterations and multiple incidents of sticking periods of hundreds of iterations in all of the chains. An example trace of one of the chains for the $x_1$ target variable is shown in Figure \ref{sfig:pmmh-gaussian-process-x0-trace} where these sticking periods are clearly visible. The chains run using $N=500$ importance samples (traces not shown here) also showed sticking behaviour though somewhat less frequently, suggesting that while increasing the number of importance samples can lessen the impact of these events, it does not seem to necessarily eliminate them. Figure \ref{fig:pm-gaussian-process-traces} also shows example chain traces for the $x_1$ variable for each of the three other \ac{APM} methods; in all cases here there are no visible long sticking periods and this was also reflected across the other chains not shown. 
+
+The right column of Figure \ref{fig:pm-gaussian-process-traces} shows histograms for the $x_1$ target variable computed from the samples from all 10 chains for each method (in the case of the \ac{APM} \ac{SS}+\ac{SS} chains only the first 4000 iterations from each chain were included to account for the roughly 2.5 times slower run time per chain in this case). Although we do not have a ground truth for the marginal posterior density here to compare against, it seems reasonable to assume that the spurious peaks in the histogram for the \ac{PM} \ac{MH} chains are not a reflection of the true marginal density but instead a result of the long sticking artifacts in the chains causing the states that the chain remains stuck at to be overly represented in the histograms. The \ac{APM} methods produced much smoother marginal density estimates, with the \ac{APM} \ac{SS}+\ac{SS} chains seeming to give a particularly smooth result here even with the run time adjustment meaning this histogram is computed from less than half the number of samples as used in the other methods. Although by no means conclusive, this provides a further suggestion that the relatively poor standing of the \ac{APM} \ac{SS}+\ac{SS} chains on the \ac{ESS} measure of performance is not an entirely accurate potrayal of the overall performance of the method. 
+
+\section{Discussion}
+
+The auxiliary pseudo-marginal methods discussed in this Chapter are a relatively simple extension to the existing pseudo-marginal \ac{MCMC} framework which nonetheless offer some important benefits. 
+
+The simplest proposed approach of splitting the combined proposed update to both auxiliary and target variables in the standard \ac{PM} \ac{MH} algorithm into a separate Metropolis independence updates to the auxiliary variables and Metropolis--Hastings update to the target variables (\ac{APM} \ac{MI}+\ac{MH}) involves changing only a few lines of code in most implementations and adds no further free parameters to tune. Despite involving only a minor change, in the empirical studies performed this adjusted update was found to give significantly better computational cost normalised sampling efficiency over the standard pseudo-marginal Metropolis--Hastings update, despite in some cases doubling the computational effort per overall chain update. A simple intuition for understanding this improved performance is that for a fixed proposal distribution for the target variables, the accept rate of the \ac{MH} update to the target variables in the \ac{APM} \ac{MI}+\ac{MH} chains was typically more than double the corresponding accept rate for the overall \ac{PM} \ac{MH} update. Therefore the doubling of the number of density estimates needed per iteration was more than outweighed by more than double the number of proposed target variable updates \emph{from the same proposal distribution} (e.g. same Gaussian random-walk step-size) being accepted
+
+The size of the increase in the accept rates for a fixed proposal distribution is dependent on how high the variance of the density estimator is or equivalently how dependent the target and auxiliary variables are under the auxiliary joint target. For high variances cases e.g. when using $N=1$ importance sample, the increase in accept rates for the target variable updates in \ac{APM} \ac{MI}+\ac{MH} chains over the accept rate of the \ac{PM} \ac{MH} updates is higher due to poor performance of making independent proposed updates to the auxiliary variables in the \ac{PM} \ac{MH} having a strong deleterious effect on the \ac{PM} \ac{MH} accept rate. For example in the Gaussian latent variable model experiments when using $N=1$ importance sample the accept rate of the \ac{MH} updates in the \ac{APM} \ac{MI}+\ac{MH} chains was typically around a factor of 20 higher than the accept rate for the corresponding \ac{PM} \ac{MH} chains using the same proposal step size. As the variance of the density estimator is decreased by increasing $N$, the difference in the accept rates for a fixed proposal step size becomes less marked with around a factor five difference for $N=8$ and around a factor two difference for $N=2$ between \ac{APM} \ac{MI}+\ac{MH} and \ac{PM} \ac{MH}. So with a lower variance estimator the difference in performance between \ac{APM} \ac{MI}+\ac{MH} and \ac{PM} \ac{MH} becomes less marked. 
+
+However the recommendation of \citep{sherlock2016pseudo} suggests that when the computational cost of each \ac{PM} \ac{MH} update scales linearly with $N$ (and when using a density estimator formed as an average of unbiased Monte Carlo estimates) that using $N=1$ is close to optimal for \ac{PM} \ac{MH} despite the higher estimator variance. As the low $N$, high density estimator variance cases are precisely when we expect to see the largest potential gains from using \ac{APM} \ac{MI}+\ac{MH} over \ac{PM} \ac{MH} this suggests when this linear cost scaling argument is valid there will often be a computational gain from using \ac{APM} \ac{MI}+\ac{MH}. In some cases as we saw in the Gaussian process experiments we can form a much lower variance density estimate by expending some computational effort to fit a good importance distribution. In these cases due to the additional overhead of the fitting procedure the linear cost scaling argument no longer applies. Further the density estimates in this case may be sufficiently low variance for there to be little improvement in accept rates of updates to the target variables by splitting the \ac{PM} \ac{MH} in to separate \ac{MI} and \ac{MH} updates. However typically in these cases the overhead introduced by separately updating the auxiliary variables in an \ac{MI} step will also be much less than the cost of the original \ac{PM} \ac{MH} update, as for fixed values of the target variables the importance distribution does not need to be refitted and any target variable dependent computations such as Cholesky factorisations of covariance matrices can be cached and reused. Therefore the overall cost per \ac{APM} \ac{MI}+\ac{MH} update will be very close to that of each \ac{PM} \ac{MH} update and so even a small improvement in accept rate of the target variable updates can make it worthwhile to split the update.
+
+Perhaps more important than the sampling efficiency gains seen from using \ac{APM} \ac{MI}+\ac{MH} over \ac{PM} \ac{MH} in the experiments here was the significantly improved ability to tune the \ac{MH} updates in the algorithm even when using a high-variance density estimator. By decoupling the dependency of the \ac{MH} accept rate from the density estimator variance, theoretical guidelines for choosing a proposal step-size based on the average accept rate can be straightforwardly applied to tune \ac{APM} \ac{MI}+\ac{MH} updates. The resulting increased ease of use of the algorithm and decreased requirement for user intervention to get good performance might often make \ac{APM} \ac{MI}+\ac{MH} an attractive choice even when the extra runtime overhead per update negates any sampling efficiency gains. Further the separate \ac{MI} step accept rate of the \ac{APM} \ac{MI}+\ac{MH} update provide a diagnostic already computed as part of the chain updates which can alert users to issues with poor mixing of the auxiliary variables due to low accept rates of the auxiliary updates. In contrast it will not always be clear if a poor accept rate of a \ac{PM} \ac{MH} chain is due to poor choice of the target variables proposal distribution or due to a high density estimator variance, and separately monitoring the density estimator variance as part of the update adds overhead while not being as directly interpretable as the \ac{MI} step accept rate.
+
+If initial runs using an \ac{APM} \ac{MI}+\ac{MH} method do show a very low accept rate for the updates to the auxiliary variables which might lead to convergence issues, the proposed \ac{APM} \ac{SS}+\ac{MH} approaches offer a simple `plug-in' solution to improve mixing of the auxiliary variables without having to tune a separate proposal distribution for a \ac{MH} update to the auxiliary variables. If the auxiliary variables can be naturally represented as being marginally distributed according to the standard normal distribution, then elliptical slice sampling is a straightforward choice, having no free parameters to tune and still initially proposing bold moves to near independent points in the auxiliary space while able to back-off to more conservative updates to ensure a non-zero move to the auxiliary variables under weak smoothness conditions. 
+
+Another common case is auxiliary variables which are naturally parameterised as a vector of standard uniform draws, in which case reflective linear slice sampling offers analagous benefits. Although the linear slice sampling algorithm does have a free initial bracket width parameter to be chosen, in general (as seen in the experiments using this algorithm for updates to the target variables in the Gaussian latent variable model experiments) the efficiency of the algorithm is not strongly dependent on the choice of this parameter providing it is set large enough to cover most of the intersection of the slice with the sampled line as the exponential shrinking of the bracket on proposing an off slice point will quickly reduce the bracket to a more appropriate size if set initially too large. For reflective slice sampling in the unit hypercube a fixed initial bracket width of one and a direction vector $\vct{v}$ sampled from $\nrm{\vct{0},\mathbf{I}}$ was found to work well in experiments applying \ac{APM} \ac{SS}+\ac{MH} methods to inference in a doubly-intractable Ising model problem in \citep{murray2016pseudo}.
+
+Independently of and concurrently with the original conference publication \citep{murray2016pseudo} related to this work, both Dahlin et al. \citep{dahlin2015accelerating} and Deligiannidis et al. \citep{deligiannidis2015correlated} considered related frameworks in which the auxiliary random variables of a pseudo-marginal density estimator are updated using a Metropolis--Hastings update leaving the distribution defined by the density \eqref{eq:auxiliary-pm-target-density} on the joint auxiliary--target variable space invariant. Both assume a parameterisation in which the auxiliary variables have an isotropic standard normal marginal distribution $\rho(\vct{u}) = \nrm{\vct{u} \gvn \vct{0},\mathbf{I}}$, and consider a Metropolis--Hastings update to the auxiliary variables with proposal density
+\begin{equation}\label{eq:crank-nicholson-proposal}
+  r^*(\vct{u}'\gvn\vct{u}) = 
+  \nrm{\vct{u}' \gvn \sqrt{1 - \lambda^2} \vct{u}, \lambda^2 \mathbf{I}}
+\end{equation}
+which can be variously considered as a discretisation of a Ornstein-Uhlenbeck diffusion process, exact update of an AR(1) model or as an fixed step size update on an elliptical path that the elliptical slice sampling algorithm \ref{alg:elliptical-slice-sampling} generalises by adaptively setting the step size $\lambda$. This fixed step-size Metropolis--Hastings update is more amenable to analysis, with both \citep{dahlin2015accelerating} and \citep{deligiannidis2015correlated} giving much more extensive theoretical justifications for using perturbative updates to the auxiliary variables (or equivalents introducing correlations in between the auxiliary variable samples) than the mainly intuition based and empirical arguments made here. These theoretical insights are important for informing future development of these ideas. In practical settings however, though the above \ac{MH} update with an optimally tuned choice of $\lambda$ may give better sampling efficiency performance compared to the elliptical slice sampling updates proposed here, we would suggest that the additional tuning burden placed on the user and loss of robustness in cases where the appropriate step size varies across the state space, would suggest that elliptical slice sampling updates to the auxiliary variables are still often a good default choice.
+
+The empirical evidence for using slice sampling updates to the target variables as in the proposed \ac{APM} \ac{MI}+\ac{SS} and \ac{APM} \ac{SS}+\ac{SS} methods is less strong, with in both of the models considered in the experiments here these methods having poorer run-time adjusted efficiency than the well tuned \ac{APM} \ac{MI}+\ac{MH} and \ac{APM} \ac{SS}+\ac{MH} methods respectively. If adapting an existing \ac{PM} \ac{MH} algorithm where some effort has already been extended to identify an appropriate proposal distribution for updates to the target variables or other information is available to inform this choice, the additional overhead of the slice sampling updates might not be worthwhile. In cases however where we have less prior knowledge about appropriate scales for updates to the target variables or are more concerned with overall robustness and ease of use, slice sampling updates to the target variables are likely to be more attractive however.
+
+Subsequent to the publication of the conference publication related to this work, Lindsten and Doucet proposed the use of \ac{HMC} within an (auxiliary) pseudo-marginal framework \citep{lindsten2016pseudo}. Under the assumption that the joint auxiliary target density \eqref{eq:auxiliary-pm-target-density} is defined with respect to the Lebesgue measure, their \emph{pseudo-marginal Hamiltonian Monte Carlo} algorithm proposes jointly updating the auxiliary and target variables using a \ac{HMC} transition operator. In particular they assume the marginal distribution on the auxiliary variables $R$ is standard norma $\nrm{\vct{0},\idmtx}$ and leverage this to propose an alternative symplectic integrator to the typical leapfrog scheme which reduces the error when multiple auxiliary variable samples are used in the density estimator. 
+
+In numerical experiments with a hierarchical model of a diffraction process with a three-dimensional target space, it was found that the proposed pseudo-marginal \ac{HMC} algorithm gave similar performancy to using a \ac{APM} \ac{SS}+\ac{MH} update when normalised by the computational cost per update. In a second experiment with a generalised linear mixed model with a 13 dimensional target space, the proposed pseudo-marginal \ac{HMC} algorithm was compared to a \ac{APM} \ac{SS}+\ac{MH} update in which the update to the target variables is formed of a sequential scan of per-dimension random-walk Metropolis updates to each individual target variable. It is reported that attempts to jointly update all target variables in the \ac{MH} step led to very poor acceptance rates. The traces for the pseudo-marginal \ac{HMC} chain (Figure 4 in \citep{lindsten2016pseudo}) in this case indicate improved mixing compared to the \ac{APM} \ac{SS}+\ac{MH} update, though as the run-time per sample of the pseudo-marginal \ac{HMC} method is reported to be approximately 3.5 times higher in the implementation used and the traces do not appear to be run-time adjusted it is not clear what a cost normalised comparison would show. Autocorrelation plots for chains from the two approaches are also shown (Figure 13 in \citep{lindsten2016pseudo}), with the pseudo-marginal \ac{HMC} method showing quicker decay of the autocorrelations per sample lag compared to \ac{APM} \ac{SS}+\ac{MH} though again it is not clear if the autocorrelation plots are run-time adjusted. Both the pseudo-marginal \ac{HMC} and \ac{APM} \ac{SS}+\ac{MH} chains appear to mix significantly better than \emph{Particle Gibbs} \citep{andrieu2009pseudo}, an auxiliary variable approach based on a particle filter density estimator. %, in the generalised linear mixed model experiment in \citep{lindsten2016pseudo}.
+
+The use of \ac{HMC} updates with an auxiliary pseudo-marginal framework seems an appealing idea when the required gradients are available due to the improved performance in complex high-dimensional target distributions often offered by \ac{HMC} methods, and the integrator proposed by \citep{lindsten2016pseudo} is an elegant approach for exploiting structure in the auxiliary target distribution to give improved performance when the number of auxiliary variable dimensions is large. Though in the experiments in \citep{lindsten2016pseudo} it is not clear how significant the gain in performance is over using random-walk Metropolis updates to the target variables in a \ac{APM} \ac{SS}+\ac{MH} method, it seems plausible that in models with higher-dimensional target space that \ac{HMC} updates would start to increasingly outperform random-walk Metropolis updates to the target variables. In the next chapter we will discuss related methods which apply \ac{HMC} updates to perform inference in simulator models; this work was performed concurrently and independently to \citep{lindsten2016pseudo}. 
+
+
+%\section{Related work}
+%Auxiliary variable methods have been extensively studied within the context of particle \ac{MCMC} methods, 
+
+
+
+% correlated pseudo-marginal methods
+% particle Gibbs
+% pseudo-marginal HMC
