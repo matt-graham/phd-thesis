@@ -13,7 +13,7 @@ To make inferences under conditions of uncertainty, we must instead turn to prob
 %\marginpar{Probability theory is nothing but common sense reduced to calculation. \\--- Pierre-Simon Laplace}
 The key computational task in inference is computing integrals with respect to probability distributions on the variables in a proposed model. Typically these integrals will not have analytic solutions and the large number of variables being integrated over mean numerical quadrature methods are impractically costly. In these cases we must resort to approximate methods which tradeoff an introduction of error for an increase in computational tractability. \ac{MCMC} methods are a very generally applicable class of approximate inference techniques which estimate the integrals of interest by computing averages over the states of a Markov chain. 
 
-The topic of this thesis is the development of new \ac{MCMC} methods. In particular we introduce several novel methods which exploit reparameterisations and augmentations of the state of a Markov chain to improve upon the computational efficiency, ease of use or degree of approximation error of existing approaches.
+The topic of this thesis is the development of \ac{MCMC} methods. In particular we introduce several novel methods which exploit reparameterisations and augmentations of the state of a Markov chain to improve upon the computational efficiency, ease of use or degree of approximation error of existing approaches.
 
 %and in some cases allow inference in models were existing methods cannot be applied. 
 
@@ -613,7 +613,7 @@ In this thesis we will primarily be concerned with methods for performing infere
 %The first stage in any inference problem will be defining a probabilistic model for the problem at hand. A model embodies our assumptions about the problem, and in particular how we assume the quantities we observe are related to the unknown aspects that we wish to infer. Amongst the simplest, but also most commonly used, basic assumptions is that we observed a set of independent realisations 
 
 
-\subsection{Hierarchical models}
+\subsection{Hierarchical models}\label{subsec:hierachical-models-intro}
 
 \begin{figure}	
 \centering
