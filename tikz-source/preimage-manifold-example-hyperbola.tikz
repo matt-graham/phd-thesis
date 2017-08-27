@@ -1,0 +1,18 @@
+\begin{tikzpicture}
+\definecolor{color0}{rgb}{0.105882352941176,0.619607843137255,0.466666666666667}
+  \begin{axis}[
+    domain=-4:4,
+    xmin=-4, xmax=4,
+    ymin=-4, ymax=4,
+    width=55mm,
+    height=55mm,
+    xlabel={\small $u_1$},
+    ylabel={\small $u_2$},
+    every tick label/.append style={font=\tiny},
+    axis y line=center,
+    axis x line=middle,
+  ]
+    \addplot [mark=none, thick, color0, domain=-2:2] ({cosh(x)}, {sinh(x)});
+    \addplot [mark=none, thick, color0, domain=-2:2] ({-cosh(x)}, {sinh(x)});
+\end{axis}
+\end{tikzpicture}

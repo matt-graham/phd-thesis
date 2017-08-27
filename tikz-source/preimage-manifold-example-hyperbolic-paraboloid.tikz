@@ -1,0 +1,19 @@
+\begin{tikzpicture}
+\definecolor{color0}{rgb}{0.105882352941176,0.619607843137255,0.466666666666667}
+	\begin{axis}[
+	  xlabel={\small $u_1$},
+	  ylabel={\small $u_2$},
+	  zlabel={\small $n / \epsilon$},
+	  width=50mm,
+	  height=50mm,
+	  every tick label/.append style={font=\tiny},
+	]
+		\addplot3
+			[surf,
+			mesh/interior colormap={blueblack}{color=(white) color=(color0)},
+            colormap/blackwhite,
+			 samples=40,
+			 domain=-4:4,y domain=-4:4]
+			{y^2 - x^2 + 1};
+	\end{axis}
+\end{tikzpicture}

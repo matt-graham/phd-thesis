@@ -6,6 +6,6 @@
   \node[obs, right=0.8 of uz, yshift=-16mm] (y) {$\rvct{x}$} ; %
   \op[above=of y, yshift=-1mm] {uy_z-y} {right:$\vctfunc{g}_{ \rvct{x}|\rvct{z}}$} {z} {y} ; %
   \node[latent] (uy) at (uy_z-y -| uz) {$\rvct{u}_2$} ; %
-  \factor[left=of uy] {pr-uy} {below: $\rho_{\scriptscriptstyle 2}$} {} {uy} ; %
   \draw (uy) -- (uy_z-y) ; %
+  \factor[left=of uy] {pr-uy} {below: $\rho_{\scriptscriptstyle 2}$} {} {uy} ; %
 \end{tikzpicture}

@@ -219,7 +219,7 @@ A key concept we make use of in this thesis is defining transformations of rando
   \prob{\rvar{x}}\lpa \lbrace x \in \set{X} : \phi(x) \in \set{A} \rbrace \rpa
   \quad \forall \set{A} \in \sset{G},
 \end{equation}
-i.e. the probability of the event $\rvar{y} \in \set{A}$ is equal to the probability of $\rvar{x}$ taking a value in the pre-image under $\phi$ of $\set{A}$. To calculate probabilities of transformed random variables therefore we will therefore need to be able to find the pre-images of values of the transformed variable.
+i.e. the probability of the event $\rvar{y} \in \set{A}$ is equal to the probability of $\rvar{x}$ taking a value in the pre-image under $\phi$ of $\set{A}$. To calculate probabilities of transformed random variables therefore we will therefore need to be able to find the pre-images of sets under the transformation.
 
 If the distribution $\prob{\rvar{x}}$ is defined by a density $\pden{\rvar{x}}$ with respect to a measure $\mu_{\rvar{x}}$, we can also in some cases find a density $\pden{\rvar{y}}$ on the transformed variable $\rvar{y} = \phi(\rvar{x})$ with respect to a (potentially different) measure $\mu_{\rvar{y}}$
 \begin{equation}\label{eq:change-of-variables-general}
@@ -229,7 +229,7 @@ If the distribution $\prob{\rvar{x}}$ is defined by a density $\pden{\rvar{x}}$ 
   \quad \forall \set{A} \in \sset{G}.
 \end{equation}
 
-For random variables with countable co-domains where the integral in \eqref{eq:change-of-variables-general} corresponds to a sum, a $\pden{\rvar{y}}$ satisfying \eqref{eq:change-of-variables-general} is simple to identify. If $\rvar{x}$ is a discrete random variable with probability density $\pden{\rvar{x}}$ with respect to the counting measure, then $\rvar{y} = \phi(\rvar{x})$ will necessarily also be a discrete random variable. Applying \eqref{eq:change-of-variables-general} for $\pden{\rvar{x}} = \td{\prob{\rvar{x}}}{\countm}$ we have that\footnote{We use $\phi^{-1}(y)$ as a shorthand here for $\phi^{-1}(\lbrace y \rbrace)$ i.e. the pre-image of a singleton set. In cases where an inverse function exists we will also use the same notation, which of the three meanings is intended should be clear from the context.} 
+For random variables with countable co-domains where the integral in \eqref{eq:change-of-variables-general} corresponds to a sum, a $\pden{\rvar{y}}$ satisfying \eqref{eq:change-of-variables-general} is simple to identify. If $\rvar{x}$ is a discrete random variable with probability density $\pden{\rvar{x}}$ with respect to the counting measure, then $\rvar{y} = \phi(\rvar{x})$ will necessarily also be a discrete random variable. Applying \eqref{eq:change-of-variables-general} for $\pden{\rvar{x}} = \td{\prob{\rvar{x}}}{\countm}$ we have that\footnote{We use $\phi^{-1}(y)$ as a shorthand here for $\phi^{-1}(\lbrace y \rbrace)$ i.e. the pre-image of a singleton set $\fset{y}$ under $\phi$ or equivalently the \emph{fibre} of an element $y$ under $\phi$. In cases where an inverse function exists we will also use the same notation, which of the three meanings is intended should be clear from the context.} 
 \begin{align}\label{eq:change-of-variables-discrete-derivation}
   \int_{\phi^{-1}(\set{A})} \pden{\rvar{x}}(x) \,\countm(\dr x) &= 
   \sum_{x\in\phi^{-1}(\set{A})} \pden{\rvar{x}}(x)  =
