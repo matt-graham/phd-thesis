@@ -1,0 +1,195 @@
+% This file was created by matplotlib2tikz v0.6.11.
+\begin{tikzpicture}
+
+\definecolor{color1}{rgb}{0,0.619607843137255,0.450980392156863}
+\definecolor{color0}{rgb}{0,0.447058823529412,0.698039215686274}
+\definecolor{color3}{rgb}{0.8,0.474509803921569,0.654901960784314}
+\definecolor{color2}{rgb}{0.835294117647059,0.368627450980392,0}
+
+\begin{axis}[
+ylabel={\small ESS per runtime / $s^{-1}$},
+width=11cm,
+height=7cm,
+xmin=-0.19, xmax=3.99,
+ymin=0, ymax=5,
+xtick={0.4,1.4,2.4,3.4},
+xticklabels={{\small $z_{1}$}, {\small $z_{2}$}, {\small $z_{3}$}, {\small $z_{4}$}},
+tick align=outside,
+tick pos=left,
+x grid style={white!80.0!black},
+y grid style={white!80.0!black},
+axis line style={lightgray!20.0!black},
+every tick label/.append style={font=\tiny},
+legend entries={{\footnotesize Mod. ABC MCMC},{\footnotesize Constrained HMC},{\footnotesize ABC HMC $(\epsilon = \nicefrac{1}{20})$},{\footnotesize ABC HMC $(\epsilon = \nicefrac{1}{4})$}},
+legend style={at={(0.5,0.97)}, anchor=north, draw=none},
+legend columns=2,
+legend cell align={left}
+]
+\addlegendimage{ybar,ybar legend,fill=color0,draw opacity=0};
+\draw[fill=color0,draw opacity=0] (axis cs:0,0) rectangle (axis cs:0.2,2.9838189373731);
+\draw[fill=color0,draw opacity=0] (axis cs:1,0) rectangle (axis cs:1.2,2.40381000640307);
+\draw[fill=color0,draw opacity=0] (axis cs:2,0) rectangle (axis cs:2.2,2.30798837536741);
+\draw[fill=color0,draw opacity=0] (axis cs:3,0) rectangle (axis cs:3.2,3.6188699801511);
+\addlegendimage{ybar,ybar legend,fill=color1,draw opacity=0};
+\draw[fill=color1,draw opacity=0] (axis cs:0.2,0) rectangle (axis cs:0.4,2.6411306791097);
+\draw[fill=color1,draw opacity=0] (axis cs:1.2,0) rectangle (axis cs:1.4,2.66495947347346);
+\draw[fill=color1,draw opacity=0] (axis cs:2.2,0) rectangle (axis cs:2.4,2.79331374700207);
+\draw[fill=color1,draw opacity=0] (axis cs:3.2,0) rectangle (axis cs:3.4,2.7032778627475);
+\addlegendimage{ybar,ybar legend,fill=color2,draw opacity=0};
+\draw[fill=color2,draw opacity=0] (axis cs:0.4,0) rectangle (axis cs:0.6,0.0306497338153038);
+\draw[fill=color2,draw opacity=0] (axis cs:1.4,0) rectangle (axis cs:1.6,0.0240223005854346);
+\draw[fill=color2,draw opacity=0] (axis cs:2.4,0) rectangle (axis cs:2.6,0.0371924668446559);
+\draw[fill=color2,draw opacity=0] (axis cs:3.4,0) rectangle (axis cs:3.6,0.0244572569672042);
+\addlegendimage{ybar,ybar legend,fill=color3,draw opacity=0};
+\draw[fill=color3,draw opacity=0] (axis cs:0.6,0) rectangle (axis cs:0.8,0.42683183855273);
+\draw[fill=color3,draw opacity=0] (axis cs:1.6,0) rectangle (axis cs:1.8,0.552434527659522);
+\draw[fill=color3,draw opacity=0] (axis cs:2.6,0) rectangle (axis cs:2.8,0.745593575070496);
+\draw[fill=color3,draw opacity=0] (axis cs:3.6,0) rectangle (axis cs:3.8,0.383401449776103);
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:0.1,2.93623693404322)
+--(axis cs:0.1,3.03140094070298);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:1.1,2.34506179306026)
+--(axis cs:1.1,2.46255821974588);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:2.1,2.21166203472336)
+--(axis cs:2.1,2.40431471601145);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:3.1,3.47254219744718)
+--(axis cs:3.1,3.76519776285502);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:0.3,2.45971936160061)
+--(axis cs:0.3,2.82254199661879);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:1.3,2.46598840037367)
+--(axis cs:1.3,2.86393054657325);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:2.3,2.55258870133131)
+--(axis cs:2.3,3.03403879267284);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:3.3,2.61652187104299)
+--(axis cs:3.3,2.79003385445201);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:0.5,0.0245328735055794)
+--(axis cs:0.5,0.0367665941250281);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:1.5,0.0198323395535861)
+--(axis cs:1.5,0.0282122616172831);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:2.5,0.0299448945358828)
+--(axis cs:2.5,0.0444400391534291);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:3.5,0.018993155024172)
+--(axis cs:3.5,0.0299213589102363);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:0.7,0.382906593368052)
+--(axis cs:0.7,0.470757083737408);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:1.7,0.51011776816229)
+--(axis cs:1.7,0.594751287156754);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:2.7,0.708584000588531)
+--(axis cs:2.7,0.782603149552461);
+
+\path [draw=black, line width=0.7000000000000001pt] (axis cs:3.7,0.350453355461718)
+--(axis cs:3.7,0.416349544090488);
+
+\node at (axis cs:0.1,3.1338189373731)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{2.98};
+\node at (axis cs:1.1,2.55381000640307)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{2.40};
+\node at (axis cs:2.1,2.45798837536741)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{2.31};
+\node at (axis cs:3.1,3.64)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{3.62};
+\node at (axis cs:0.3,2.7911306791097)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{2.64};
+\node at (axis cs:1.3,2.81495947347346)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{2.66};
+\node at (axis cs:2.3,2.94331374700207)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{ 2.79};
+\node at (axis cs:3.3,2.8532778627475)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{2.70};
+\node at (axis cs:0.5,0.180649733815304)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{ 0.03};
+\node at (axis cs:1.5,0.174022300585435)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{0.02};
+\node at (axis cs:2.5,0.187192466844656)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{0.04};
+\node at (axis cs:3.5,0.174457256967204)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{0.02};
+\node at (axis cs:0.7,0.57683183855273)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{0.43};
+\node at (axis cs:1.7,0.702434527659522)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{0.55};
+\node at (axis cs:2.7,0.895593575070496)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{0.75};
+\node at (axis cs:3.7,0.533401449776103)[
+  scale=0.5,
+  anchor=south,
+  text=lightgray!20.0!black,
+  rotate=0.0
+]{0.38};
+
+\end{axis}
+
+\end{tikzpicture}
