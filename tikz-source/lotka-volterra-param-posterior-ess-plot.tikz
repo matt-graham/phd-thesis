@@ -9,7 +9,7 @@
 \definecolor{color4}{rgb}{0.941176470588235,0.894117647058824,0.258823529411765};
 
 \begin{axis}[
-ylabel={\small ESS per runtime / $s^{-1}$},
+ylabel={\small ESS per run time / $s^{-1}$},
 width=115mm,
 height=7cm,
 xmin=-0.22, xmax=4.07,

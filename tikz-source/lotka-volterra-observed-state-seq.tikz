@@ -1,0 +1,31 @@
+% This file was created by matplotlib2tikz v0.6.11.
+\begin{tikzpicture}
+
+\definecolor{color1}{rgb}{0.850980392156863,0.372549019607843,0.00784313725490196}
+\definecolor{color0}{rgb}{0.105882352941176,0.619607843137255,0.466666666666667}
+
+\begin{axis}[
+xlabel={\small Time $t$},
+ylabel={\small Population},
+width=11cm,
+height=5cm,
+xmin=0, xmax=50,
+ymin=0, ymax=120,
+tick align=outside,
+tick pos=left,
+x grid style={white!80.0!black},
+y grid style={white!80.0!black},
+every tick label/.append style={font=\tiny},
+axis line style={lightgray!20.0!black},
+legend style={at={(0.97,0.03)}, anchor=south east, draw=none},
+legend entries={{\footnotesize Prey $r(t)$},{\footnotesize Predator $f(t)$}},
+legend cell align={left}
+]
+
+\addplot [line width=0.7pt, draw=color0] table [x=t, y=r, col sep=space] {data/lotka-volterra-prey-sequence.csv};
+
+\addplot [line width=0.7pt, draw=color1] table [x=t, y=f, col sep=space] {data/lotka-volterra-predator-sequence.csv};
+
+\end{axis}
+
+\end{tikzpicture}

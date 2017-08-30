@@ -1,0 +1,166 @@
+% This file was created by matplotlib2tikz v0.6.11.
+\begin{tikzpicture}
+
+\definecolor{color1}{rgb}{0.850980392156863,0.372549019607843,0.00784313725490196}
+\definecolor{color0}{rgb}{0.105882352941176,0.619607843137255,0.466666666666667}
+
+\begin{groupplot}[group style={group size=4 by 1, horizontal sep=5mm, vertical sep=5mm}, height=40mm, width=36mm]
+\nextgroupplot[
+xlabel={\small $\log z_1$},
+xmin=-2.47140225063037, xmax=1.71891885719701,
+ymin=0, ymax=1.1,
+ytick={0,0.2,0.4,0.6,0.8,1,1.2},
+yticklabels={0.0,0.2,0.4,0.6,0.8,1.0,},
+tick align=outside,
+tick pos=left,
+x grid style={white!80.0!black},
+y grid style={white!80.0!black},
+axis line style={lightgray!20.0!black},
+every tick label/.append style={font=\tiny}
+]
+\draw[fill=color0,draw opacity=0] (axis cs:-2.28093310936549,0) rectangle (axis cs:-2.09046396810061,0.000768628445677742);
+\draw[fill=color0,draw opacity=0] (axis cs:-2.09046396810061,0) rectangle (axis cs:-1.89999482683573,0.00455716865333526);
+\draw[fill=color0,draw opacity=0] (axis cs:-1.89999482683573,0) rectangle (axis cs:-1.70952568557085,0.0220004141992351);
+\draw[fill=color0,draw opacity=0] (axis cs:-1.70952568557085,0) rectangle (axis cs:-1.51905654430597,0.0404894984499095);
+\draw[fill=color0,draw opacity=0] (axis cs:-1.51905654430597,0) rectangle (axis cs:-1.32858740304109,0.0738975348265257);
+\draw[fill=color0,draw opacity=0] (axis cs:-1.32858740304109,0) rectangle (axis cs:-1.13811826177621,0.13813891229451);
+\draw[fill=color0,draw opacity=0] (axis cs:-1.13811826177621,0) rectangle (axis cs:-0.947649120511325,0.255218245208537);
+\draw[fill=color0,draw opacity=0] (axis cs:-0.947649120511325,0) rectangle (axis cs:-0.757179979246444,0.399745593928598);
+\draw[fill=color0,draw opacity=0] (axis cs:-0.757179979246444,0) rectangle (axis cs:-0.566710837981563,0.537414088813732);
+\draw[fill=color0,draw opacity=0] (axis cs:-0.566710837981563,0) rectangle (axis cs:-0.376241696716682,0.649276828670209);
+\draw[fill=color0,draw opacity=0] (axis cs:-0.376241696716682,0) rectangle (axis cs:-0.185772555451801,0.682920073751512);
+\draw[fill=color0,draw opacity=0] (axis cs:-0.185772555451801,0) rectangle (axis cs:0.0046965858130803,0.678917325616373);
+\draw[fill=color0,draw opacity=0] (axis cs:0.0046965858130803,0) rectangle (axis cs:0.195165727077961,0.592956944363691);
+\draw[fill=color0,draw opacity=0] (axis cs:0.195165727077961,0) rectangle (axis cs:0.385634868342843,0.454494620100234);
+\draw[fill=color0,draw opacity=0] (axis cs:0.385634868342843,0) rectangle (axis cs:0.576104009607724,0.307778990395484);
+\draw[fill=color0,draw opacity=0] (axis cs:0.576104009607724,0) rectangle (axis cs:0.766573150872605,0.178796416962054);
+\draw[fill=color0,draw opacity=0] (axis cs:0.766573150872605,0) rectangle (axis cs:0.957042292137486,0.106725949752303);
+\draw[fill=color0,draw opacity=0] (axis cs:0.957042292137486,0) rectangle (axis cs:1.14751143340237,0.0712178356552557);
+\draw[fill=color0,draw opacity=0] (axis cs:1.14751143340237,0) rectangle (axis cs:1.33798057466725,0.0402332889680169);
+\draw[fill=color0,draw opacity=0] (axis cs:1.33798057466725,0) rectangle (axis cs:1.52844971593213,0.0146459420222857);
+\addplot [semithick, color1, dashed, forget plot]
+table {%
+-0.916290731874155 0
+-0.916290731874155 1.1
+};
+\nextgroupplot[
+xlabel={\small $\log z_2$},
+xmin=-6.80021124099568, xmax=-2.73544140560854,
+ymin=0, ymax=1.1,
+ytick={0,0.2,0.4,0.6,0.8,1,1.2},
+yticklabels={},
+tick align=outside,
+tick pos=left,
+x grid style={white!80.0!black},
+y grid style={white!80.0!black},
+axis line style={lightgray!20.0!black},
+every tick label/.append style={font=\tiny}
+]
+\draw[fill=color0,draw opacity=0] (axis cs:-6.61544897575081,0) rectangle (axis cs:-6.43068671050594,0.00155010006843349);
+\draw[fill=color0,draw opacity=0] (axis cs:-6.43068671050594,0) rectangle (axis cs:-6.24592444526107,0.0109199786943834);
+\draw[fill=color0,draw opacity=0] (axis cs:-6.24592444526107,0) rectangle (axis cs:-6.0611621800162,0.0299931373576502);
+\draw[fill=color0,draw opacity=0] (axis cs:-6.0611621800162,0) rectangle (axis cs:-5.87639991477133,0.0599126666114924);
+\draw[fill=color0,draw opacity=0] (axis cs:-5.87639991477133,0) rectangle (axis cs:-5.69163764952646,0.114088231014397);
+\draw[fill=color0,draw opacity=0] (axis cs:-5.69163764952646,0) rectangle (axis cs:-5.50687538428159,0.208601036304247);
+\draw[fill=color0,draw opacity=0] (axis cs:-5.50687538428159,0) rectangle (axis cs:-5.32211311903672,0.344252111846013);
+\draw[fill=color0,draw opacity=0] (axis cs:-5.32211311903672,0) rectangle (axis cs:-5.13735085379185,0.482726274663252);
+\draw[fill=color0,draw opacity=0] (axis cs:-5.13735085379185,0) rectangle (axis cs:-4.95258858854698,0.60763922682593);
+\draw[fill=color0,draw opacity=0] (axis cs:-4.95258858854698,0) rectangle (axis cs:-4.76782632330211,0.658922425738011);
+\draw[fill=color0,draw opacity=0] (axis cs:-4.76782632330211,0) rectangle (axis cs:-4.58306405805724,0.679653931681198);
+\draw[fill=color0,draw opacity=0] (axis cs:-4.58306405805724,0) rectangle (axis cs:-4.39830179281237,0.642927817769315);
+\draw[fill=color0,draw opacity=0] (axis cs:-4.39830179281237,0) rectangle (axis cs:-4.2135395275675,0.536100809701184);
+\draw[fill=color0,draw opacity=0] (axis cs:-4.2135395275675,0) rectangle (axis cs:-4.02877726232263,0.399310973494617);
+\draw[fill=color0,draw opacity=0] (axis cs:-4.02877726232263,0) rectangle (axis cs:-3.84401499707776,0.262971445687821);
+\draw[fill=color0,draw opacity=0] (axis cs:-3.84401499707776,0) rectangle (axis cs:-3.65925273183289,0.152771454509885);
+\draw[fill=color0,draw opacity=0] (axis cs:-3.65925273183289,0) rectangle (axis cs:-3.47449046658802,0.101029287421114);
+\draw[fill=color0,draw opacity=0] (axis cs:-3.47449046658802,0) rectangle (axis cs:-3.28972820134315,0.0669270859155767);
+\draw[fill=color0,draw opacity=0] (axis cs:-3.28972820134315,0) rectangle (axis cs:-3.10496593609828,0.0406446629675563);
+\draw[fill=color0,draw opacity=0] (axis cs:-3.10496593609828,0) rectangle (axis cs:-2.92020367085341,0.0114179158672042);
+\addplot [semithick, color1, dashed, forget plot]
+table {%
+-5.29831736654804 0
+-5.29831736654804 1.1
+};
+\nextgroupplot[
+xlabel={\small $\log z_3$},
+xmin=-3.18652438694051, xmax=1.01090210756293,
+ymin=0, ymax=1.1,
+xtick={-4,-3,-2,-1,0,1},
+xticklabels={-4,-3,-2,-1,0,1},
+ytick={0,0.2,0.4,0.6,0.8,1,1.2},
+yticklabels={},
+tick align=outside,
+tick pos=left,
+x grid style={white!80.0!black},
+y grid style={white!80.0!black},
+axis line style={lightgray!20.0!black},
+every tick label/.append style={font=\tiny}
+]
+\draw[fill=color0,draw opacity=0] (axis cs:-2.54723817903503,0) rectangle (axis cs:-2.37887077037445,0.00106433900376329);
+\draw[fill=color0,draw opacity=0] (axis cs:-2.37887077037445,0) rectangle (axis cs:-2.21050336171388,0.00712727011448632);
+\draw[fill=color0,draw opacity=0] (axis cs:-2.21050336171388,0) rectangle (axis cs:-2.04213595305331,0.0176043571827813);
+\draw[fill=color0,draw opacity=0] (axis cs:-2.04213595305331,0) rectangle (axis cs:-1.87376854439274,0.0369857803807744);
+\draw[fill=color0,draw opacity=0] (axis cs:-1.87376854439274,0) rectangle (axis cs:-1.70540113573217,0.0817973033472548);
+\draw[fill=color0,draw opacity=0] (axis cs:-1.70540113573217,0) rectangle (axis cs:-1.5370337270716,0.153535652806265);
+\draw[fill=color0,draw opacity=0] (axis cs:-1.5370337270716,0) rectangle (axis cs:-1.36866631841102,0.253958888719377);
+\draw[fill=color0,draw opacity=0] (axis cs:-1.36866631841102,0) rectangle (axis cs:-1.20029890975045,0.415662393076843);
+\draw[fill=color0,draw opacity=0] (axis cs:-1.20029890975045,0) rectangle (axis cs:-1.03193150108988,0.626553564251084);
+\draw[fill=color0,draw opacity=0] (axis cs:-1.03193150108988,0) rectangle (axis cs:-0.863564092429309,0.80047796109819);
+\draw[fill=color0,draw opacity=0] (axis cs:-0.863564092429309,0) rectangle (axis cs:-0.695196683768737,0.890139019138427);
+\draw[fill=color0,draw opacity=0] (axis cs:-0.695196683768737,0) rectangle (axis cs:-0.526829275108165,0.866352943009681);
+\draw[fill=color0,draw opacity=0] (axis cs:-0.526829275108165,0) rectangle (axis cs:-0.358461866447594,0.73914067449292);
+\draw[fill=color0,draw opacity=0] (axis cs:-0.358461866447594,0) rectangle (axis cs:-0.190094457787022,0.511410139794853);
+\draw[fill=color0,draw opacity=0] (axis cs:-0.190094457787022,0) rectangle (axis cs:-0.0217270491264503,0.314939811818922);
+\draw[fill=color0,draw opacity=0] (axis cs:-0.0217270491264503,0) rectangle (axis cs:0.146640359534121,0.146888285546154);
+\draw[fill=color0,draw opacity=0] (axis cs:0.146640359534121,0) rectangle (axis cs:0.315007768194693,0.0553408766822816);
+\draw[fill=color0,draw opacity=0] (axis cs:0.315007768194693,0) rectangle (axis cs:0.483375176855265,0.0162786849414868);
+\draw[fill=color0,draw opacity=0] (axis cs:0.483375176855265,0) rectangle (axis cs:0.651742585515836,0.00143020553630693);
+\draw[fill=color0,draw opacity=0] (axis cs:0.651742585515836,0) rectangle (axis cs:0.820109994176408,0.00270361113009515);
+\addplot [semithick, color1, dashed, forget plot]
+table {%
+-2.99573227355399 0
+-2.99573227355399 1.1
+};
+\nextgroupplot[
+xlabel={\small $\log z_4$},
+xmin=-7.09633655429136, xmax=-2.94754849748849,
+ymin=0, ymax=1.1,
+xtick={-8,-7,-6,-5,-4,-3,-2},
+xticklabels={-8,-7,-6,-5,-4,-3,-2},
+ytick={0,0.2,0.4,0.6,0.8,1,1.2},
+yticklabels={},
+tick align=outside,
+tick pos=left,
+x grid style={white!80.0!black},
+y grid style={white!80.0!black},
+axis line style={lightgray!20.0!black},
+every tick label/.append style={font=\tiny}
+]
+\draw[fill=color0,draw opacity=0] (axis cs:-6.52805447388269,0) rectangle (axis cs:-6.35845823882844,0.00131606695118323);
+\draw[fill=color0,draw opacity=0] (axis cs:-6.35845823882844,0) rectangle (axis cs:-6.18886200377419,0.00791527005048551);
+\draw[fill=color0,draw opacity=0] (axis cs:-6.18886200377419,0) rectangle (axis cs:-6.01926576871994,0.0168730160730552);
+\draw[fill=color0,draw opacity=0] (axis cs:-6.01926576871995,0) rectangle (axis cs:-5.8496695336657,0.0375715887676502);
+\draw[fill=color0,draw opacity=0] (axis cs:-5.8496695336657,0) rectangle (axis cs:-5.68007329861145,0.0798366779526027);
+\draw[fill=color0,draw opacity=0] (axis cs:-5.68007329861145,0) rectangle (axis cs:-5.5104770635572,0.146239095414274);
+\draw[fill=color0,draw opacity=0] (axis cs:-5.5104770635572,0) rectangle (axis cs:-5.34088082850295,0.233958023816438);
+\draw[fill=color0,draw opacity=0] (axis cs:-5.34088082850295,0) rectangle (axis cs:-5.1712845934487,0.383824558246694);
+\draw[fill=color0,draw opacity=0] (axis cs:-5.1712845934487,0) rectangle (axis cs:-5.00168835839445,0.577743957397747);
+\draw[fill=color0,draw opacity=0] (axis cs:-5.00168835839445,0) rectangle (axis cs:-4.8320921233402,0.736714467511812);
+\draw[fill=color0,draw opacity=0] (axis cs:-4.8320921233402,0) rectangle (axis cs:-4.66249588828595,0.844981021861489);
+\draw[fill=color0,draw opacity=0] (axis cs:-4.66249588828595,0) rectangle (axis cs:-4.4928996532317,0.820301228712414);
+\draw[fill=color0,draw opacity=0] (axis cs:-4.4928996532317,0) rectangle (axis cs:-4.32330341817745,0.740554175390895);
+\draw[fill=color0,draw opacity=0] (axis cs:-4.32330341817745,0) rectangle (axis cs:-4.1537071831232,0.552087727478441);
+\draw[fill=color0,draw opacity=0] (axis cs:-4.1537071831232,0) rectangle (axis cs:-3.98411094806896,0.373465837727705);
+\draw[fill=color0,draw opacity=0] (axis cs:-3.98411094806895,0) rectangle (axis cs:-3.81451471301471,0.212509434472242);
+\draw[fill=color0,draw opacity=0] (axis cs:-3.81451471301471,0) rectangle (axis cs:-3.64491847796046,0.0909123955202665);
+\draw[fill=color0,draw opacity=0] (axis cs:-3.64491847796046,0) rectangle (axis cs:-3.47532224290621,0.0285006326847637);
+\draw[fill=color0,draw opacity=0] (axis cs:-3.47532224290621,0) rectangle (axis cs:-3.30572600785196,0.00818886102958453);
+\draw[fill=color0,draw opacity=0] (axis cs:-3.30572600785196,0) rectangle (axis cs:-3.13612977279771,0.00286327110884667);
+\addplot [semithick, color1, dashed, forget plot]
+table {%
+-6.90775527898214 0
+-6.90775527898214 1.1
+};
+\end{groupplot}
+
+\end{tikzpicture}

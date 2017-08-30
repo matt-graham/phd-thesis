@@ -1,88 +1,24 @@
 \chapter{Continuous tempering}\label{ch:continuous-tempering}
 
-Applications of \ac{MCMC} methods to perform inference in challenging statistical physics problems were among the earliest uses of the first modern electronic computers \citep{robert2011short}. In the years since, \ac{MCMC} methods have become a mainstay for performing approximate inference in complex probabilistic models in most fields of computational science. Statistical physics in particular has continued to contribute to key developments of \ac{MCMC} methodology, 
-such as tempering methods \citep{swendsen1986replica,geyer1991markov,marinari1992simulated} and gradient-based dynamics \citep{duane1987hybrid}.
-
-%both directly through the wider adoption of advances originally developed within the field such as tempering methods \citep{swendsen1986replica,geyer1991markov,marinari1992simulated} and gradient-based dynamics \citep{duane1987hybrid}, and more generally as a source of physical intuition for methods such as Gibbs sampling \citep{geman1984stochastic,gelfand1990sampling}.
-
-The aim in \ac{MCMC} methods is to construct an aperiodic and irreducible Markov chain which leaves a target distribution invariant, so that samples from the chain can be used to form Monte Carlo estimates of expectations with respect to the target distribution. Several general purpose constructions have been developed for specifying valid Markov transition operators for arbitrary target distributions, including Metropolis--Hastings methods \citep{metropolis1953equation,hastings1970monte}, slice sampling \citep{neal2003slice} and Gibbs sampling \citep{geman1984stochastic,gelfand1990sampling}.% methods and combinations thereof. 
-
-While these methods give a basis for constructing chains that will asymptotically give correct inferences, producing algorithms that will give reasonable results in a practical amount of time is still a major challenge. For the restricted case of target distributions defined by densities that are differentiable functions of a real-valued vector variable, \ac{HMC}\footnote{Originally termed \emph{Hybrid Monte Carlo} in \citep{duane1987hybrid}.} \citep{duane1987hybrid,neal2011mcmc} provides a framework for defining efficient Markov chains that exploit the gradient of the target density.
-
-% Markov chains that use the gradient of the target density to converge quickly to the target distribution and to make efficient large moves around it once it is reached.
+In Chapter \ref{ch:approximate-inference} we introduced simulated tempering as an approach for dealing with two key issues with \ac{MCMC} methods: improving exploration of multi-modal distributions and allowing estimation of the normalising constants of target distributions, which is often an important quantity for model comparison.
 
 Although \ac{HMC} is able to efficiently explore contiguous regions of high probability density in a target distribution, as with most \ac{MCMC} methods using local moves it struggles to move between isolated modes in multimodal target distributions \citep{neal2011mcmc}. Tempering methods \citep{swendsen1986replica,geyer1991markov,marinari1992simulated} which augment the state space with an temperature variable are often used to improve exploration in multimodal distributions. As the temperature variable is typically discrete however it cannot be included in \ac{HMC} updates.
 
-In this paper we present an alternative \emph{continuous tempering} approach which instead augments the state with a continuous temperature variable. This allows use of \ac{HMC} to jointly update both the temperature and original state, making the method simple to use with existing \ac{HMC} implementations. The proposed approach both improves exploration of multimodal densities and also provides estimates of the typically unknown normalising constant of the target density, which is often an important inferential quantity in its own right for model comparison \citep{gelman1998simulating}.
+In this Chapter we present an alternative \emph{continuous tempering} approach which instead augments the state with a continuous temperature variable. This allows use of \ac{HMC} to jointly update both the temperature and original state, making the method simple to use with existing \ac{HMC} implementations. The proposed approach both improves exploration of multimodal densities and also provides estimates of the typically unknown normalising constant of the target density, which is often an important inferential quantity in its own right for model comparison \citep{gelman1998simulating}.
 
-\section{Hamiltonian Monte Carlo}
+The work described in this chapter have previously appeared in the published conference paper
+\begin{itemize}
+ \item Continuously tempered Hamiltonian Monte Carlo. Matthew M. Graham and Amos J. Storkey. \emph{Proceedings of the 33rd Conference on Uncertainty in Artificial Intelligence}, 2017.
+\end{itemize}
+I was the primary author of that publication and resposible for the novel contributions made in the paper, as well as performing and analysing the numerical experiments described in the paper, which are reproduced in this chapter in Section \ref{sec:ct-experiments}.
 
-\ac{HMC} can be used to perform inference whenever the target distribution of interest is defined on a random vector $\rvct{x} \in \reals^D = \set{X}$, by a density function which is differentiable and has support almost everywhere in $\set{X}$. Distributions with bounded support can often be mapped to an equivalent unbounded distribution by performing a change of variables via a smooth bijective map \citep{carpenter2016stan,kucukelbir2016automatic}. We will follow the common convention of defining the target density in a Boltzmann-Gibbs form in terms of a real-valued \emph{potential energy} function $\phi : \set{X} \to \reals$ and a (typically unknown) normalising constant $\normconst$,
-\begin{equation}\label{eq:target-density}
-  \pden{\rvct{x}}(\vct{x}) = \frac{1}{\normconst}\exp\lpa-\phi(\vct{x})\rpa.
-\end{equation}
-The key idea of \ac{HMC} is to simulate a Hamiltonian dynamic in an extended state space to form long-range proposals for a Metropolis accept-reject step with a high probability of acceptance. The \emph{target vector} $\rvct{x}$ is augmented with a \emph{momentum vector} $\rvct{p} \in \reals^D$. Typically the momentum is chosen to be independent of $\rvct{x}$ with marginal $\pden{\rvct{p}}(\vct{p}) \propto \exp\lpa -\tau(\vct{p})\rpa$, with a joint density
-\begin{equation}\label{eq:hmc-joint-target}
-\pden{\rvct{x},\rvct{p}}(\vct{x},\vct{p}) = 
-\pden{\rvct{x}}(\vct{x})\,\pden{\rvct{p}}(\vct{p})
-\propto 
-\exp\lpa -\phi(\vct{x}) - \tau(\vct{p})\rpa.
-\end{equation}
-With analogy to classical dynamics, $\tau(\vct{x})$ is referred to as the \emph{kinetic energy} and $\hamiltonian(\vct{x},\,\vct{p}) = \phi(\vct{x}) + \tau(\vct{p})$ is termed the \emph{Hamiltonian}. By construction, marginalising the joint density over the momenta recovers $\pden{\rvct{x}}(\vct{x})$.
+\section{HMC in multimodal distributions}
 
-Each \ac{HMC} update involves a discrete-time simulation of the canonical Hamiltonian dynamic 
-\begin{equation}\label{eq:standard-hamiltonian-dynamic}
-  \td{\vct{x}}{t} = \pd{\hamiltonian}{\vct{p}}\tr = \pd{\tau}{\vct{p}}\tr 
-  \qquad 
-  \td{\vct{p}}{t} = -\pd{\hamiltonian}{\vct{x}}\tr = -\pd{\phi}{\vct{x}}\tr
-\end{equation}
-which conserves the Hamiltonian and is time-reversible and volume-preserving. Through choice of an appropriate symplectic integrator such as the popular leapfrog (St\"ormer-Verlet) scheme, the simulated discrete time dynamic remains exactly time-reversible and volume-preserving and also approximately conserves the Hamiltonian even over long simulated trajectories \citep{leimkuhler2004simulating}.
-
-The discrete-time dynamic is used to generate a new proposed state $(\vct{x}',\,\vct{p}')$ given the current state $(\vct{x},\,\vct{p})$ and this proposal accepted or rejected in a Metropolis step with acceptance probability $\min\lbr 1,\,\exp\lpa \hamiltonian(\vct{x},\,\vct{p})- \hamiltonian(\vct{x}',\,\vct{p}')\rpa\rbr$. Due to the approximate Hamiltonian conservation the acceptance probability is typically close to one, and so \ac{HMC} is able to make long-range moves in high-dimensional state-spaces while still maintaining high acceptance rates, a significant improvement over the behaviour typical of simpler Metropolis--Hastings methods in high-dimensions.
-
-The energy conservation property which gives this desirable behaviour also however suggests that standard \ac{HMC} updates are unlikely to move between isolated modes in a target distribution. The Hamiltonian is approximately conserved over a trajectory therefore $\phi(\vct{x}') - \phi(\vct{x}) \approx \tau(\vct{p}) - \tau(\vct{p}')$. Typically a quadratic kinetic energy  $\tau(\vct{p}) = \vct{p}\tr\mtx{M}^{-1}\vct{p} \,/\,2$ is used corresponding to a Gaussian marginal density on the momentum. As this kinetic energy is bounded below by zero, the maximum change in potential energy over a trajectory is approximately equal to the initial kinetic energy. 
+The energy conservation property which makes Hamiltonian dynamics a desirable proposal generating mechanism for a \ac{MCMC} method also however suggests that standard \ac{HMC} updates are unlikely to move between isolated modes in a target distribution. The Hamiltonian is approximately conserved over a trajectory therefore $\phi(\vct{x}') - \phi(\vct{x}) \approx \tau(\vct{p}) - \tau(\vct{p}')$. Typically a quadratic kinetic energy  $\tau(\vct{p}) = \vct{p}\tr\mtx{M}^{-1}\vct{p} \,/\,2$ is used corresponding to a Gaussian marginal density on the momentum. As this kinetic energy is bounded below by zero, the maximum change in potential energy over a trajectory is approximately equal to the initial kinetic energy. 
 
 At equilibrium the momenta will have a Gaussian distribution and so the kinetic energy a $\chi^2$ distribution with mean $\nicefrac{D}{2}$ and variance $D$ \citep{neal2011mcmc,betancourt2013general}. If potential energy barriers significantly larger than $\sim D$ separate regions of the configuration state space the \ac{HMC} updates are unlikely to move across the barriers meaning impractically long sampling runs will be needed for effective ergodicity.
 
 \section{Thermodynamic methods}
-
-A common approach in \ac{MCMC} methods for dealing with multimodal target distributions is to introduce a concept of temperature. In statistical mechanics, the Boltzmann distribution on a configuration $\rvct{x}$ of a mechanical system with energy function $\phi$ and in thermal equilibrium with a heat bath at temperature $T$ is defined by a probability density $\exp\lpa-\beta\phi(\vct{x})\rpa / \partfunc(\beta)$ where $\beta = (k_B T)^{-1}$ is the \emph{inverse temperature}, $k_B$ is Boltzmann's constant and $\partfunc(\beta)$ is the \emph{partition function}. At high temperatures ($\beta \to 0$) the density function becomes increasingly flat across the target state space and, correspondingly, energy barriers between different regions of the state space become lower.
-
-In the above statistical mechanics formulation, if $\rvct{x} \in \reals^D$ the distribution in the limit $\beta \to 0$ has an improper flat density across the target state space. More usefully from a statistical perspective we can use an inverse temperature variable $\beta \in [0, 1]$ to geometrically bridge between a simple \emph{base distribution} with normalised density $\exp\lpa-\psi(\vct{x})\rpa$ at $\beta=0$ and the target distribution at $\beta=1$
-\begin{align}
-  \pi\lpa\vct{x} \gvn \beta \rpa &=
-  \exp\lpa -\beta\phi(\vct{x}) - (1-\beta)\psi(\vct{x}) \rpa, \label{eq:geometric-bridge} \\
-  \partfunc(\beta) &= 
-  \int_{\set{X}} 
-    \exp\lpa -\beta\phi(\vct{x}) - (1-\beta)\psi(\vct{x}) \rpa
-  \,\dr\vct{x}. \label{eq:partition-function}
-\end{align}
-Several approaches to introducing a system temperature in to \ac{MCMC} methods have been proposed. In \ac{ST} \citep{marinari1992simulated} an ordered set of inverse temperatures are chosen
-\begin{equation}\label{eq:finite-inv-temp-schedule}
-  \fset{\beta_n}_{n=0}^N : 0 = \beta_0 < \beta_1 < \dots < \beta_N = 1,
-\end{equation}
-and a joint distribution defined with density
-\begin{equation}\label{eq:simulated-tempering-joint}
-  \pden{\rvct{x},\upbeta}(\vct{x},\,\beta_n) \propto
-  \pi\lpa\vct{x} \gvn \beta_n \rpa \exp\lpa w_n\rpa,
-\end{equation}
-where $\lbrace w_n\rbrace_{n=0}^N$ are a set of prior weights associated with each inverse temperature. Alternating \ac{MCMC} updates of $\upbeta\gvn\rvct{x}$ and $\rvct{x}\gvn\upbeta$ are performed, with $\rvct{x}$ samples for which $\upbeta=1$ converging in distribution to the target. Updates of the inverse temperature variable can propose moves to a limited set of neighbouring inverse temperatures or sample $\upbeta$ independently from its conditional $\pden{\upbeta|\rvct{x}}(\beta_n\gvn\vct{x})$.
-
-The ratio of the marginal densities of $\pden{\upbeta}(1)$ and $\pden{\upbeta}(0)$ can be related to the usually unknown normalising constant $\normconst$ for the target density by
-\begin{equation}\label{eq:st-marginal-ratio}
-\normconst = \exp(w_0 - w_N) \, \pden{\upbeta}(1)/\pden{\upbeta}(0),
-\end{equation}
-allowing estimation of $\normconst$ from a \ac{ST} chain by computing the ratio of counts of samples with $\upbeta=1$ and $\upbeta=0$. As an alternative \cite{carlson2016partition} proposes to instead use a `\emph{Rao-Blackwellised}' estimator for $\normconst$ based on the identity
-\begin{equation}\label{eq:rao-blackwell-tempered-sampling}
-  \prob{\upbeta}(\beta_n) = 
-  \int_{\set{X}} 
-    \prob{\upbeta|\rvct{x}}(\beta_n\gvn\vct{x})
-    \pden{\rvct{x}}(\vct{x})
-  \,\dr\vct{x} 
-\end{equation}
-which indicates $\prob{\upbeta}(\beta_n)$ can be estimated by averaging the conditional probabilities $\prob{\upbeta|\rvct{x}}(\beta_n\gvn\vct{x})$ across samples of $\rvct{x}$ from the joint in \eqref{eq:simulated-tempering-joint}. The authors empirically demonstrate this estimator can give significantly improved estimation accuracy over the simpler count-based estimator.
-
-A problem for \ac{ST} methods is that as  $\prob{\upbeta}(\beta_n) \propto \partfunc(\beta_n) \,\exp( w_n)$ and the partition function can vary across several orders of magnitude, the chain can mix poorly between inverse temperatures. This is often tackled with an iterative approach in which initial pilot runs are used to estimate $\prob{\upbeta}(\beta_n)$ and the weights $\lbrace w_n\rbrace_{n=0}^N$ set so as to try to flatten out this marginal distribution \cite{geyer1995annealing}.
 
 An alternative is \ac{PT} \citep{swendsen1986replica,geyer1991markov,earl2005parallel}, where multiple Markov chains on the target state are run in parallel, with the $n$\textsuperscript{th} chain having an associated inverse temperature $\beta_n$ defined as in \eqref{eq:finite-inv-temp-schedule}. \ac{MCMC} updates are performed on each chain which leave a distribution with unnormalised density $\pi(\vct{x} \gvn \beta_n)$ invariant. Interleaved with these updates, exchanges of the states of the chains at adjacent inverse temperatures $(\beta_n,\,\beta_{n+1})$ are proposed in a Metropolis--Hastings step. Parallel tempering sidesteps the issue with mixing between inverse temperatures in \ac{ST} by keeping the inverse temperatures for the chains fixed, at a cost of a significantly increased state size.
 
@@ -98,7 +34,7 @@ is an importance weight for the final state $\vct{x}^{(N-1)}$ with respect to th
 
 In cases where an exact sample from the target distribution can be generated, running reversed \ac{AIS} from the target to base distribution allow calculating an unbiased estimate of $\normconst^{-1}$ and so a stochastic upper bound on $\log \normconst$ \citep{grosse2015sandwiching}. This combination of stochastically lower bounding $\log \normconst$ by forward \ac{AIS} runs and stochastically upper bounding by reverse \ac{AIS} runs is termed \emph{bidirectional Monte Carlo}.
 
-%The application of \ac{HMC} updates for the transition operators $\transop_n$ in \ac{AIS} was explored in \citep{sohl2012hamiltonian} and termed \emph{Hamiltonian \ac{AIS}}. The authors suggest using many transitions composed of a single leapfrog step and partial momentum resampling can be preferable to a smaller number of transitions using multiple leapfrog steps and full momentum resampling. 
+The application of \ac{HMC} updates for the transition operators $\transop_n$ in \ac{AIS} was explored in \citep{sohl2012hamiltonian} and termed \emph{Hamiltonian \ac{AIS}}. The authors suggest using many transitions composed of a single leapfrog step and partial momentum resampling can be preferable to a smaller number of transitions using multiple leapfrog steps and full momentum resampling. 
 
 \section{Continuous tempering}
 
@@ -132,7 +68,7 @@ The contact Hamiltonian flow restricted to the zero level-set of the contact Ham
 
 For a quadratic kinetic energy, $\td{\beta}{t}$ is always non-positive and so forward simulation of the contact Hamiltonian flow generates non-increasing trajectories in $\beta$ (and backwards simulation generates non-decreasing trajectories in $\beta$). In the ideal case this allows the inverse temperature range $[0,\,1]$ to be coherently traversed without the random-walk exploration inherent to simulated tempering.
 
-Simulating the contact Hamiltonian flow is non-trivial in practice however: the contact Hamiltonian \eqref{eq:contact-hamiltonian} depends on the log partition function $\log \partfunc(\beta)$, the partial derivatives of which require computing expectations with respect to $\pi(\vct{x}\gvn\beta)$ which for most problems is intractable to do exactly. Moreover the contact flow can encounter meta-stabilities whereby $\td{\beta}{t}$ becomes zero and the flow halts at an intermediate $\beta$ meaning the flow no longer defines a bijection between $\beta=0$ and $\beta=1$. This can be ameliorated by regular resampling of the momenta however this potentially increases random-walk behaviour. %of the overall dynamic.
+Simulating the contact Hamiltonian flow is non-trivial in practice however: the contact Hamiltonian \eqref{eq:contact-hamiltonian} depends on the log partition function $\log \partfunc(\beta)$, the partial derivatives of which require computing expectations with respect to $\pi(\vct{x}\gvn\beta)$ which for most problems is intractable to do exactly. Moreover the contact flow can encounter meta-stabilities whereby $\td{\beta}{t}$ becomes zero and the flow halts at an intermediate $\beta$ meaning the flow no longer defines a bijection between $\beta=0$ and $\beta=1$. This can be ameliorated by regular resampling of the momenta however this potentially increases random-walk behaviour of the overall dynamic.
 
 An alternative \emph{extended Hamiltonian approach} for simulating a system with a continuously varying inverse temperature was proposed recently in the statistical physics literature \citep{gobbo2015extended}. The inverse temperature of the system is indirectly set via an auxiliary variable, which we will term a \emph{temperature control variable} $\rvar{u} \in \reals$. This control variable is mapped to an interval $[s,\,1]$, $0 < s < 1$ via a smooth piecewise defined function $\beta : \reals \to [s,\,1]$, with the conditions that for a pair of thresholds $(\theta_1,\,\theta_2)$ with $0 < \theta_1 < \theta_2$, $\beta(u) = 1 ~\forall~ |u| \leq \theta_1$, $\beta(u) = s ~\forall~ |u| \geq \theta_2$ and $s < \beta(u) < 1 ~\forall~ \theta_1 < |u| < \theta_2$.
 
@@ -249,6 +185,146 @@ We can also estimate expectations with respect to the base density $\pden{\rvct{
 \end{equation}
 Often the base density will have known moments (e.g. mean and covariance of a Gaussian base density) which can be compared to the estimates calculated using \eqref{eq:ct-base-expc-estimator} to check for convergence problems. Convergence of the estimates to the true moments is not a sufficient condition for convergence of the chain to the target joint density \eqref{eq:x-beta-joint-density} but is necessary.
 
+\section{Bounding the inverse temperature marginal density}
+
+We have a joint density on $(\rvct{x},\,\upbeta)$
+\begin{equation}
+\pden{\rvct{x},\upbeta}(\vct{x},\beta) =
+\frac{1}{C} \exp\lpa -\beta\phi(\vct{x}) -\beta\log\zeta -(1-\beta)\psi(\vct{x})\rpa.
+\label{eq:x-beta-joint-density-app}
+\end{equation}
+The resulting marginal density on $\upbeta$ is
+\begin{equation}\label{eq:beta-marginal-density}
+\pden{\upbeta}(\beta) = \int_{\set{X}} \pden{\rvct{x},\upbeta}(\vct{x},\beta) \,\dr\vct{x}
+= \frac{1}{C\zeta^\beta} \int_{\set{X}} \exp\lpa -\beta\phi(\vct{x}) -(1-\beta)\psi(\vct{x})\rpa\,\dr\vct{x}.
+\end{equation}
+To derive an upper-bound on $\pden{\upbeta}(\beta)$ we use H\"older's inequality
+\begin{equation}\label{eq:holders-inequality}
+  \int_{\set{X}} g(\vct{x}) h(\vct{x}) \,\dr\vct{x} \leq 
+  \lpa \int_{\set{X}} |g(\vct{x})|^{\frac{1}{a}} \,\dr\vct{x} \rpa^{a}
+  \lpa \int_{\set{X}} |h(\vct{x})|^{\frac{1}{1-a}} \,\dr\vct{x} \rpa^{1-a}
+\end{equation}
+where $a \in [0,\,1]$ and $g$ and $h$ are measurable functions. We also use the definitions 
+\begin{equation}\label{eq:target-and-based-norm-consts}
+  \int_\set{X} \exp\lpa-\phi(\vct{x})\rpa\,\dr\vct{x} = Z
+  \quad\text{and}\quad
+  \int_\set{X} \exp\lpa-\psi(\vct{x})\rpa\,\dr\vct{x} = 1.
+\end{equation}
+From \eqref{eq:beta-marginal-density} we have that
+\begin{equation}
+  \pden{\upbeta}(\beta)
+  =
+  \frac{1}{C\zeta^{\beta}} 
+  \int_\set{X} 
+    \lpa \exp\lpa-\phi(\vct{x}) \rpa^{\beta}\rpa \lpa \exp\lpa-\psi(\vct{x})\rpa^{1 - \beta}\rpa
+  \,\dr\vct{x}.
+\end{equation}
+Applying H\"older's inequality \eqref{eq:holders-inequality} with $g(\vct{x}) = \exp\lpa-\phi(\vct{x})\rpa^{\beta}$, $h(\vct{x}) = \exp\lpa-\psi(\vct{x})\rpa^{1-\beta}$ and $a = \beta$
+\begin{align}
+  \pden{\upbeta}(\beta)
+  &\leq
+  \frac{1}{C\zeta^{\beta}} 
+  \lpa
+  \int_\set{X} 
+    \left| \exp\lpa-\phi(\vct{x}) \rpa^{\beta} \right|^{\frac{1}{\beta}}
+  \,\dr\vct{x}
+  \rpa^{\beta}
+  \lpa
+  \int_\set{X} 
+    \left|\exp\lpa-\psi(\vct{x})\rpa^{1 - \beta}\right|^{\frac{1}{1-\beta}}
+  \,\dr\vct{x}
+  \rpa^{1-\beta}  
+  \\
+  &=
+  \frac{1}{C\zeta^{\beta}} 
+  \lpa
+  \int_\set{X} 
+    \exp\lpa-\phi(\vct{x})\rpa
+  \,\dr\vct{x}
+  \rpa^{\beta}
+  \lpa
+  \int_\set{X} 
+    \exp\lpa-\psi(\vct{x})\rpa
+  \,\dr\vct{x}
+  \rpa^{1-\beta}.
+\end{align}
+Substituting the definitions in \eqref{eq:target-and-based-norm-consts} gives
+\begin{equation}
+  \pden{\upbeta}(\beta) \leq \frac{1}{C} \lpa \frac{Z}{\zeta} \rpa^\beta.
+\end{equation}
+To derive a lower-bound on $\pden{\upbeta}(\beta)$, we use Jensen's inequality
+\begin{equation}\label{eq:jensens-inequality}
+  \varphi\lpa \int_{\set{X}} g(\vct{x}) q(\vct{x}) \,\dr\vct{x}\rpa \geq
+ \int_{\set{X}} \varphi\lpa g(\vct{x}) \rpa q(\vct{x}) \,\dr\vct{x},
+\end{equation}
+for a concave function $\varphi$, normalised density $q : \int_\set{X} q(\vct{x}) \,\dr\vct{x} = 1$ and measurable $g$. The logarithm of \eqref{eq:beta-marginal-density} gives
+\begin{equation}
+  \log\pden{\upbeta}(\beta) + \beta\log\zeta + \log C
+  =
+  \log\lpa
+  \int_\set{X} 
+    \exp\lpa-\beta\lpa\phi(\vct{x}) - \psi(\vct{x})\rpa\rpa \exp\lpa-\psi(\vct{x})\rpa
+  \,\dr\vct{x}
+  \rpa.
+\end{equation}
+Applying Jensen's inequality \eqref{eq:jensens-inequality} with $\varphi = \log$, $q = \exp(-\psi)$ and $g = \exp\lpa-\beta\lpa\phi - \psi\rpa\rpa$
+\begin{align}
+  \log\pden{\upbeta}(\beta) + \log C + \beta\log\zeta
+  &\geq
+  \beta
+  \int_\set{X} 
+    \lpa\psi(\vct{x}) - \phi(\vct{x})\rpa \exp\lpa-\psi(\vct{x})\rpa
+  \,\dr\vct{x}\\
+  &=
+  \beta
+  \int_\set{X} 
+    \lpa
+    \log Z - \log Z -
+    \log\exp\lpa-\psi(\vct{x}) + \phi(\vct{x})\rpa
+    \rpa 
+    \exp\lpa-\psi(\vct{x})\rpa
+  \,\dr\vct{x}
+  \\ 
+  &=
+  \beta\log Z
+  -\beta
+  \int_\set{X} 
+    \exp\lpa-\psi(\vct{x})\rpa \log\lpa\frac{\exp\lpa-\psi(\vct{x})\rpa}{\exp\lpa-\phi(\vct{x})\rpa / Z}\rpa
+  \,\dr\vct{x}.
+\end{align}
+Recognising the integral in the last line as the \ac{KL} divergence $d^{b\to t}$ from the base density $\exp\lpa-\psi(\vct{x})\rpa$ to the target density $\exp\lpa-\phi(\vct{x})\rpa / Z$
+\begin{equation}
+  d^{b\to t} = \int_{\set{X}} 
+    \exp\lpa -\psi(\vct{x})\rpa \log\lpa\frac{\exp\lpa -\psi(\vct{x})\rpa}{\exp\lpa -\phi(\vct{x})\rpa / Z}\rpa
+  \,\dr\vct{x},
+\end{equation} 
+and taking the exponential of both sides and rearranging we have
+\begin{equation}
+  \pden{\upbeta}(\beta) \geq
+  \frac{1}{C} \lpa \frac{Z}{\zeta} \rpa^\beta \exp\lpa -\beta d^{b\to t}\rpa.
+\end{equation}
+By instead noting \eqref{eq:beta-marginal-density} can be rearranged into the form
+\begin{equation}
+  \log\pden{\upbeta}(\beta) + \log C + \beta\log\zeta - \log Z
+  =
+  \log\lpa
+  \int_\set{X} 
+    \exp\lpa-(1-\beta)\lpa\psi(\vct{x}) - \phi(\vct{x})\rpa\rpa \frac{1}{Z}\exp\lpa-\phi(\vct{x})\rpa
+  \,\dr\vct{x}
+  \rpa,
+\end{equation}
+by an equivalent series of steps we can also derive a bound using the reversed form of the \ac{KL} divergence 
+\begin{equation}
+  d^{t\to b} = \int_{\set{X}} 
+    \frac{1}{Z}\exp\lpa -\phi(\vct{x})\rpa \log\lpa\frac{\exp\lpa -\phi(\vct{x})\rpa / Z}{\exp\lpa -\psi(\vct{x})\rpa}\rpa
+  \,\dr\vct{x}.
+\end{equation} 
+from the target to the base distribution, giving that
+\begin{equation}
+  \pden{\upbeta}(\beta) \geq 
+  \frac{1}{C} \lpa \frac{Z}{\zeta} \rpa^\beta \exp\lpa -(1 - \beta) d^{t\to b}\rpa.
+\end{equation}
+
 \section{Choosing a base density}\label{sec:choosing-base-density}
 
 By applying H\"older's and Jensen's inequalities we can bound $\pden{\upbeta}(\beta)$ (see Appendix A for details)
@@ -275,21 +351,62 @@ A further alternative is to fit multiple local variational approximations $\lbra
   q(\vct{x}) = \frac{1}{\zeta} \sum_{i=1}^L \lpa \exp(\ell_i) q_i(\vct{x}) \rpa,~~
   \zeta = \sum_{i=1}^L \exp(\ell_i),
 \end{equation}
-with $\ell_i$ the final variational objective value for $q_i$ ($\log \normconst$ minus the KL divergence from $q_i$ to target distribution). If the local approximations had non-overlapping support this would lead to a global approximation which is guaranteed to be at least as close in \ac{KL} divergence as any of the local approximations and a $\log \zeta$ which is at least as tight a lower bound on $\log Z$ as any of the individual $\ell_i$ \citep{zobay2009mean}. 
-%Often we may wish to use local approximations with overlapping support (e.g. Gaussian) where the guarantee does not apply. However for the cases of target distributions with multiple isolated modes the `overlap' (regions with high density under multiple $q_i$) between local Gaussian approximations to each mode will often be minimal and so the method is still a useful heuristic. 
- A mixture distribution is unlikely to itself be a good choice of base distribution however, as it will tend to be multimodal. We can therefore instead use a base distribution with moments matched to the fitted mixture, e.g. a Gaussian $\exp[-\psi(\vct{x})]$ with mean and covariance matched to the mean and covariance of the mixture $q(\vct{x})$.
+with $\ell_i$ the final variational objective value for $q_i$ ($\log \normconst$ minus the KL divergence from $q_i$ to target distribution). If the local approximations had non-overlapping support this would lead to a global approximation which is guaranteed to be at least as close in \ac{KL} divergence as any of the local approximations and a $\log \zeta$ which is at least as tight a lower bound on $\log Z$ as any of the individual $\ell_i$ \citep{zobay2009mean}. Often we may wish to use local approximations with overlapping support (e.g. Gaussian) where the guarantee does not apply. However for the cases of target distributions with multiple isolated modes the `overlap' (regions with high density under multiple $q_i$) between local Gaussian approximations to each mode will often be minimal and so the method is still a useful heuristic. A mixture distribution is unlikely to itself be a good choice of base distribution however, as it will tend to be multimodal. We can therefore instead use a base distribution with moments matched to the fitted mixture, e.g. a Gaussian $\exp[-\psi(\vct{x})]$ with mean and covariance matched to the mean and covariance of the mixture $q(\vct{x})$.
 
 For complex target distributions it will sometimes remain difficult to find a reasonable $\psi$ and $\log \zeta$ which well approximate $\phi$ and $\log \normconst$. If the \ac{KL} divergence from the base to target distribution is high, the bounds on the marginal in \eqref{eq:partition-function-bounds} become increasingly loose and this tends to lead to low densities on intermediate inverse temperatures. This reduces the ability of the \ac{MCMC} dynamic to move between the inverse temperatures corresponding to the target and base distributions and so the mixing gain from the augmentation. Similarly from \eqref{eq:beta-marginal-0-1} the density ratio $\pden{\upbeta}(1) \,/ \pden{\upbeta}(0)$ is $\exp(\log \normconst - \log \zeta)$, and so for large $|\log\normconst - \log\zeta|$ the dynamic will tend to spend most of the time close to $\upbeta = 1$ if $\log \normconst  > \log \zeta$ or $\upbeta = 0$ if $\log \normconst < \log \zeta$. In the former case there will be limited gain from using the extended space while in the latter the variance of the estimator in \eqref{eq:ct-target-expc-estimator} will be comparable to directly using an importance sampling estimator for the target using samples from the base distribution.
 
 A natural approach to try to ameliorate these effects is to use an iterative `bootstrap' method. An initial $\psi$ and $\log \zeta$ are chosen for example using a Gaussian variational approximation to the target density as described above. A Markov chain which leaves the joint density \eqref{eq:x-beta-joint-density} invariant is then simulated. The samples from this chain can then be used to both compute an estimate for $\log \normconst$ using \eqref{eq:ct-norm-const-estimator} and updated estimates of the target density mean and covariance using \eqref{eq:ct-target-expc-estimator}. A new Gaussian base density can then be specified with the updated mean and covariance estimates and $\log \zeta$ chosen to be the updated $\log \normconst$ estimate. Samples of the new joint density can then be used to update $\log \zeta$ and $\psi$ again and so on. This is analogous to the iterative approaches often used in \ac{ST} to choose the prior weights on the inverse temperatures \citep{geyer1995annealing,carlson2016partition}. 
 
-%A difficulty presented by the use of a continuous inverse temperature formulation is that it is not as trivial as the discrete case to attempt to flatten out the overall marginal distribution on the inverse temperature by using estimates from an initial run of the relative probabilities (densities) of intermediate $\upbeta \in (0, 1)$ (with the $\log \zeta$ value effectively controlling the relative densities of $\upbeta = 1$ and $\upbeta = 0$). 
+A difficulty presented by the use of a continuous inverse temperature formulation is that it is not as trivial as the discrete case to attempt to flatten out the overall marginal distribution on the inverse temperature by using estimates from an initial run of the relative probabilities (densities) of intermediate $\upbeta \in (0, 1)$ (with the $\log \zeta$ value effectively controlling the relative densities of $\upbeta = 1$ and $\upbeta = 0$). 
 
-%While in the discrete case the weights $\lbrace w_n \rbrace_{n=0}^N$ can be used to arbitrarily reweight the marginal $\prob{\upbeta = \beta_n}$, in the continous case a suitably expressive parametric family across the interval $[0,\,1]$ needs to be chosen for the `prior density' $\rho(\beta)$ used to reweight the marginal density $\pden{\upbeta = \beta} = \int_{\set{X}} \pi(\vct{x}\gvn\beta)\rho(\beta)\dr\vct{x}$. Further, to be able to use the estimators \eqref{eq:ct-norm-const-estimator} and \eqref{eq:ct-target-expc-estimator}, the conditional density $\pden{\upbeta=\beta\gvn\rvct{x}=\vct{x}}$ needs to able to be able to be normalised, which requires that $\rho(\beta)$ is chosen such that the resulting joint density can still be tractably integrated with respect to $\beta$. This can be achieved by using a cubic spline for $\rho(\beta)$ fitted to the inverse of the estimated marginal densities at a series of points, with the resulting piecewise defined exponentially weighted cubic having a tractable integral.
+While in the discrete case the weights $\lbrace w_n \rbrace_{n=0}^N$ can be used to arbitrarily reweight the marginal $\prob{\upbeta = \beta_n}$, in the continous case a suitably expressive parametric family across the interval $[0,\,1]$ needs to be chosen for the `prior density' $\rho(\beta)$ used to reweight the marginal density $\pden{\upbeta = \beta} = \int_{\set{X}} \pi(\vct{x}\gvn\beta)\rho(\beta)\dr\vct{x}$. Further, to be able to use the estimators \eqref{eq:ct-norm-const-estimator} and \eqref{eq:ct-target-expc-estimator}, the conditional density $\pden{\upbeta=\beta\gvn\rvct{x}=\vct{x}}$ needs to able to be able to be normalised, which requires that $\rho(\beta)$ is chosen such that the resulting joint density can still be tractably integrated with respect to $\beta$. This can be achieved by using a cubic spline for $\rho(\beta)$ fitted to the inverse of the estimated marginal densities at a series of points, with the resulting piecewise defined exponentially weighted cubic having a tractable integral.
 
-\section{Experiments}\label{sec:experiments}
+\section{Experiments}\label{sec:ct-experiments}
 
-We performed a series of experiments comparing our proposed approaches to existing methods. Code for running all experiments is available at \url{https://git.io/cthmc}. Appendix \ref{app:exp-bimodal-target} shows an additional illustrative example.
+In the following sections we discuss three experiments comparing the proposed continuous tempering approaches to existing inference methods.
+
+\subsection{One-dimensional bimodal target}\label{subsec:exp-bimodal-target}
+
+\begin{figure}[!t]
+\begin{subfigure}[b]{.5\linewidth}
+\vskip 0pt
+\centering
+\includegraphics[width=0.95\textwidth]{images/continuous-tempering/bimodal-gm-target-and-gaussian-base} 
+\caption{Target (blue curve) \& base (green curve) density functions.}\label{sfig:bimodal-gm-target-and-gaussian-base}
+\end{subfigure}%
+\begin{subfigure}[b]{.5\linewidth}
+\vskip 0pt
+\centering
+\includegraphics[width=0.95\textwidth]{images/continuous-tempering/jct-energy-and-trajectory} 
+\caption{Joint energy (contour plot) \& example trajectory (green curve).}\label{sfig:jct-energy-and-trajectory}
+\end{subfigure}%
+\\
+\begin{subfigure}[b]{.5\linewidth}
+\vskip 5pt
+\centering
+\includegraphics[width=0.95\textwidth]{images/continuous-tempering/jct-prob-dens-and-joint-samples}
+\caption{Joint density (contour plot) and CT HMC samples (circles).}\label{sfig:jct-prob-dens-and-joint-samples}
+\end{subfigure}
+\begin{subfigure}[b]{.5\linewidth}
+\vskip 5pt
+\centering
+\includegraphics[width=0.95\textwidth]{images/continuous-tempering/jct-and-hmc-target-histograms}
+\caption{Histograms from HMC (top) and CT HMC (bottom) samples.}\label{sfig:jct-and-hmc-target-histograms}
+\end{subfigure}
+\caption{Visualisations of \ac{CT} in a bimodal univariate target density. \subref{sfig:bimodal-gm-target-and-gaussian-base} A two-component Gaussian mixture target density (blue curve) and Gaussian base density (green curve) with mean and variance matched to the target. \subref{sfig:jct-energy-and-trajectory} The extended potential energy on the target state $\rvar{x}$ and temperature control variable $\rvar{u}$ (contour plot - dark colours indicate low energy) and an example simulated Hamiltonian trajectory in the joint space (green curve). The temperature control variable bridges the base and target densities lowering energy barriers in the target space. \subref{sfig:jct-prob-dens-and-joint-samples} Joint density on the target state $\rvar{x}$ and inverse temperature $\upbeta$ \eqref{eq:x-beta-joint-density} (contour plot, dark colours indicate high density) and samples from a \ac{CT} \ac{HMC} chain run in the joint space (circles, size of each circle is proportional to $\pden{\upbeta|\rvar{x}}(1\gvn x)$ and so larger symbols indicate a greater weighting in estimates of expectations with respect to the target \eqref{eq:ct-target-expc-estimator}). \subref{sfig:jct-and-hmc-target-histograms} Example target state sample histograms from running standard \ac{HMC} in the original target density (top) and running \ac{HMC} in the extended joint space (bottom).
+}
+\label{fig:1d-gm-vis}
+\end{figure}
+
+We give here an illustrative example of the gains of the proposed approach over standard \ac{HMC} in target densities with isolated modes. We use a one-dimensional Gaussian mixture density with two separated Gaussian components as the target density, shown by the blue curve in Figure \ref{sfig:bimodal-gm-target-and-gaussian-base}. Although performance in this toy univariate model is not necessarily reflective of that in more realistic higher-dimensional models, it has the advantage of allowing the joint density on $\rvar{x}$ and  $\upbeta = \beta(\rvar{u})$ to be directly visualised.
+
+For the base density $\exp[-\psi(x)]$ we use a univariate Gaussian with mean and variance matched to those of the target density (corresponding to the Gaussian density minimising the \ac{KL} divergence from the target to base distribution), shown by the green curve in Figure \ref{sfig:bimodal-gm-target-and-gaussian-base}. We also set $\log \zeta = \log Z$ and so the performance here represents a `best-case' scenario for the continuous tempering approach.
+
+The resulting potential energy ($-\log\pden{\rvar{x},\,\rvar{u}}$) on the extended $(\rvar{x},\,\rvar{u})$ space is shown in Figure \ref{sfig:jct-energy-and-trajectory}. For positive temperature control values (and so inverse temperature values close to 1), the energy surface tends increasingly to the double-well potential corresponding to the target distribution, with a high energy barrier between the two modes. For negative temperature control values the energy surface tends towards the single quadratic well corresponding to the Gaussian base density. The resulting joint energy surface allows for paths between the values of the target state $\rvar{x}$ corresponding to the two modes which have much lower potential energy barriers than the potential barrier between the two modes in the original target space, allowing simulated Hamiltonian trajectories such as that shown in green to more easily explore the target state space. 
+
+Samples from a \ac{HMC} chain on the extended joint space are shown in Figure \ref{sfig:jct-prob-dens-and-joint-samples}, with the joint density on $(\rvar{x},\,\upbeta)$ \eqref{eq:x-beta-joint-density} shown in the background as a contoured heat map. It can be seen that the Hamiltonian dynamic is able to explore the joint space well with good coverage of all of the high density regions. The size of the points in \ref{sfig:jct-prob-dens-and-joint-samples} is proportional to $w_1(x) = \pden{\upbeta|\rvar{x}}(1\gvn x)$ and so reflects the importance weights of the samples in the estimator for expectations with respect to the target in \eqref{eq:ct-target-expc-estimator}. Importantly even points for which $\upbeta$ is close to zero can contribute significantly to the expectations if the corresponding $\rvar{x}$ value is probable under the target: this is in contrast to the extended Hamiltonian approach of \citep{gobbo2015extended} where only a subset of points corresponding to $\upbeta=1$ are used to compute expectations.
+
+The final panel, Figure \ref{sfig:jct-and-hmc-target-histograms} shows empirical histograms on the target variable $\rvar{x}$ estimated from samples of a chain on the extended space (joint continuous tempering, bottom) and standard \ac{HMC} on the original target space (top). As can be seen the standard \ac{HMC} approach gets stuck in one mode thus does not assign any mass to the other mode in the histogram, unlike the tempered chain which identifies both modes and accurately estimates their relative masses.
 
 \subsection{Boltzmann machine relaxations}\label{subsec:exp-bm-relaxations}
 
@@ -384,7 +501,7 @@ As the per-image latent representations are conditionally independent given the 
 
 The results are shown in Figure \ref{fig:iwae-marginal-likelihood-results}, with the curves / points showing average results across 10 independent runs and filled regions / bars $\pm 3$ standard error of means for the estimates. Here Gibbs \ac{CT} and \ac{AIS} perform similarly, with joint \ac{CT} converging less quickly and simulated tempering significantly less efficient. The quick convergence of \ac{AIS} and Gibbs \ac{CT} here suggests the posterior densities are relatively easy for the dynamics to explore and well matched by the Gaussian base densities, limiting the gains from any more coherent exploration of the extended space by the joint \ac{CT} updates. The higher per-leapfrog-step costs of the \ac{HMC} updates in the extended space therefore mean the joint \ac{CT} approach is less efficient overall here. The poorer performance of simulated tempering here is in part due to the generation of the discrete random indices becoming a bottleneck in the \ac{GPU} implementation.
 
-%A possible reason for the better relative performance of \ac{AIS} here compared to the experiments in Section \ref{subsec:exp-bm-relaxations} is its more effective utilisation of the parallel compute cores available when running for example on a \ac{GPU}. Multiple \ac{AIS} chains can be run for each data point and then the resulting unbiased estimates for each data points marginal likelihood averaged (reducing the per data point variance) before taking their product for the joint marginal likelihood estimate. While it is also possible to run multiple tempered chains per data point and similarly combine the estimates, empirically we found that greater gains in estimation accuracy came from running a single longer chain rather than multiple shorter chains of total length equivalent to the longer chain. This can be explained by the initial \emph{warm up} transients of each shorter chain having a greater biasing effect on the overall estimate compared to running longer chains. %Therefore an increase in the number of parallel compute cores available seems to give greater gains for \ac{AIS} versus the tempering methods.
+A possible reason for the better relative performance of \ac{AIS} here compared to the experiments in Section \ref{subsec:exp-bm-relaxations} is its more effective utilisation of the parallel compute cores available when running for example on a \ac{GPU}. Multiple \ac{AIS} chains can be run for each data point and then the resulting unbiased estimates for each data points marginal likelihood averaged (reducing the per data point variance) before taking their product for the joint marginal likelihood estimate. While it is also possible to run multiple tempered chains per data point and similarly combine the estimates, empirically we found that greater gains in estimation accuracy came from running a single longer chain rather than multiple shorter chains of total length equivalent to the longer chain. This can be explained by the initial \emph{warm up} transients of each shorter chain having a greater biasing effect on the overall estimate compared to running longer chains. Therefore an increase in the number of parallel compute cores available seems to give greater gains for \ac{AIS} versus the tempering methods.
 
 \section{Discussion}
 

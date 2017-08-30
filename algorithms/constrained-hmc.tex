@@ -8,8 +8,8 @@
     %$\varphi$ : cached value of potential energy $\phi$ evaluated at $\vct{u}$ in previous transition;\\
     $(\varphi, \mtx{J}, \mtx{L})$ : cached values of $\phi$, $\jacobian{\genfunc_{\rvct{x}}}$ and $\chol\lpa\jacobian{\genfunc_{\rvct{x}}}\jacobian{\genfunc_{\rvct{x}}}\phantom{}\tr\rpa$ evaluated at $\vct{u}$; \\
     $\epsilon$ : convergence tolerance for Newton iteration;\\
-    $M$ : number of Newton iterations to try before rejecting for non-convergence; \\
-    $\delta t$ : integrator time step; \\
+    $I$ : number of Newton iterations to try before rejecting for non-convergence;\\
+    $\delta t$ : integrator time step;~
     $N_s$ : number of time steps to simulate; \\
     $N_g$ : number of geodesic steps per time step.
     \Ensure\\
@@ -18,9 +18,11 @@
 \end{algorithmic}
 \vspace{1mm}
 \hrule
+\vspace{-2mm}
 \begin{multicols}{2}
 \small
-\begin{algorithmic}
+\begin{algorithmic}[1]
+\algrenewcommand\algorithmicindent{1.0em}
     \State $\vct{n} \sim \nrm{\vct{0},\mathbf{I}}$
     \State $\vct{p} \gets \Call{ProjectMom}{\vct{n},\mtx{J},\mtx{L}}$
     \State $\vct{u}_{\mathrm{p}},\vct{p}_{\mathrm{p}},\mtx{J}_{\mathrm{p}},\mtx{L}_{\mathrm{p}} \gets \Call{SimDyn}{\vct{u},\vct{p},\mtx{J},\mtx{L}}$
@@ -37,17 +39,17 @@
     \EndIf
     \State % empty line 
     \Function{SimDyn}{$\vct{u}$, $\vct{p}$, $\mtx{J}$, $\mtx{L}$}
-        \State $\tilde{\vct{p}} \gets \vct{p} - \frac{\delta t}{2} \nabla\phi({\vct{u}})$
+        \State $\tilde{\vct{p}} \gets \vct{p} - \frac{\delta t}{2} \nabla\phi({\vct{u}})\tr$
         \vspace{0.5mm}
         \State $\vct{p} \gets \Call{ProjectMom}{\tilde{\vct{p}},\mtx{J},\mtx{L}}$
         \State $\vct{u},\vct{p},\mtx{J},\mtx{L} \gets \Call{SimGeo}{\vct{u},\vct{p},\mtx{J},\mtx{L}}$
         \For{$s \in \fset{2 \dots N_s}$}
-            \State $\tilde{\vct{p}} \gets \vct{p} - \delta t \nabla\phi({\vct{u}})$
+            \State $\tilde{\vct{p}} \gets \vct{p} - \delta t \nabla\phi({\vct{u}})\tr$
             \vspace{0.5mm}
             \State $\vct{p} \gets \Call{ProjectMom}{\tilde{\vct{p}},\mtx{J},\mtx{L}}$
             \State $\vct{u},\vct{p},\mtx{J},\mtx{L} \gets \Call{SimGeo}{\vct{u},\vct{p},\mtx{J},\mtx{L}}$
         \EndFor
-        \State $\tilde{\vct{p}}\gets \vct{p} - \frac{\delta t}{2} \nabla\phi({\vct{u}})$
+        \State $\tilde{\vct{p}}\gets \vct{p} - \frac{\delta t}{2} \nabla\phi({\vct{u}})\tr$
         \vspace{0.5mm}
         \State $\vct{p} \gets \Call{ProjectMom}{\tilde{\vct{p}},\mtx{J},\mtx{L}}$
         \State \Return $\vct{u},\vct{p},\mtx{J},\mtx{L}$
@@ -60,13 +62,13 @@
     \Function{ProjectPos}{$\vct{u}$, $\mtx{J}$, $\mtx{L}$}
          \State $\vct{\delta} \gets \genfunc_{\rvct{x}}(\vct{u}) - \vct{x}$
          \State $i \gets 0$
-         \While{$\Vert\vct{\delta}\Vert_{\infty} > \epsilon \,\land\, i < M$}
+         \While{$\Vert\vct{\delta}\Vert_{\infty} > \epsilon \,\land\, i < I$}
          \label{ln:convergence-check}
              \State $\vct{u} \gets \vct{u} - \mtx{J}\tr \mtx{L}^{-\textsf{T}} \mtx{L}^{-1} \vct{\delta}$
              \State $\vct{\delta} \gets \genfunc_{\rvct{x}}(\vct{u}) - \vct{x}$
              \State $i \gets i + 1$
          \EndWhile
-         \If{$i = M$} 
+         \If{$i = I$} 
            \State \textbf{raise}  \textsc{RejectMove} \label{ln:non-convergence} 
          \EndIf
          \State \Return $\vct{u}$
@@ -92,3 +94,4 @@
     \EndFunction
 \end{algorithmic}
 \end{multicols}
+\vspace{-2mm}
