@@ -29,8 +29,9 @@
   \op[left= of b] {ub-b} {} {ub} {b} ; %
   \node[latent, right=of a, yshift=-10mm] (p) {$\rvct{p}$} ; %
   \op[left=of p] {a_b-p} {} {a,b} {p} ; %
-  \node[latent] (un) at (b-|p) {$\rvct{u}_x$} ; %
-  \factor[left= of un] {pr-un} {below: \tiny $\nrm{\vct{0},\idmtx}$} {} {un} ; %
+  \node (un) at (b-|p) {} ; %
+%  \node[latent] (un) at (b-|p) {$\rvct{u}_x$} ; %
+%  \factor[left= of un] {pr-un} {below: \tiny $\nrm{\vct{0},\idmtx}$} {} {un} ; %
   \node[obs, right=of un] (x) {$\rvct{x}$} ; %
   \node[latent, below=0.3 of ub] (uc) {$\rvct{u}_c$} ; %
 %  \node[latent, right= of uc] (cxy) {$\rvct{z}_{c,:2}$} ; %

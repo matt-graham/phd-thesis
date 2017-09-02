@@ -15,7 +15,6 @@
 
 \begin{landscape}
 
-\vspace*{-8mm}
 \begin{table}[H]
 \centering
 \begin{tabular}{p{4cm}p{5cm}lll}
@@ -66,15 +65,15 @@ $\mtx{\Sigma} \in \sset{S}^{D}_{++}$ &~: covariance matrix
   $\nrm{\vct{x} \gvn \vct{\mu}, \mtx{\Sigma}}$ & 
   $\frac{1}{\sqrt{(2\uppi)^D|\mtx{\Sigma}|}} \exp\lpa -\frac{1}{2} (\vct{x}-\vct{\mu})\tr\mtx{\Sigma}^{-1}(\vct{x}-\vct{\mu})\rpa$ \\[4mm]
 %%%%%%%%%%%%%
-  Student's \emph{t} & 
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\nu > 0$ &~: degrees of freedom\\[-1mm]
-  $\mu \in \reals$ &~: location\\[-1mm]
-  $\sigma > 0$ &~: scale\\ 
-  \end{tabular} &
-  $\mathrm{StT}(x \gvn \nu, \mu, \sigma)$ & 
-  $\frac{\upGamma\lpa\frac{\nu + 1}{2}\rpa}{\upGamma\lpa\frac{\nu}{2}\rpa\sqrt{\uppi\nu}\sigma}\lpa 1 + \frac{1}{\nu}\lpa\frac{x-\mu}{\sigma}\rpa^2\rpa^{-\frac{\nu + 1}{2}}$\\[6mm] 
+%  Student's \emph{t} & 
+%  \setlength\tabcolsep{0pt}
+%  \begin{tabular}{ll}
+%  $\nu > 0$ &~: degrees of freedom\\[-1mm]
+%  $\mu \in \reals$ &~: location\\[-1mm]
+%  $\sigma > 0$ &~: scale\\ 
+%  \end{tabular} &
+%  $\mathrm{StT}(x \gvn \nu, \mu, \sigma)$ & 
+%  $\frac{\upGamma\lpa\frac{\nu + 1}{2}\rpa}{\upGamma\lpa\frac{\nu}{2}\rpa\sqrt{\uppi\nu}\sigma}\lpa 1 + \frac{1}{\nu}\lpa\frac{x-\mu}{\sigma}\rpa^2\rpa^{-\frac{\nu + 1}{2}}$\\[6mm] 
 %%%%%%%%%%%%%
 %  Cauchy & 
 %  \setlength\tabcolsep{0pt}
@@ -109,8 +108,9 @@ $\mtx{\Sigma} \in \sset{S}^{D}_{++}$ &~: covariance matrix
 \label{tab:standard-distributions-unbounded}
 \end{table}
 \end{landscape}
-
+%
 \begin{landscape}
+\vspace{15mm}
 \begin{table}[htp]
 \centering
 \begin{tabular}{p{4cm}p{5cm}lll}
@@ -165,41 +165,41 @@ $\mtx{\Sigma} \in \sset{S}^{D}_{++}$ &~: covariance matrix
 %  $\frac{x^{\frac{k}{2}-1}\exp\lpa -\frac{x}{2}\rpa}{\Gamma\lpa\frac{k}{2}\rpa 2^{\frac{k}{2}}}$ & 
 %  $x > 0$ \\[2mm]
 %%%%%%%%%%%%%
-  Gamma &
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\alpha > 0$ &~: shape\\[-1mm]
-  $\beta > 0$ &~: rate 
-  \end{tabular} &
-  $\textrm{Gamma}(x \gvn \alpha, \beta)$ & 
-  $\frac{\beta^\alpha}{\upGamma(\alpha)} x^{\alpha - 1} \exp(-\beta x)$& 
-  $x \geq 0$ \\[3mm]
+%  Gamma &
+%  \setlength\tabcolsep{0pt}
+% \begin{tabular}{ll}
+%  $\alpha > 0$ &~: shape\\[-1mm]
+%  $\beta > 0$ &~: rate 
+%  \end{tabular} &
+%  $\textrm{Gamma}(x \gvn \alpha, \beta)$ & 
+%  $\frac{\beta^\alpha}{\upGamma(\alpha)} x^{\alpha - 1} \exp(-\beta x)$& 
+%  $x \geq 0$ \\[3mm]
 %%%%%%%%%%%%%
-  Beta &
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\alpha > 0$ &~: shape\\[-1mm]
-  $\beta > 0$ &~: shape 
-  \end{tabular} &
-  $\textrm{Beta}(x \gvn \alpha, \beta)$ & 
-  $\frac{\upGamma(\alpha + \beta)}{\upGamma(\alpha)\upGamma(\beta)} x^{\alpha - 1} (1 - x)^{\beta - 1}$& 
-  $0 \leq x \leq 1$ \\[3mm]
+%  Beta &
+%  \setlength\tabcolsep{0pt}
+%  \begin{tabular}{ll}
+%  $\alpha > 0$ &~: shape\\[-1mm]
+%  $\beta > 0$ &~: shape 
+%  \end{tabular} &
+%  $\textrm{Beta}(x \gvn \alpha, \beta)$ & 
+%  $\frac{\upGamma(\alpha + \beta)}{\upGamma(\alpha)\upGamma(\beta)} x^{\alpha - 1} (1 - x)^{\beta - 1$& 
+%  $0 \leq x \leq 1$ \\[3mm]
 %%%%%%%%%%%%%
-  Dirichlet &
-  $\vct{\alpha} \in (0,\infty)^K$ : concentration &
-  $\textrm{Dir}(\vct{x} \gvn \vct{\alpha})$ & 
-  $\frac{\upGamma\lpa \sum_{k=1}^K \alpha_k \rpa}{\prod_{k=1}^K \upGamma(\alpha_k)} \prod_{k=1}^K x_i^{\alpha_k -1}$& 
-  $\vct{x} \in \vvmathbb{S}^K$ \\[2mm]
+%  Dirichlet &
+%  $\vct{\alpha} \in (0,\infty)^K$ : concentration &
+%  $\textrm{Dir}(\vct{x} \gvn \vct{\alpha})$ & 
+%  $\frac{\upGamma\lpa \sum_{k=1}^K \alpha_k \rpa}{\prod_{k=1}^K \upGamma(\alpha_k)} \prod_{k=1}^K x_i^{\alpha_k -1}$& 
+%  $\vct{x} \in \vvmathbb{S}^K$ \\[2mm]
 %%%%%%%%%%%%%
-  Lomax &
-  \setlength\tabcolsep{0pt}
-  \begin{tabular}{ll}
-  $\alpha > 0$ &~: shape\\[-1mm]
-  $\beta > 0$ &~: scale 
-  \end{tabular} &
-  $\textrm{Lomax}(x \gvn \alpha, \beta)$ & 
-  $\frac{\alpha\beta^\alpha}{(\beta + x)^{\alpha + 1}}$& 
-  $x \geq 0$ \\
+%  Lomax &
+%  \setlength\tabcolsep{0pt}
+%  \begin{tabular}{ll}
+%  $\alpha > 0$ &~: shape\\[-1mm]
+%  $\beta > 0$ &~: scale 
+%  \end{tabular} &
+%  $\textrm{Lomax}(x \gvn \alpha, \beta)$ & 
+%  $\frac{\alpha\beta^\alpha}{(\beta + x)^{\alpha + 1}}$& 
+%  $x \geq 0$ \\
 \bottomrule
 \end{tabular}
 \caption[Standard bounded density definitions.]{Definitions of densities of parameteric distributions for bounded real random variables used in this thesis.}

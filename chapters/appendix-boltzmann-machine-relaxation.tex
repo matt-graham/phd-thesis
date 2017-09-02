@@ -1,0 +1,112 @@
+\chapter{Boltzmann machine relaxations}\label{app:boltzmann-machine-relaxation}
+
+In this appendix we describe the continuous relaxation of the Boltzmann machine distribution introduced in \citep{zhang2012continuous} and derive some basic results which we use in the experiments with this model in Chapter \ref{ch:continuous-tempering}.
+
+The \emph{Boltzmann machine distribution} on $\rvct{s} \in \lbrace -1,+1\rbrace^{D_B} = \set{S}$ is defined
+\begin{equation}
+\begin{split}
+  \prob{\rvct{s}}(\vct{s}) &= 
+  \frac{1}{Z_B} \exp\lpa\frac{1}{2}\vct{s}\tr\mtx{W}\vct{s} + \vct{s}\tr\vct{b}\rpa
+  \\
+  Z_B &= \sum_{\vct{s}\in\set{S}} \lpa\exp\lpa\frac{1}{2}\vct{s}\tr\mtx{W}\vct{s} + \vct{s}\tr\vct{b}\rpa\rpa.
+\end{split}
+\end{equation}
+\noindent
+We introduce an auxiliary real-valued vector random variable $\rvct{x}\in\reals^D$ with a Gaussian conditional distribution
+\begin{equation}
+  \pden{\rvct{x}|\rvct{s}}(\vct{x} \gvn \vct{s}) =
+  \frac{1}{(2\pi)^{\nicefrac{D}{2}}} \exp\lpa 
+    -\frac{1}{2} \lpa \vct{x} - \mtx{Q}\tr\vct{s} \rpa \tr \lpa \vct{x} - \mtx{Q}\tr\vct{s} \rpa 
+  \rpa
+\end{equation}
+with $\mtx{Q}$ a $D_B \times D$ matrix such that $\mtx{Q}\mtx{Q}\tr = \mtx{W} + \mtx{D}$ for a diagonal $\mtx{D}$ such that $\mtx{W} + \mtx{D} \succeq 0$. In our experiments, based on the observation in \citep{zhang2012continuous} that minimising the maximum eigenvalue of $\mtx{W} + \mtx{D}$ decreases the maximal separation between the Gaussian components in the relaxation, we set $\mtx{D}$ as the solution to the semi-definite programme 
+\begin{equation}
+  \min_{\mtx{D}} \lpa \lambda_{\textsc{max}}\lpa \mtx{W} + \mtx{D} \rpa \rpa 
+  : \mtx{W} + \mtx{D} \succeq 0
+\end{equation}
+where $\lambda_{\textsc{max}}$ denotes the maximal eigenvalue. In general the optimised $\mtx{W} + \mtx{D}$ lies on the semi-definite cone and so has rank less than $D_B$ hence a $\mtx{Q}$ can be found such that $D < D_B$.
+
+\noindent
+The resulting joint distribution on $(\rvct{x},\,\rvct{s})$ is
+\begin{equation}
+\begin{split}
+  &\pden{\rvct{x},\rvct{s}}(\vct{x},\vct{s})
+  =\,\\
+  &\quad
+  \frac{1}{(2\pi)^{\nicefrac{D}{2}} Z_B} \exp\lpa 
+    -\frac{1}{2} \vct{x}\tr\vct{x} + \vct{s}\tr\mtx{Q}\vct{x} 
+    -\frac{1}{2}\vct{s}\tr\mtx{Q}\mtx{Q}\tr\vct{s} + \frac{1}{2}\vct{s}\tr\mtx{W}\vct{s} 
+    + \vct{s}\tr\vct{b}
+  \rpa
+\end{split}
+\end{equation}
+Using that $\mtx{Q}\mtx{Q}\tr = \mtx{W} + \mtx{D}$ this can be simplified to
+\begin{align}
+ \pden{\rvct{x},\rvct{s}}(\vct{x},\vct{s})
+  &=
+  \frac{1}{(2\pi)^{\nicefrac{D}{2}} Z_B} \exp\lpa 
+    -\frac{1}{2} \vct{x}\tr\vct{x} + \vct{s}\tr\lpa \mtx{Q}\vct{x} + \vct{b} \rpa
+    -\frac{1}{2}\vct{s}\tr\mtx{D}\vct{s}
+  \rpa
+  \\
+  &=
+  \frac{\exp\lpa -\frac{1}{2} \vct{x}\tr\vct{x} \rpa}{(2\pi)^{\nicefrac{D}{2}} Z_B \exp\lpa\frac{1}{2}\Tr(\mtx{D})\rpa} 
+  \prod_{i=1}^{D_B} \lpa
+  \exp\lpa
+    s_i\lpa \vct{q}_i\tr\vct{x} + b_i \rpa
+  \rpa
+  \rpa,
+\end{align}
+where $\fset{\vct{q}_i\tr}_{i=1}^{D_B}$ are the $D_B$ rows of $\mtx{Q}$.
+\noindent
+We can marginalise over the binary state $\rvct{s}$ as each $\rvar{s}_i$ is conditionally independent of all the others given $\rvct{x}$ in the joint distribution. This gives the \emph{Boltzmann machine relaxation} density on $\rvct{x}$
+\begin{equation}
+  \pden{\rvct{x}}(\vct{x}) =
+  \frac
+  {2^{D_B} \exp\lpa -\frac{1}{2} \vct{x}\tr\vct{x} \rpa }
+  {(2\pi)^{\nicefrac{D}{2}} Z_B \exp\lpa\frac{1}{2}\Tr(\mtx{D})\rpa} 
+  \prod_{i=1}^{D_B} \lpa \cosh\lpa\vct{q}_i\tr\vct{x} + b_i \rpa\rpa,
+\end{equation}
+which is a structured Gaussian mixture density with $2^{D_B}$ components.
+\noindent
+If we define $\pden{\rvct{x}}(\vct{x}) = \frac{1}{Z} \exp\lpa-\phi(\vct{x})\rpa$ with
+\begin{equation}
+  \phi(\vct{x}) = 
+  \frac{1}{2} \vct{x}\tr\vct{x} -
+  \sum_{i=1}^{D_B} \lpa \log\cosh\lpa\vct{q}_i\tr\vct{x} + b_i \rpa\rpa,
+\end{equation}
+then the normalisation constant $Z$ of the relaxation density can be related to the normalising constant of the corresponding Boltzmann machine distribution by
+\begin{equation}
+  \log{Z} = \log Z_B + \frac{1}{2}\Tr(\mtx{D}) + \frac{D}{2}\log(2\pi) - D_B\log 2.
+\end{equation}
+\noindent
+It can also be shown that the first and second moments of the relaxation distribution are related to the first and second moments of the corresponding Boltzmann machine distribution by
+\begin{equation}
+\begin{split}
+  \expc{\rvct{x}} 
+  &= \int_{\set{X}} \vct{x} \sum_{\vct{s}\in\set{S}} \lpa 
+    \pden{\rvct{x}|\rvct{s}}(\vct{x} \gvn \vct{s}) \,\prob{\rvct{s}}(\vct{s})
+  \rpa 
+  \,\dr\vct{x} \\
+  &= \sum_{\vct{s}\in\set{S}} \lpa 
+    \int_{\set{X}} \vct{x} \,\nrm{\vct{x}; \mtx{Q}\tr\vct{s},\,\idmtx} \,\dr\vct{x}
+    \,\prob{\rvct{s}}(\vct{s})
+  \rpa \\
+  &= \expc{
+    \mtx{Q}\tr\rvct{s}
+  }
+  =
+  \mtx{Q}\tr \expc{\rvct{s}},
+\end{split}
+\end{equation}
+\begin{equation}
+\begin{split}
+  \expc{\rvct{x}\rvct{x}\tr} 
+  &= \sum_{\vct{s}\in\set{S}} \lpa 
+    \int_{\set{X}} \vct{x}\vct{x}\tr \,\nrm{\vct{x}; \mtx{Q}\tr\vct{s},\,\idmtx} \,\dr\vct{x}
+    \,\prob{\rvct{s}}(\vct{s}) 
+  \rpa\\
+  &= \expc{\mtx{Q}\tr\rvct{s}\rvct{s}\mtx{Q} + \idmtx}
+  = \mtx{Q}\tr\expc{\rvct{s}\rvct{s}\tr}\mtx{Q} + \idmtx.
+\end{split}
+\end{equation}

@@ -1,0 +1,21 @@
+\begin{algorithmic}
+\small
+    \Require
+    $(\vct{x}_n, u_n)$ : current target variables -- temperature control state pair,\\
+    $\phi$ : energy function of target distribution,~
+    $\psi$ : energy function of base distribution,~
+    $\zeta$  : target distribution normalising constant estimate, \\
+    $\transop_{\textsc{hmc}}$ : \ac{HMC} transition operator as described in Algorithm \ref{alg:hamiltonian-monte-carlo} using Hamiltonian defined in \eqref{eq:cthmc-hamiltonian}.
+    \Ensure\raggedright
+    $(\vct{x}_{n+1}, u_{n+1})$ : new target variables -- temperature control state pair, ~
+    $(w_{0,n+1}, w_{1,n+1})$ : new importance weight pair.
+\end{algorithmic}
+\hrule
+\small
+\begin{algorithmic}[1]
+  \State $\vct{x}_{n+1}, u_{n+1} \sim \transop_{\textsc{hmc}}(\cdot \gvn \vct{x}_n,\,u_n)$ \Comment{Jointly update $(\rvct{x},\upbeta)$ using \ac{HMC}.}
+  \State $\Delta \gets \phi(\vct{x}) + \log \zeta - \psi(\vct{x})$ \Comment{Calculate energy difference at new state.}
+  \State $w_{0,n+1} \gets \frac{-\Delta}{\exp(-\Delta) - 1}$ \Comment{Calculate target distribution importance weight.}
+  \State $w_{1,n+1} \gets \frac{\Delta}{\exp(\Delta) -1}$ \Comment{Calculate base distribution importance weight.}
+  \State \Return $(\vct{x}_{n+1},\,u_{n+1})$, $(w_{0,n+1},w_{1,n+1})$
+\end{algorithmic}
