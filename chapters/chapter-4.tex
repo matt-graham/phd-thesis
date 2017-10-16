@@ -635,8 +635,9 @@ We begin an initial intuition for the approach, by considering taking the limit 
 %  \,\dr\vct{u}.
 The Dirac delta term restricts the integral across the input space $\set{U}$ to an embedded, $M - N_{\rvct{x}}$ dimensional, implicitly-defined manifold corresponding to the fibre of $\vct{y}$ under $\genfunc_{\rvct{x}}$, $\preimage{\genfunc_{\rvct{x}}}{\vct{y}} \equiv \fset{\vct{u} \in \set{U} :  \genfunc_{\rvct{x}}(\vct{u}) = \vct{y}}$. It is not necessarily immediately clear however how to define the required density on that manifold for arbitrary non-injective $\genfunc_{\rvct{x}}$.
 
+%\marginpar{A foliation of a $D$-dimensional manifold $\set{M}$ is a partition of $\set{M}$ into a set $\lbrace \set{M}_i \rbrace$ of pairwise-disjoint and connected $d < D$ dimensional submanifolds of $\set{M}$ termed the \emph{leaves}, such that the union of the leaves covers $\set{M}$ and locally each .}
 In differentiable generative models we can however use a derivation equivalent to that given by Diaconis, Holmes and Shahshahani in \citep{diaconis2013sampling} for the conditional density on a manifold to find an expression for the conditional expectation consistent with definition given in \eqref{eq:conditional-expectation-property}. %Our derivation is largely a restatement of the results in \citep{diaconis2013sampling} except for the minor difference of working in terms of conditional expectations rather densities. % (with the motivation that the conditional expectation is object we are directly interested in).%; we provide the derivation mainly for completeness and to make it more easily relatable to our notation.
-The key result we use is a formula from geometric measure-theory, Federer's \emph{co-area formula} \citep[\S 3.2.12]{federer2014geometric}. This generalises Fubini's theorem for iterated integrals on spaces defined by a Cartesian product to more general foliations of a space.% that we earlier used implicitly when deriving the \ac{ABC} conditional expectation in \eqref{eq:abc-conditional-expectation-derivation} to cases where the iterated integrals
+The key result we use is a formula from geometric measure-theory, Federer's \emph{co-area formula} \citep[\S 3.2.12]{federer2014geometric}. This generalises Fubini's theorem for iterated integrals on spaces defined by a Cartesian product to more general partitions of a space.% that we earlier used implicitly when deriving the \ac{ABC} conditional expectation in \eqref{eq:abc-conditional-expectation-derivation} to cases where the iterated integrals
 \begin{theorem}[Co-area formula]\label{thm:co-area-formula}
 \marginpar{The $K$-dimensional Hausdorff measure $\haum{K}$ on $\reals^N$ for $K \in \naturals$, $0 < K < N$ formalises a measure of the `volume' of $K$-dimensional submanifolds of $\reals^N$ - e.g. for $K=1$ it corresponds to the length of a curve in $\reals^N$. Additionally $\haum{N} = \lebm{N}$ and $\haum{{\scriptstyle 0}} = \countm$.}
 Let $\set{V} \subseteq \reals^L$ and $\set{W} \subseteq \reals^K$ with $L \geq K$, $\vctfunc{m}:\set{V}\to\set{W}$ be Lipschitz and $\func{h} : \set{V} \to \reals$ be Lebesgue measurable. Then
@@ -980,6 +981,7 @@ These conditions put stricter requirements on the generator $\genfunc_{\rvct{x}}
 \label{fig:disconnected-manifold-example}
 \end{figure}
 
+\marginpar{If $\set{U}$ and \set{V} are an open subset of $\reals^M$ and $\reals^N$ respectively with $N > M$ and $\vctfunc{\phi} : \set{U} \to \set{V}$ is a differentiable map, then $\vctfunc{phi}$ is a \emph{submersion} if the Jacobian $\jacobian{\vctfunc{\phi}}$ is full row-rank everywhere in $\set{U}$.}   
 If we define an augmented `noisy' generator
 \begin{equation}
   \genfunc_{\rvct{y}}(\vct{u},\vct{n}) = \genfunc_{\rvct{x}}(\vct{u}) + \epsilon \vct{n}
