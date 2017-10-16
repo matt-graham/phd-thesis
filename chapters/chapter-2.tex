@@ -168,7 +168,7 @@ To be able to use the inverse \ac{CDF} transform method we need to be able to ev
 
 An important class of generic sampling methods, particularly due their use as a building block in other algorithms, is rejection sampling \citep{vonneumann1951various}. Rejection sampling uses the observation that to sample from a distribution with density $\tgtdens : \set{X} \to [0, \infty)$ it is sufficient to uniformly sample from the volume under the graph of $\lpa\vct{x}, \tgtdens(\vct{x})\rpa$.
 
-The key requirement in rejection sampling is to identify a \emph{proposal distribution} $Q$ which we can generate independent samples from and has a density $q=\pd{Q}{\mu}$ that upper bounds the potentially unnormalised target density $\utgtdens$ across its full support $\set{X}$ when multiplied by a known constant $M$, i.e. $\utgtdens(x) \leq M q(x) ~\forall x \in \set{X}$. The requirement to be able to generate independent samples from $Q$ can be met for example by distributions amenable to transform sampling, e.g. the standard normal. The second requirement is generally more challenging and as we will see the efficiency of rejection sampling methods is very dependent on how tight the bound can be made.
+The key requirement in rejection sampling is to identify a \emph{proposal distribution} $Q$ which we can generate independent samples from and has a density $q=\td{Q}{\mu}$ that upper bounds the potentially unnormalised target density $\utgtdens$ across its full support $\set{X}$ when multiplied by a known constant $M$, i.e. $\utgtdens(x) \leq M q(x) ~\forall x \in \set{X}$. The requirement to be able to generate independent samples from $Q$ can be met for example by distributions amenable to transform sampling, e.g. the standard normal. The second requirement is generally more challenging and as we will see the efficiency of rejection sampling methods is very dependent on how tight the bound can be made.
 
 \begin{algorithm}[!t]
 \caption{Rejection sampling.}
@@ -209,7 +209,7 @@ Although rejection sampling can be an efficient method of sampling from univaria
 
 So far we have considered methods for generating samples directly from a target distribution. Although samples can be of value in themselves for giving a representative set of plausible values from the target distribution (e.g. for visualisation purposes), usually the end goal is to estimate integrals of the form in \eqref{eq:integral-against-density}. 
 
-\emph{Importance sampling} \citep{kahn1951estimation} is a Monte Carlo method which allows arbitrary integrals to be estimated. If $Q$ is a distribution, with density $q = \pd{Q}{\mu}$, which is absolutely continuous with respect to the target distribution (which requires that $\tgtdens(\vct{x}) > 0 \Rightarrow q(\vct{x}) > 0$), then importance sampling is based on the identity
+\emph{Importance sampling} \citep{kahn1951estimation} is a Monte Carlo method which allows arbitrary integrals to be estimated. If $Q$ is a distribution, with density $q = \td{Q}{\mu}$, which is absolutely continuous with respect to the target distribution (which requires that $\tgtdens(\vct{x}) > 0 \Rightarrow q(\vct{x}) > 0$), then importance sampling is based on the identity
 \begin{equation}\label{eq:importance-sampling-integral}
   \bar{f} =
   \frac
