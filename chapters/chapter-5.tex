@@ -135,7 +135,7 @@ In both \ac{AIS} and simulated tempering the choices of the number and spacing o
 \pden{\rvct{x},\upbeta}(\vct{x},\beta) \propto 
 \exp\lpa -\beta\phi(\vct{x}) - (1-\beta)\psi(\vct{x}) \rpa\,\rho(\beta).
 \end{equation}
-with $\rho(\beta)$ a prior density on the inverse temperature variable analogous to the weights $\lbrace w_n \rbrace_{n=0}^N$ in simulated tempering. The authors of \citep{gelman1998simulating} suggest that the `most natural approach' to do this is to use Metropolis or Gibbs transition operator to alternate updates of $\upbeta\gvn\rvct{x}$ and $\rvct{x}\gvn\upbeta$, with they linking this idea to simulated tempering. In of the numerical experiments a random-walk Metropolis scheme is used to perform the updates to $\upbeta$ given $\rvct{x}$.
+with $\rho(\beta)$ a prior density on the inverse temperature variable analogous to the weights $\lbrace w_n \rbrace_{n=0}^N$ in simulated tempering. The authors of \citep{gelman1998simulating} suggest that the `most natural approach' to do this is to use Metropolis or Gibbs transition operator to alternate updates of $\upbeta\gvn\rvct{x}$ and $\rvct{x}\gvn\upbeta$ as an obvious analogue to simulated tempering. In the numerical experiments a random-walk Metropolis scheme is used to perform the updates to $\upbeta$ given $\rvct{x}$.
 
 The authors of \citep{gelman1998simulating} suggest a method to use the samples of a chain with an invariant distribution with density \eqref{eq:path-sampling-target-density} to estimate $\log \normconst$ by utilising the identity
 \vspace{-1mm}
