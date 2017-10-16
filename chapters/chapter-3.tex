@@ -74,7 +74,7 @@ The target distribution $P$ is then the posterior distribution $\prob{\rvct{x}|\
 %    \pden{\rvct{y}|\rvct{x},\rvct{z}}(\vct{y}\gvn\vct{x},\vct{z}) \,\dr\vct{z},
 %\end{split}.
 %\end{equation}
-Generally this integral will not have an analytic solution. We can however form an unbiased estimate of \eqref{eq:pm-target-density-hierarchical-marginal} using importance sampling. We define a \emph{importance distribution} $Q$ which we can generate independent samples from and with a known density $q$ which in general may depend on the values of the target variables $\vct{x}$ and observations $\vct{y}$. If $\lbrace \rvct{z}^{(n)} \rbrace_{n=1}^N$ are a set of independent variables distributed according to $Q$ then we can define a unbiased density estimator $\hat{\rvar{p}}$ as
+Generally this integral will not have an analytic solution. We can however form an unbiased estimate of \eqref{eq:pm-target-density-hierarchical-marginal} using importance sampling. We define a \emph{importance distribution} $Q$ which we can generate independent samples from and with a known density $q$ which in general may depend on the values of the target variables $\vct{x}$ and observations $\vct{y}$ and which the target distribution $P$ must be absolutely continuous with respect to. If $\lbrace \rvct{z}^{(n)} \rbrace_{n=1}^N$ are a set of independent variables distributed according to $Q$ then we can define a unbiased density estimator $\hat{\rvar{p}}$ as
 \begin{equation}\label{eq:pm-hierarchical-model-importance-sampling-estimator}
   \hat{\rvar{p}} = \frac{1}{N} \sum_{n=1}^N \frac{\pden{\rvct{x},\rvct{y},\rvct{z}}(\rvct{x},\vct{y},\rvct{z}^{(n)})}{q(\rvct{z}^{(n)}\gvn\rvct{x},\vct{y})} \implies
   \expc{\hat{\rvar{p}}\gvn\rvct{x} = \vct{x}} = \utgtdens(\vct{x}).
