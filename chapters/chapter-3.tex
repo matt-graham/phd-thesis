@@ -706,7 +706,7 @@ To model the unknown relationship between the input descriptors and binary class
 %    \State $mtx{C} \gets \mathbf{0}$
     \For{$i \in \fset{1\,...\,M}$}
       \State $\rvar{C}_{i,i} \gets \rvar{s} + \epsilon$
-      \For{$j \in \fset{1\,..\,j-1}$}
+      \For{$j \in \fset{1\,...\,i-1}$}
         \State $\rvar{C}_{i,j} \gets \rvar{s} \exp\lpa -\frac{1}{2} \sum_{k=1}^D \lpa \frac{d_k^{(i)} - d_k^{(j)}}{\rvar{\ell}_d} \rpa^2 \rpa$
         \State $\rvar{C}_{j,i} \gets \rvar{C}_{i,j}$
       \EndFor
