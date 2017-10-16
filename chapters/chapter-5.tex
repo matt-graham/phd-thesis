@@ -381,7 +381,7 @@ Taking logarithms of \eqref{eq:ct-beta-marginal} and recalling the previous defi
   \log \int_{\set{X}} \exp\lpa - \beta\phi(\vct{x}) - (1-\beta)\psi(\vct{x})\rpa\,\dr\vct{x}
   - \log C - \beta \log \zeta
   \\ \label{eq:ct-log-beta-marginal}
-  &= \log\pi(\vct{x}\gvn\beta) - \log C - \beta\log\zeta.
+  &= \log\int_{\set{X}}\pi(\vct{x}\gvn\beta)\,\dr\vct{x} - \log C - \beta\log\zeta.
 \end{align}
 We will first show that $\log\pden{\upbeta}$ is convex. Differentiating \eqref{eq:ct-log-beta-marginal} with respect to the inverse temperature and using the earlier definition of the partition function $\partfunc(\beta)$ \eqref{eq:partition-function-def} gives
 \begin{align}\nonumber
