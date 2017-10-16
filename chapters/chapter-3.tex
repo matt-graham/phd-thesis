@@ -204,7 +204,7 @@ Rather than defining the chain state in the pseudo-marginal Metropolis--Hastings
 
 While the formulation of the update in Algorithm \ref{alg:pseudo-marginal-metropolis-hastings} is the more useful for implementation purposes, showing the correctness of the update is simpler when considering the chain state as $(\vct{x},\vct{u})$. We will briefly go through this derivation now as it provides some useful insights in to the pseudo-marginal Metropolis--Hastings algorithm that will help motivate our alternative proposed approaches.
 
-From \eqref{eq:density-unbiased-estimator-property} we known that a distribution on $\set{X}\times\set{U}$ with density
+From \eqref{eq:density-unbiased-estimator-property} we know that a distribution on $\set{X}\times\set{U}$ with density
 \begin{equation}\label{eq:auxiliary-pm-target-density}
   \pi(\vct{x},\vct{u}) = \frac{1}{C} \,\esttgtdens(\vct{x},\vct{u})\,\rho(\vct{u})
 \end{equation}
