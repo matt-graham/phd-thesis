@@ -27,9 +27,9 @@
   \factor[left=of ub] {pr-ub} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {ub} ; %
   \node[latent, right= of ub] (b) {$\rvct{z}_b$} ; %
   \op[left= of b] {ub-b} {} {ub} {b} ; %
-  \node[latent, right=of a, yshift=-10mm] (p) {$\rvct{p}$} ; %
+  \node[latent, right=of a, yshift=-10mm] (p) {$\rvct{P}$} ; %
   \op[left=of p] {a_b-p} {} {a,b} {p} ; %
-  \node (un) at (b-|p) {} ; %
+  \node[latent] (un) at (b-|p) {$\rvct{C}_1$} ; %
 %  \node[latent] (un) at (b-|p) {$\rvct{u}_x$} ; %
 %  \factor[left= of un] {pr-un} {below: \tiny $\nrm{\vct{0},\idmtx}$} {} {un} ; %
   \node[obs, right=of un] (x) {$\rvct{x}$} ; %
@@ -40,8 +40,8 @@
   \factor[left=of uc] {pr-uc} {\tiny $\nrm{\vct{0}, \idmtx}$} {} {uc} ; % 
 %  \node[latent, below=0.3 of cxy] (cz) {$\rvar{z}_{c,2}$} ; %
 %  \op[left= of cz] {uc-cz} {} {uc} {cz} ; %
-  \node[latent, right= of cxy, yshift=-0.15] (cm) {$\rvct{C}$} ; %
+  \node[latent, right= of cxy, yshift=-0.15] (cm) {$\rvct{C}_2$} ; %
 %  \op[left= of cm] {cxy_cz-cm} {} {cxy,cz} {cm} ;
-  \op[left= of cm] {cxy-cm} {} {cxy} {cm}
+  \op[left= of cm] {cxy-cm} {} {cxy} {cm,un}
   \op[left=of x] {un_cm_p-x} {} {un,cm,p} {x} ; %
 \end{tikzpicture}
