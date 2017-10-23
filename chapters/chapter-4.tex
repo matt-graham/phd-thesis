@@ -369,7 +369,7 @@ Comparing this to the definition of the conditional expectation from Chapter \re
   }.
 \end{split}
 \end{equation}
-For the case of a model in which $\prob{\rvct{z}}$ has a density $\pden{\rvct{z}}$ with respect to the Lebesgue measure, then if we use $f = \ind{\set{A}}$ for $\set{A} \in \sset{H}$ in \eqref{eq:abc-expectation} and the definition of a regular conditional distribution in \eqref{eq:regular-conditional-probability} we have
+For the case of a model in which $\prob{\rvct{z}}$ has a density $\pden{\rvct{z}}$ with respect to the Lebesgue measure, then if we use $f = \ind{\set{A}}$ for $\set{A} \in \borel(\set{Z})$ in \eqref{eq:abc-expectation} and the definition of a regular conditional distribution in \eqref{eq:regular-conditional-probability} we have
 \begin{equation}\label{eq:abc-posterior-derivation}
   \prob{\rvct{z}|\rvct{y}}(\set{A}\gvn\vct{y}) = 
   \int_{\set{A}} \frac{\int_{\set{X}} k_{\epsilon}(\vct{y}\gvn\vct{x}) \,\prob{\rvct{x}|\rvct{z}}(\dr\vct{x}\gvn\vct{z}) \,\pden{\rvct{z}}(\vct{z})}{\pden{\rvct{y}}(\vct{y})}\,\dr\vct{z}.
@@ -473,7 +473,7 @@ If we instead use a Gaussian (or other smoothly varying) kernel \eqref{eq:gaussi
 
 Irrespective of the kernel chosen, the estimate formed is only consistent for the \ac{ABC} posterior expectation $\expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y};\,\epsilon}$ rather than the actual posterior expectation $\expc{f(\rvct{z}) \gvn \rvct{x} = \vct{y}}$ we are directly interested in. As $\epsilon \to 0$, $\expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y};\,\epsilon}$ converges to $\expc{f(\rvct{z}) \gvn \rvct{x} = \vct{y}}$, however for reject \ac{ABC} we also have that as $\epsilon \to 0$ the proportion of accepted samples will tend to zero meaning that we need to expend increasing computational effort to get an estimator for $\expc{f(\rvct{z}) \gvn \rvct{y} = \vct{y};\,\epsilon}$ with a similar variance (which by a standard Monte Carlo argument is inversely proportional to the number of accepted samples). In the more general importance sampling case, although we do not explicitly reject any samples if using a kernel with unbounded support, we instead have that as $\epsilon \to 0$ that the kernel weightings in \eqref{eq:abc-kernel-estimator} will becoming increasingly dominated by the few samples closest to the observed data and so the contribution to the estimator \eqref{eq:abc-kernel-estimator} from all but a few will be negligible, again leading to an increasing number of samples being needed to keep the variance of the estimator reasonable - i.e. the same issues which we discussed in the context of more general importance samplers in Chapter \ref{ch:approximate-inference}. For the exact $\epsilon = 0$ case we would only accept (or equivalently put non-zero weight on) samples for which $\rvct{x}_s$ is exactly equal to $\vct{y}$. For $\set{X} \subseteq \reals^{N_{\rvct{x}}}$ if $\prob{\rvct{x}}$ is absolutely continuous with respect to the Lebesgue measure, the event $\rvct{x} = \vct{y}$ has zero measure under $\prob{\rvct{x},\rvct{z}}$\footnote{In reality due the use of finite precision arithmetic the probability of generating values exactly consistent with data though vanishingly small is non-zero.} and so some degree of approximation due to non-zero $\epsilon$ is always required in practice in these simple Monte Carlo \ac{ABC} schemes.
 
-When the dimensionality of the observed variable vector $\rvct{x}$ is high it quickly becomes impractical to reduce the variance of these naive Monte Carlo estimators for \eqref{eq:abc-expectation} to reasonable levels without using large $\epsilon$ which introduces significant approximation error. The \ac{ABC} rejection method is well known to scale poorly with dimensionality due to curse of dimensionality effects \citep{blum2010approximate,marin2012approximate,prangle2015summary}. Although often discussed specifically in the context of \ac{ABC}, the issues faced are much the same as encountered when trying to use any simple rejection or importance sampling scheme to approximate expectations with respect to a probability distribution on a high-dimensional space. If the proposal distribution ($\prob{\rvct{x},\rvct{z}}$ here) is significantly more diffuse than the target distribution ($\prob{\rvct{x},\rvct{z}|\rvct{y}}$ here) an exponentially small proportion of the probability mass of the proposal distribution will lie in the typical set of the target distribution and so very few samples will be accepted / have non-negligible importance weights.
+When the dimensionality of the observed variable vector $\rvct{x}$ is high it quickly becomes impractical to reduce the variance of these naive Monte Carlo estimators for \eqref{eq:abc-expectation} to reasonable levels without using large $\epsilon$ which introduces significant approximation error. The \ac{ABC} rejection method is well known to scale poorly with dimensionality due to curse of dimensionality effects \citep{blum2010approximate,marin2012approximate,prangle2015summary}. Although often discussed specifically in the context of \ac{ABC}, the issues faced are much the same as encountered when trying to use any simple rejection or importance sampling scheme to approximate expectations with respect to a probability distribution on a high-dimensional space. If the proposal distribution ($\prob{\rvct{x},\rvct{z}}$ here) is significantly more diffuse than the target distribution ($\prob{\rvct{x},\rvct{z}|\rvct{y}}$ here) an exponentially small proportion of the probability mass of the proposal distribution will lie in the typical set of the target distribution and so very few samples will be accepted or have non-negligible importance weights.
 
 Rather than conditioning on the full observed data most \ac{ABC} methods used in practice therefore instead use \emph{summary statistics} to extract lower dimensional representations of the observed data \citep{prangle2015summary}. A function $\vctfunc{s} : \set{X} \to \set{T}$ is defined which computes summary statistics from simulated observed outputs $\rvct{x}$ and observed data $\vct{y}$ with the dimensionality of the summaries, $\dim({\set{T}})$, typically much smaller than $N_{\rvct{x}}$. The \ac{ABC} posterior expectation is then computed using
 \begin{equation}
@@ -554,7 +554,7 @@ that we can evaluate up to an unknown normalising constant $\pden{\rvct{y}}(\vct
 
 Importantly as all variables in the model are now being perturbatively updated, we can avoid the curse of dimensionality effects that limit the performance of standard \ac{ABC} approaches when conditioning on large numbers of observed variables. We will however still be susceptible to the standard challenges of ensuring convergence when applying \ac{MCMC} methods in complex high-dimensional target distributions. The dimensionality of the observations and choice of kernel $k_\epsilon$ and tolerance will affect the geometry of the target density and so will have therefore have a bearing on how well chains are able to mix.
 
-For generator functions which are not differentiable or it is non-trivial to calculate derivatives using \ac{AD}, the slice-sampling methods discussed in Chapter \ref{ch:approximate-inference} offer a relatively black-box approach to constructing transition operators which leave the distribution defined by the density \eqref{eq:abc-density-input-space} invariant. The adaptive nature of slice sampling updates will potentially give improved performance in target densities with a complex geometry than simpler approaches such as random-walk Metropolis. To apply slice-sampling to inference in a generative model we only require that the inputs $\rvct{u}$ are real-valued (which does not preclude the inclusion of discrete latent variables in the generative model as these will typically be generated by transforms of standard uniform random inputs) and that we are able evaluate the generator $\genfunc_{\rvct{x}}$ and density $\rho$ of the input distribution $\prob{\rvct{u}}$. If the inputs $\rvct{u}$ are marginally normally distributed, a natural choice is the elliptical slice sampling algorithm described in Algorithm \ref{alg:elliptical-slice-sampling}. If the inputs $\rvct{u}$ instead marginally have a standard uniform distribution, then we can instead apply the reflective variant of linear slice sampling described in Chapter \ref{ch:pseudo-marginal-methods}, and for other input distributions with unbounded support we can use the standard linear slice sampling method (Algorithm \ref{alg:linear-slice-sampling}) without reflections. If different subsets of the inputs have distinct distributions, we may wish to combine different slice-sampling transition operators which each update only a subset of the inputs.
+For generator functions which are not differentiable or it is non-trivial to calculate derivatives using \ac{AD}, the slice-sampling methods discussed in Chapter \ref{ch:approximate-inference} offer a relatively black-box approach to constructing transition operators which leave the distribution defined by the density \eqref{eq:abc-density-input-space} invariant. The adaptive nature of slice sampling updates will potentially give improved performance in target densities with a complex geometry than simpler approaches such as random-walk Metropolis. To apply slice-sampling to inference in a generative model we only require that the inputs $\rvct{u}$ are real-valued (which does not preclude the inclusion of discrete latent variables in the generative model as these will typically be generated by transforms of standard uniform random inputs) and that we are able evaluate the generator $\genfunc_{\rvct{x}}$ and density $\rho$ of the input distribution $\prob{\rvct{u}}$. If the inputs $\rvct{u}$ are marginally normally distributed, a natural choice is the elliptical slice sampling algorithm described in Algorithm \ref{alg:elliptical-slice-sampling}. If the inputs $\rvct{u}$ instead marginally have a standard uniform distribution, then we can instead apply the reflective variant of linear slice sampling described in Chapter \ref{ch:pseudo-marginal-methods}, and for other input distributions with unbounded support we can use the standard linear slice sampling method (Algorithm \ref{alg:linear-slice-sampling}) without reflections. If different subsets of the inputs have distinct properties, we may wish to combine different slice-sampling transition operators which each update only a subset of the inputs.
 
 For the case of differentiable generative models as defined in Definition \ref{def:differentiable-generative-model}, a natural choice of \ac{MCMC} method is Hamiltonian Monte Carlo. In general in this case it will be desirable to use a Gaussian kernel $k_{\epsilon}$ as this is a smooth function of both inputs and if $\rho$ has unbounded support so will the target density \eqref{eq:abc-density-input-space}. For a Gaussian kernel, the potential energy function corresponding to \eqref{eq:abc-density-input-space} is
 \begin{equation}\label{eq:abc-hmc-potential-energy}
@@ -573,7 +573,7 @@ Although this expression involves the generator Jacobian $\jacobian{\genfunc_{\r
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=0.8\textwidth]{images/gaussian-abc-with-hmc-trajectory-gray}
+\includegraphics[width=0.8\textwidth]{images/gaussian-abc-with-hmc-trajectory}
 \caption[Oscillatory Hamiltonian trajectory example.]{Illustration of oscillatory behaviour in \ac{HMC} trajectories when using an \ac{ABC} target density \eqref{eq:abc-density-input-space} in the input space to a generative model. The left axis shows the two-dimensional input space $\set{U}$ of a toy differentiable generative model with a Gaussian input density $\rho$ (green shading). The dashed curve shows the one-dimensional manifold corresponding to the fibre under the generator function $\genfunc_{\rvar{x}}$ of an observed output $x$. The right axis shows the same input space with now the green shading showing the density proportional to $k_\epsilon\lpa x\gvn \genfunc_{\rvar{x}}(\vct{u})\rpa \,\rho(\vct{u})$ with a Gaussian $k_\epsilon$. The red curve shows a simulated \ac{HMC} trajectory using this density as the target: the large magnitude density gradients normal to the manifold cause high-frequency oscillations and slows movement along the manifold (which corresponds to variation in the latent variable $\rvar{z}$).}
 \label{fig:gaussian-abc-hmc-trajectory-example}
 \end{figure} 
@@ -633,24 +633,26 @@ We begin an initial intuition for the approach, by considering taking the limit 
 %    {\delta}\lpa{\vct{y}} - \genfunc_{\rvct{x}}(\vct{u})\rpa\,
 %    \rho(\vct{u})
 %  \,\dr\vct{u}.
+\marginpar{The \emph{fibre} $\vctfunc{m}^{-1}(\vct{y})$ of an element $\vct{y} \in \set{Y}$ under a map $\vctfunc{m} : \set{X} \to \set{Y}$ is the pre-image of the singleton set $\lbrace \vct{y} \rbrace$ under $\vctfunc{m}$.}
 The Dirac delta term restricts the integral across the input space $\set{U}$ to an embedded, $M - N_{\rvct{x}}$ dimensional, implicitly-defined manifold corresponding to the fibre of $\vct{y}$ under $\genfunc_{\rvct{x}}$, $\preimage{\genfunc_{\rvct{x}}}{\vct{y}} \equiv \fset{\vct{u} \in \set{U} :  \genfunc_{\rvct{x}}(\vct{u}) = \vct{y}}$. It is not necessarily immediately clear however how to define the required density on that manifold for arbitrary non-injective $\genfunc_{\rvct{x}}$.
 
 %\marginpar{A foliation of a $D$-dimensional manifold $\set{M}$ is a partition of $\set{M}$ into a set $\lbrace \set{M}_i \rbrace$ of pairwise-disjoint and connected $d < D$ dimensional submanifolds of $\set{M}$ termed the \emph{leaves}, such that the union of the leaves covers $\set{M}$ and locally each .}
 In differentiable generative models we can however use a derivation equivalent to that given by Diaconis, Holmes and Shahshahani in \citep{diaconis2013sampling} for the conditional density on a manifold to find an expression for the conditional expectation consistent with definition given in \eqref{eq:conditional-expectation-property}. %Our derivation is largely a restatement of the results in \citep{diaconis2013sampling} except for the minor difference of working in terms of conditional expectations rather densities. % (with the motivation that the conditional expectation is object we are directly interested in).%; we provide the derivation mainly for completeness and to make it more easily relatable to our notation.
 The key result we use is a formula from geometric measure-theory, Federer's \emph{co-area formula} \citep[\S 3.2.12]{federer2014geometric}. This generalises Fubini's theorem for iterated integrals on spaces defined by a Cartesian product to more general partitions of a space.% that we earlier used implicitly when deriving the \ac{ABC} conditional expectation in \eqref{eq:abc-conditional-expectation-derivation} to cases where the iterated integrals
+
 \begin{theorem}[Co-area formula]\label{thm:co-area-formula}
 \marginpar{The $K$-dimensional Hausdorff measure $\haum{K}$ on $\reals^N$ for $K \in \naturals$, $0 < K < N$ formalises a measure of the `volume' of $K$-dimensional submanifolds of $\reals^N$ - e.g. for $K=1$ it corresponds to the length of a curve in $\reals^N$. Additionally $\haum{N} = \lebm{N}$ and $\haum{{\scriptstyle 0}} = \countm$.}
-Let $\set{V} \subseteq \reals^L$ and $\set{W} \subseteq \reals^K$ with $L \geq K$, $\vctfunc{m}:\set{V}\to\set{W}$ be Lipschitz and $\func{h} : \set{V} \to \reals$ be Lebesgue measurable. Then
+Let $\set{V} \subseteq \reals^L$ and $\set{W} \subseteq \reals^K$ with $L \geq K$, and let $\vctfunc{m}:\set{V}\to\set{W}$ be a Lipschitz function and $\func{h} : \set{V} \to \reals$ a Lebesgue measurable function. Then
 \begin{equation}\label{eq:co-area-formula}
     \int_{\set{V}} 
       \func{h}(\vct{v}) \, \jacobproddet{\vctfunc{m}}{\vct{v}}
-    \,\dr\lebm{L}(\vct{v})
+    \,\lebm{L}(\dr\vct{v})
     = 
     \int_{\set{W}}
-      \int_{\preimage{\vctfunc{m}}{\vct{w}}} \func{h}(\vct{v}) \,\dr\haum{L-K}(\vct{v})
-    \,\dr\lebm{K}(\vct{w})
+      \int_{\preimage{\vctfunc{m}}{\vct{w}}} \func{h}(\vct{v}) \,\haum{L-K}(\dr\vct{v})
+    \,\lebm{K}(\dr\vct{w})
 \end{equation}
-with $\haum{L-K}$ denoting the $L-K$-dimensional Hausdorff measure and $\jacobproddet{\vctfunc{m}}{\vct{v}}$ denoting the generalised Jacobian determinant
+with $\haum{L-K}$ denoting the $L-K$-dimensional Hausdorff measure and $\jacobproddet{\vctfunc{m}}{\vct{v}}$ denoting the generalised Jacobian determinant for `wide' rectangular Jacobian matrices
 \begin{equation}\label{eq:jacobian-product-det}
   \jacobproddet{\vctfunc{m}}{\vct{v}} \equiv 
   \left|\,\jacob{\vctfunc{m}}{\vct{u}}\jacob{\vctfunc{m}}{\vct{u}}\tr\right|^{\frac{1}{2}}.
@@ -668,7 +670,7 @@ If $Q$ is a probability measure on $\set{V}$ with density $q$ with respect to th
 \begin{split}
     &\int_{\set{V}} 
       \func{h}'(\vct{v})\,q(\vct{v})
-    \,\dr\lebm{L}(\vct{v})
+    \,\lebm{L}(\dr\vct{v})
     =\,\\
     &\qquad
     \int_{\set{W}}
@@ -676,8 +678,8 @@ If $Q$ is a probability measure on $\set{V}$ with density $q$ with respect to th
         \func{h}'(\vct{v}) \,
         q(\vct{v})\,
         \jacobproddet{\vctfunc{m}}{\vct{v}}^{-1}
-      \,\dr\haum{L-K}(\vct{v})
-    \,\dr\lebm{K}(\vct{w}).
+      \,\haum{L-K}(\dr\vct{v})
+    \,\lebm{K}(\dr\vct{w}).
 \end{split}
 \end{equation}
 \end{corollary}
@@ -692,7 +694,7 @@ For a differentiable generative model $(\set{U},\sset{F}\kern-2pt,\rho,\mu,\genf
   \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}}
     \rho(\vct{u})\,
     \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
-  \,\dr\haum{M-N_{\rvct{x}}}(\vct{u})
+  \,\haum{M-N_{\rvct{x}}}(\dr\vct{u})
   \qquad \forall \vct{x} \in\set{X}.
 \end{equation}
 %with $\genfunc_{\rvct{x}}^{-1}[\vct{x}] = \fset{\vct{u} \in \set{U} : \genfunc_{\rvct{x}}(\vct{u}) = \vct{x}}$.
@@ -704,18 +706,18 @@ From Definition \ref{def:differentiable-generative-model} we have that $\rvct{x}
   =
   \int_{\set{U}} 
     \ind{\set{A}}\circ\,\genfunc_{\rvct{x}}(\vct{u})\,\rho(\vct{u})
-  \,\dr\lebm{M}(\vct{u})
-  \qquad \forall \set{A} \in\sset{G}.
+  \,\lebm{M}(\dr\vct{u})
+  \qquad \forall \set{A} \in\borel(\set{X}).
 \end{equation*}
-As $\genfunc_{\rvct{x}}$ is Lipschitz and $\jacobian{\genfunc_{\rvct{x}}}$ has full row-rank $\prob{\rvct{u}}$-almost everywhere we can apply Corollary \ref{col:co-area-formula}, and so we have that $\forall \set{A} \in\sset{G}$
+As $\genfunc_{\rvct{x}}$ is Lipschitz and $\jacobian{\genfunc_{\rvct{x}}}$ has full row-rank $\prob{\rvct{u}}$-almost everywhere we can apply Corollary \ref{col:co-area-formula}, and so we have that $\forall \set{A} \in\borel(\set{X})$
 \begin{equation*}
   \prob{\rvct{x}}(\set{A}) =
   \int_{\set{X}}
   \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}}\kern-1pt
     \ind{\set{A}}\!\circ\,\genfunc_{\rvct{x}}(\vct{u})\,\rho(\vct{u})\,
     \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
-  \,\dr\haum{M-{N_{\rvct{x}}}}(\vct{u})
-  \,\dr\lebm{N_{\rvct{x}}}(\vct{x}).
+  \,\haum{M-{N_{\rvct{x}}}}(\dr\vct{u})
+  \,\lebm{N_{\rvct{x}}}(\dr\vct{x}).
 \end{equation*}
 The term $\ind{\set{A}}\!\circ\,\genfunc_{\rvct{x}}(\vct{u})$ inside the inner integral is equal to $\ind{\set{A}}(\vct{x})$ across all points in the fibre $\preimage{\genfunc_{\rvct{x}}}{\vct{x}}$ being integrated across and so can be taken outside the inner integral to give
 \begin{align*}
@@ -726,20 +728,20 @@ The term $\ind{\set{A}}\!\circ\,\genfunc_{\rvct{x}}(\vct{u})$ inside the inner i
   \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}} 
    \rho(\vct{u})\,
    \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
-  \,\dr\haum{M-{N_{\rvct{x}}}}(\vct{u})
-  \,\dr\lebm{N_{\rvct{x}}}(\vct{x})\\
+  \,\haum{M-{N_{\rvct{x}}}}(\dr\vct{u})
+  \,\lebm{N_{\rvct{x}}}(\dr\vct{x})\\
   &=
   \int_{\set{A}}
   \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}} 
    \rho(\vct{u})\,
    \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
-  \,\dr\haum{M-{N_{\rvct{x}}}}(\vct{u})
-  \,\dr\lebm{N_{\rvct{x}}}(\vct{x}).
+  \,\haum{M-{N_{\rvct{x}}}}(\dr\vct{u})
+  \,\lebm{N_{\rvct{x}}}(\dr\vct{x}).
 \end{align*}
 By definition the density $\pden{\rvct{x}}$ of a probability measure $\prob{\rvct{x}}$ with respect to the Lebesgue measure $\lebm{N_{\rvct{x}}}$ satisfies
 \begin{equation*}
-  \prob{\rvct{x}}(\set{A}) = \int_{\set{A}} \pden{\rvct{x}}(\vct{x}) \,\dr\lebm{N_{\rvct{x}}}(\vct{x})
-  \qquad \forall \set{A} \in \sset{G}
+  \prob{\rvct{x}}(\set{A}) = \int_{\set{A}} \pden{\rvct{x}}(\vct{x}) \,\lebm{N_{\rvct{x}}}(\dr\vct{x})
+  \qquad \forall \set{A} \in \borel(\set{X})
 \end{equation*}
 $\therefore$ $\prob{\rvct{x}}$ has a density corresponding to \eqref{eq:dgm-marginal-density-x} with respect to $\lebm{N_{\rvct{x}}}$. \qedhere
 \end{proof}
@@ -755,45 +757,45 @@ For a differentiable generative model $(\set{U},\sset{F}\kern-2pt,\rho,\mu,\genf
   \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}}
     f\circ\genfunc_{\rvct{z}}(\vct{u}) \, \rho(\vct{u}) \,
     \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
-  \,\dr\haum{M-N_{\rvct{x}}}(\vct{u}).
+  \,\haum{M-N_{\rvct{x}}}(\dr\vct{u}).
 \end{split}
 \end{equation}
 %with $\set{C} = \fset{\vct{u} \in \set{U} :  \genfunc_{\rvct{x}}(\vct{u}) = \vct{x}}$.
 \end{proposition}
 \begin{proof}
-Restating the general definition for a conditional expectation from Chapter \ref{ch:probabilistic-modelling}, we need to find a measurable function $\expc{f(\rvct{z}) \gvn \rvct{x}\,} : \set{X} \to \reals$ which $\forall\set{A} \in \sset{G}$ satisfies
+Restating the general definition for a conditional expectation from Chapter \ref{ch:probabilistic-modelling}, we need to find a measurable function $\expc{f(\rvct{z}) \gvn \rvct{x}\,} : \set{X} \to \reals$ which $\forall\set{A} \in \borel(\set{X})$ satisfies
 \begin{equation*}
   \int_{\set{A}}
     \expc{f(\rvct{z}) \gvn \rvct{x} = \vct{x}} 
-  \,\dr\prob{\rvct{x}}(\vct{x}) =
+  \,\prob{\rvct{x}}(\dr\vct{x}) =
   \int_{\set{A} \times \set{Z}}
     f(\vct{z}) 
-  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z}),
+  \,\prob{\rvct{x},\rvct{z}}(\dr\vct{x},\dr\vct{z}),
 \end{equation*}
-with this uniquely defining the conditional expectation up to $\prob{\rvct{x}}$-null sets. Using $\rvct{x} = \genfunc_{\rvct{x}}(\rvct{u})$, $\rvct{z} = \genfunc_{\rvct{z}}(\rvct{u})$ and $\pden{\rvct{u}} = \rho$ we have that $\forall\set{A} \in \sset{G}$
+with this uniquely defining the conditional expectation up to $\prob{\rvct{x}}$-null sets. Using $\rvct{x} = \genfunc_{\rvct{x}}(\rvct{u})$, $\rvct{z} = \genfunc_{\rvct{z}}(\rvct{u})$ and $\pden{\rvct{u}} = \rho$ we have that $\forall\set{A} \in \borel(\set{X})$
 \begin{equation*}
   \int_{\set{A} \times \set{Z}}
     f(\vct{z}) 
-  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z}) =
+  \,\prob{\rvct{x},\rvct{z}}(\dr\vct{x},\dr\vct{z}) =
   \int_{\set{U}}
   \ind{\set{A}}\circ\,\genfunc_{\rvct{x}}(\vct{u})\,
   f\circ\genfunc_{\rvct{z}}(\vct{u})\,
   \rho(\vct{u})
-  \,\dr\lebm{M}(\vct{u}).
+  \,\lebm{M}(\dr\vct{u}).
 \end{equation*}
-Applying the co-area corollary \eqref{eq:co-area-formula-corollary} to the right-hand side and again noting the indicator term $\ind{\set{A}}\circ\,\genfunc_{\rvct{x}}(\vct{u})$ is constant across the fibre being integrated on, we have that $\forall \set{A} \in\sset{G}$
+Applying the co-area corollary \eqref{eq:co-area-formula-corollary} to the right-hand side and again noting the indicator term $\ind{\set{A}}\circ\,\genfunc_{\rvct{x}}(\vct{u})$ is constant across the fibre being integrated on, we have that $\forall \set{A} \in\borel(\set{X})$
 \begin{align*}
   &\int_{\set{A} \times \set{Z}}
     f(\vct{z}) 
-  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z})\\
+  \,\prob{\rvct{x},\rvct{z}}(\dr\vct{x},\dr\vct{z})\\
   &=
   \int_{\set{X}} \int_{\preimage{\genfunc_{\rvct{x}}}{\vct{x}}}
    \ind{\set{A}}\circ\,\genfunc_{\rvct{x}}(\vct{u})\,
    f\circ\genfunc_{\rvct{z}}(\vct{u})\,
    \rho(\vct{u})\,
    \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
-  \,\dr\haum{M-{N_{\rvct{x}}}}(\vct{u})
-  \,\dr\lebm{N_{\rvct{x}}}(\vct{x})
+  \,\haum{M-{N_{\rvct{x}}}}(\dr\vct{u})
+  \,\lebm{N_{\rvct{x}}}(\dr\vct{x})
   \\
   &=
   \int_{\set{A}}
@@ -801,15 +803,15 @@ Applying the co-area corollary \eqref{eq:co-area-formula-corollary} to the right
    f\circ\genfunc_{\rvct{z}}(\vct{u})\,
    \rho(\vct{u})\,
    \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
-  \,\dr\haum{M-{N_{\rvct{x}}}}(\vct{u})
-  \,\dr\lebm{N_{\rvct{x}}}(\vct{x}).
+  \,\haum{M-{N_{\rvct{x}}}}(\dr\vct{u})
+  \,\lebm{N_{\rvct{x}}}(\dr\vct{x}).
 \end{align*}
 Finally using that $\prob{\rvct{x}}$ has a density $\pden{\rvct{x}}$ with respect to the Lebesgue measure as shown in the previous proposition, we have that
 \begin{equation*}
 \begin{split}
   &\int_{\set{A} \times \set{Z}}
     f(\vct{z}) 
-  \,\dr\prob{\rvct{x},\rvct{z}}(\vct{x},\vct{z}) =\,\\
+  \,\prob{\rvct{x},\rvct{z}}(\dr\vct{x},\dr\vct{z}) =\,\\
   &\qquad
   \int_{\set{A}}
   \frac{1}{\pden{\rvct{x}}(\vct{x})}
@@ -817,8 +819,8 @@ Finally using that $\prob{\rvct{x}}$ has a density $\pden{\rvct{x}}$ with respec
    f\circ\genfunc_{\rvct{z}}(\vct{u})\,
    \rho(\vct{u})\,
    \jacobproddet{\genfunc_{\rvct{x}}}{\vct{u}}^{-1}
-  \,\dr\haum{M-{N_{\rvct{x}}}}(\vct{u})
-  \,\dr\prob{\rvct{x}}(\vct{x}).
+  \,\haum{M-{N_{\rvct{x}}}}(\dr\vct{u})
+  \,\prob{\rvct{x}}(\dr\vct{x}).
 \end{split}
 \end{equation*}
 Note that as we are integrating against the probability measure $\prob{\rvct{x}}$ we can safely ignore the points for which $\pden{\rvct{x}}(\vct{x}) = 0$ as the set of all such points naturally has zero measure under $\prob{\rvct{x}}$ and so does not contribute to integral. Comparing to the definition of the conditional expectation we have that \eqref{eq:cond-expectation-input-space} satisfies the definition. \qedhere
@@ -1038,7 +1040,7 @@ The constrained \ac{HMC} implementation we propose for performing inference in d
 
 Rather than the RATTLE integrator used in \citep{brubaker2012family}, we use the geodesic integrator generalisation discussed in the previous section to simulate the dynamic. This gives increased flexibility in balancing the need for an appropriately small step-size to ensure convergence of the iterative solution of the equations projecting on to the constraint manifold and using a more efficient larger step size for updates to the momentum due to the potential energy gradient. We have assumed $\mtx{M} = \idmtx$ here; other mass matrix choices can be implemented by reparameterising the model with an initial linear transformation stage in the generator.
 
-The projection on to the constraint manifold in the geodesic steps corresponding to \eqref{eq:rattle-step-a} is performed in the function \textsc{ProjectPos} in Algorithm \ref{alg:constrained_hmc}. We use a quasi-Newton method for solving for $\vct{\lambda}$ the system of equations $\genfunc_{\rvct{x}}(\tilde{\vct{u}} + (\nicefrac{\delta t}{N_g}) \vct{p} - \mtx{J}\tr\vct{\lambda}) = \vct{x}$ where $\mtx{J} = \jacob{\genfunc_{\rvct{x}}}{\vct{u}}$. The true Newton update would be
+The projection on to the constraint manifold in the geodesic steps corresponding to \eqref{eq:rattle-step-a} is performed in the function \textsc{ProjectPos} in Algorithm \ref{alg:constrained_hmc}. We use a quasi-Newton method for solving for $\vct{\lambda}$ the system of equations $\genfunc_{\rvct{x}}(\vct{u} + (\nicefrac{\delta t}{N_g}) \vct{p} - \mtx{J}\tr\vct{\lambda}) = \vct{x}$ where $\mtx{J} = \jacob{\genfunc_{\rvct{x}}}{\vct{u}}$. The true Newton update would be
 \begin{equation}\label{eq:newton-iteration}
     \vct{u}'\gets \vct{u}' - 
     \mtx{J}\tr
@@ -1121,7 +1123,7 @@ For models with these structures the generator Jacobian
    \pd{\genfunc_{\rvct{x}}}{\vct{u}_2}
   \rsb
 \end{equation}
-has a component $\pd{\genfunc_{\rvct{x}}}{\vct{u}_2}$ which is either block-diagonal (independent) or block-triangular (Markovian). Considering first the simplest case where each $(\rvct{x}_i,\rvct{u}_{2,i})$ pair are single dimensional, the Cholesky decomposition of $\jacobian{\genfunc_{\rvct{x}}}\jacobian{\genfunc_{\rvct{x}}}\phantom{}\tr = \pd{\genfunc_{\rvct{x}}}{\vct{u}_1}\pd{\genfunc_{\rvct{x}}}{\vct{u}_1}\tr + \pd{\genfunc_{\rvct{x}}}{\vct{u}_2} \pd{\genfunc_{\rvct{x}}}{\vct{u}_2}\tr$ can then be computed by low-rank Cholesky updates of the triangular / diagonal matrix $\pd{\genfunc_{\rvct{x}}}{\vct{u}_2}$ with each of the columns of $\pd{\genfunc_{\rvct{x}}}{\vct{u}_1}$. As $\dim(\vct{u}_1) = L$ is often significantly less than the number of observations being conditioned on $N_{\rvct{x}}$, the resulting $\mathcal{O}(LN_{\rvct{x}}^2)$ cost of the low-rank Cholesky updates is a significant improvement over the original $\mathcal{O}(N_{\rvct{x}}^3)$. For cases in which each $(\rvct{x}_i,\rvct{u}_{2,i})$ pair are both vectors of dimension $D$ (i.e. $N_{\rvct{x}} = GD$) and so $\pd{\genfunc_{\rvct{x}}}{\vct{u}_2}$ is block diagonal / triangular, then the Cholesky factorisation of  $\pd{\genfunc_{\rvct{x}}}{\vct{u}_2} \pd{\genfunc_{\rvct{x}}}{\vct{u}_2}\phantom{}\tr$ can be computed at a cost $\mathcal{O}(G D^3)$ for block diagonal, and $\mathcal{O}(G^2 D^3)$ for block triangular $\pd{\genfunc_{\rvct{x}}}{\vct{u}_2}$, with then again $\mathcal{O}(LN_{\rvct{x}}^2)$ cost low-rank updates of this Cholesky factor by the columns of $\pd{\genfunc_{\rvct{x}}}{\vct{u}_1}$ performed. 
+has a component $\pd{\genfunc_{\rvct{x}}}{\vct{u}_2}$ which is either block-diagonal (independent) or block-triangular (Markovian). Considering first the simplest case where each $(\rvct{x}_i,\rvct{u}_{2,i})$ pair are single dimensional, the Cholesky decomposition of $\jacobian{\genfunc_{\rvct{x}}}\jacobian{\genfunc_{\rvct{x}}}\phantom{}\tr = \pd{\genfunc_{\rvct{x}}}{\vct{u}_1}\pd{\genfunc_{\rvct{x}}}{\vct{u}_1}\tr + \pd{\genfunc_{\rvct{x}}}{\vct{u}_2} \pd{\genfunc_{\rvct{x}}}{\vct{u}_2}\tr$ can then be computed by low-rank Cholesky updates of the triangular or diagonal matrix $\pd{\genfunc_{\rvct{x}}}{\vct{u}_2}$ with each of the columns of $\pd{\genfunc_{\rvct{x}}}{\vct{u}_1}$. As $\dim(\vct{u}_1) = L$ is often significantly less than the number of observations being conditioned on $N_{\rvct{x}}$, the resulting $\mathcal{O}(LN_{\rvct{x}}^2)$ cost of the low-rank Cholesky updates is a significant improvement over the original $\mathcal{O}(N_{\rvct{x}}^3)$. For cases in which each $(\rvct{x}_i,\rvct{u}_{2,i})$ pair are both vectors of dimension $D$ (i.e. $N_{\rvct{x}} = GD$) and so $\pd{\genfunc_{\rvct{x}}}{\vct{u}_2}$ is block diagonal or triangular, then the Cholesky factorisation of  $\pd{\genfunc_{\rvct{x}}}{\vct{u}_2} \pd{\genfunc_{\rvct{x}}}{\vct{u}_2}\phantom{}\tr$ can be computed at a cost $\mathcal{O}(G D^3)$ for block diagonal, and $\mathcal{O}(G^2 D^3)$ for block triangular $\pd{\genfunc_{\rvct{x}}}{\vct{u}_2}$, with then again $\mathcal{O}(LN_{\rvct{x}}^2)$ cost low-rank updates of this Cholesky factor by the columns of $\pd{\genfunc_{\rvct{x}}}{\vct{u}_1}$ performed. 
 
 When $\rvct{x}_i$ and $\rvct{u}_{2,i}$ are vectors of differing dimensions, with generally in this case $\dim(\rvct{u}_{2,i}) > \dim(\rvct{x}_{i})$ due to the requirement the total number of random inputs $M$ is at least $N_{\rvct{x}}$, then though we could choose a subset of each $\rvct{u}_{2,i}$ of equal dimension to $\rvct{x}_i$ so as to identify a block-triangular component, generally any gain here will be minimal and it may be preferable to use efficient blocked algorithhms to compute the Cholesky of $\jacobian{\genfunc_{\rvct{x}}}\jacobian{\genfunc_{\rvct{x}}}\phantom{}\tr$ directly.
 
@@ -1183,7 +1185,7 @@ The matrix inside the left $\textrm{vec}$ operator can be computed once by reusi
 
 \subsection{Initialising the state}
 
-A final implementation detail is the requirement to find an initial $\vct{u}$ satisfying $\genfunc_{\rvct{x}}(\vct{u}) = \vct{x}$ to initialise the chain at. In directed generative models with one of the structures described in Section \ref{subsec:dgm-exploiting-model-structure}, a method we found worked well in the experiments was to sample a $\vct{u}_1$, $\vct{u}_2$ pair from $\prob{\rvct{u}}$ and then keeping the $\vct{u}_1$ values fixed, solve $\genfunc_{\rvct{x}}\lpa\genfunc_{\rvct{z}}(\vct{u}_1),\,\vct{u}_2\rpa= \vct{x}$ for $\vct{u}_2$ using for example Newton's method or by directly minimising the Euclidean norm $\Vert\genfunc_{\rvct{x}}\lpa\genfunc_{\rvct{z}}(\vct{u}_1),\,\vct{u}_2\rpa - \vct{x}\Vert_2^2$ with respect to $\vct{u}_2$ by gradient descent. In more general cases one strategy is to randomly sample affine subspaces by generating a $M \times N_{\rvct{x}}$ matrix $\mtx{P}$ and $M$ dimensional vector $\vct{b}$ and then attempting to find any intersections with the manifold by iteratively solving $\genfunc_{\vct{x}}\lpa\mtx{P}\vct{v} + \vct{b}\rpa$ for $\vct{v}$, sampling a new subspace if no roots are found.
+A final implementation detail is the requirement to find an initial $\vct{u}$ satisfying $\genfunc_{\rvct{x}}(\vct{u}) = \vct{x}$ to initialise the chain at. In directed generative models with one of the structures described in Section \ref{subsec:dgm-exploiting-model-structure}, a method we found worked well in the experiments was to sample a $\vct{u}_1$, $\vct{u}_2$ pair from $\prob{\rvct{u}}$ and then keeping the $\vct{u}_1$ values fixed, solve $\genfunc_{\rvct{x}|\rvct{z}}\lpa\genfunc_{\rvct{z}}(\vct{u}_1),\,\vct{u}_2\rpa= \vct{x}$ for $\vct{u}_2$ using for example Newton's method or by directly minimising the Euclidean norm $\Vert\genfunc_{\rvct{x}|\rvct{z}}\lpa\genfunc_{\rvct{z}}(\vct{u}_1),\,\vct{u}_2\rpa - \vct{x}\Vert_2^2$ with respect to $\vct{u}_2$ by gradient descent. In more general cases one strategy is to randomly sample affine subspaces by generating a $M \times N_{\rvct{x}}$ matrix $\mtx{P}$ and $M$ dimensional vector $\vct{b}$ and then attempting to find any intersections with the manifold by iteratively solving $\genfunc_{\vct{x}}\lpa\mtx{P}\vct{v} + \vct{b}\rpa$ for $\vct{v}$, sampling a new subspace if no roots are found.
 
 %For general generators, we can choose a subset of the inputs (or linear projections of the inputs) of dimensionality $N_{\rvct{x}}$ and plug the resulting system of equations into a black-box solver.
 
@@ -1213,7 +1215,7 @@ with $z_1$ a location parameter, $z_2$ a positive scale parameter and $z_3$ and 
 \begin{equation}\label{eq:generalised-lambda-param-prior}
   \pden{\rvct{z}}(\vct{z}) = \textrm{Exp}(z_2\gvn\lambda) \prod_{i \in \fset{1,3,4}} \nrm{z_i \gvn 0, \sigma^2}
 \end{equation}
-corresponding to independent normal priors on each of the location and shape parameters and an exponential prior on the location parameter. In the experiments in \citep{mcvinish2012improving} the prior hyper parameters are chosen as $\sigma = 10$ and $\lambda = \nicefrac{1}{10}$. In \citep{mcvinish2012improving} the proposed modified \ac{ABC} \ac{MCMC} algorithm is compared to a standard pseudo-marginal \ac{ABC} \ac{MCMC} approach and a population Monte Carlo \ac{ABC} method \citep{beaumont2009adaptive}. The proposed modified \ac{ABC} \ac{MCMC} algorithm was found to significantly outperform the other two approaches, and so we focus on comparing to this method.
+corresponding to independent normal priors on each of the location and shape parameters and an exponential prior on the scale parameter. In the experiments in \citep{mcvinish2012improving} the prior hyper parameters are chosen as $\sigma = 10$ and $\lambda = \nicefrac{1}{10}$. In \citep{mcvinish2012improving} the proposed modified \ac{ABC} \ac{MCMC} algorithm is compared to a standard pseudo-marginal \ac{ABC} \ac{MCMC} approach and a population Monte Carlo \ac{ABC} method \citep{beaumont2009adaptive}. The proposed modified \ac{ABC} \ac{MCMC} algorithm was found to significantly outperform the other two approaches, and so we focus on comparing to this method.
 
 We compare a Cython \citep{behnel2011cython} implementation of the modified \ac{ABC} \ac{MCMC} algorithm to two of the algorithms proposed in previous sections: an \ac{ABC} approach with a Gaussian kernel $k_\epsilon$, running \ac{HMC} in the input space to a differentiable generator for the model as discussed in Section \ref{sec:abc-inference-in-input-space}; the constrained \ac{HMC} algorithm proposed in Section \ref{sec:chmc}, conditioning the output of a differentiable generator to be exactly equal to observed data. As in \citep{mcvinish2012improving} we use $N=250$ generated data points using the parameters $\vct{z} = [5,~1,~0.4,~-0.1]\tr$ with the generated data used in our experiments shown in Figure \ref{fig:generalised-lambda-generated-data}. 
 
@@ -1254,13 +1256,13 @@ Here the input variables $\rvct{u}_2$ have independent unit-variance logistic di
 
 As the generated observed variables $\rvct{x}$ are conditionally independent given the parameter variables $\rvct{z}$, the Jacobian of the overall generator $\genfunc_{\rvct{x}}(\rvct{u}) = \genfunc_{\rvct{x}|\rvct{z}}(\genfunc_{\rvct{z}}(\rvct{u}_1),\rvct{u}_2)$ has the block structure discussed in Section \ref{subsec:dgm-exploiting-model-structure}, with a dense matrix block corresponding to the partial derivatives of the generated $\rvct{x}$ with respect to the inputs $\rvct{u}_1$ mapping to parameters, and a diagonal matrix block corresponding to the partial derivatives of the generated $\rvct{x}$ with respect to the inputs $\rvct{u}_2$. As described in Section \ref{subsec:dgm-exploiting-model-structure} this allows efficient computation of the Jacobian product Cholesky factor in the constrained \ac{HMC} algorithm.
 
-The modified \ac{ABC} \ac{MCMC} method uses a proposal kernel to generate updates to the parameters $\rvct{z}$ which are then accepted or rejected in a Metropolis--Hastings step. We follow the experiments of \citep{mcvinish2012improving} and use a uniform random-walk proposal density $\mathcal{U}(z' \gvn z - s, z +s)$ where $s$ is a step-size parameter, which was tuned to give an average accept rate of $\sim 0.25$ in pilot runs, with $s = 0.075$ used in our experiments. The interval bisection method used to construct the proposed updates to the auxiliary uniform variables has a free parameters $m$ defining the number of bisection iterations; following the method used in the experiments of \citep{mcvinish2012improving} we use $m = 16$. The \ac{ABC} kernel used in the modified \ac{ABC} \ac{MCMC} algorithm is uniform across a cubic region specified by an infinity norm tolerance
+The modified \ac{ABC} \ac{MCMC} method uses a proposal kernel to generate updates to the parameters $\rvct{z}$ which are then accepted or rejected in a Metropolis--Hastings step. We follow the experiments of \citep{mcvinish2012improving} and use a uniform random-walk proposal density $\mathcal{U}(z' \gvn z - s, z +s)$ where $s$ is a step-size parameter, which was tuned to give an average accept rate of $\sim 0.25$ in pilot runs, with $s = 0.075$ used in our experiments. The interval bisection method used to construct the proposed updates to the auxiliary uniform variables has a free parameter $m$ defining the number of bisection iterations; following the method used in the experiments of \citep{mcvinish2012improving} we use $m = 16$. The \ac{ABC} kernel used in the modified \ac{ABC} \ac{MCMC} algorithm is uniform across a cubic region specified by an infinity norm tolerance
 \begin{equation}
   k_{\epsilon}(\vct{y} \gvn \vct{x}) = \frac{1}{\epsilon^D} \ind{[0,\epsilon]}\lpa \Vert \vct{y} - \vct{x} \Vert_{\infty}\rpa = \frac{1}{\epsilon^D} \prod_{d=1}^D \ind{[0,\epsilon]}(|y_i - x_i|)
 \end{equation}
 with the product decomposition of this kernel being central to the proposed efficient update to the auxiliary variables in \citep{mcvinish2012improving}. We follow \citep{mcvinish2012improving} in using a tolerance of $\epsilon = 0.1$ in the experiments.
 
-In pilot runs with the modified \ac{ABC} \ac{MCMC} algorithm, we found that when initialising chains from the normal--exponential prior \eqref{eq:generalised-lambda-param-prior} with hyperparameters $\sigma = 10$ and $\lambda = \nicefrac{1}{10}$, that some chains failed to converge, remaining at the initial state for long series of rejections even with very small step sizes and in some cases failing completely due to numerical overflow. By generating an additional synthetic dataset using parameters sampled from a prior with  $\sigma = 10$ and $\lambda = \nicefrac{1}{10}$ it was found that this prior choice put significant mass on settings leading to very extreme sampled values and in some cases producing values beyond the maximum range of double precision floating point. As such extreme variation in the target distribution seem implausible a-priori, we use a more informative choice of prior in our experiments with $\sigma = \lambda = 1$, with this choice giving a more plausible range of variation for simulated datasets. We found the regularisation provided by this choice to significantly improve the stability of all the methods tested while having a negligible impact on the inferred posteriors.
+In pilot runs with the modified \ac{ABC} \ac{MCMC} algorithm, we found that when initialising chains from the normal--exponential prior \eqref{eq:generalised-lambda-param-prior} with hyperparameters $\sigma = 10$ and $\lambda = \nicefrac{1}{10}$, that some chains failed to converge, remaining at the initial state for long series of rejections even with very small step sizes and in some cases failing completely due to numerical overflow. By generating additional synthetic datasets using parameters sampled from a prior with  $\sigma = 10$ and $\lambda = \nicefrac{1}{10}$ it was found that this prior choice put significant mass on settings leading to very extreme sampled values and in some cases producing values beyond the maximum range of double precision floating point. As such extreme variation in the target distribution seems implausible a-priori, we use a more informative choice of prior in our experiments with $\sigma = \lambda = 1$, with this choice giving a more plausible range of variation for simulated datasets. We found the regularisation provided by this choice to significantly improve the stability of all the methods tested while having a negligible impact on the inferred posteriors.
 
 For all the approaches tested, the chains for the parameter values $\rvct{z}$, or correspondingly the input variables $\rvct{u}_1$ in the case of the methods parameterised in the generator input space, were initialised from values sampled from the prior, with the same 5 independently sampled initial states used for all chains. For the constrained \ac{HMC} chains, the initial states of the remaining $\rvct{u}_2$ input variables were set by using an optimisation routine to solve for values of these variables giving generated observed outputs within an maximum elementwise distance of $10^{-8}$ of the observed data values. These same optimised $\rvct{u}_2$ initial states were also used for the unconstrained \ac{HMC} chains. This optimisation was a negligible overhead (less than one second) and so not included in the run time estimates.
 
@@ -1305,7 +1307,7 @@ As a second test case we considered inferring the parameters of a \ac{SDE} varia
 \end{equation}
 where $r$ represents the prey population, $f$ the predator population, $\fset{z_i}_{i=1}^4$ the system parameters and $n_r$ and $n_f$ are zero-mean white noise processes.
 
-A simulator for these \acp{SDE} can be formed by using an Euler--Maruyuma \citep{kloeden1992numerical} integration scheme to generate simulated realisations of the stochastic process at discrete time points. If the white-noise processes $n_r$ and $n_f$ have variances $\sigma_r^2$ and $\sigma_f^2$ respectively, then an Euler--Maruyama discretisation of $N_s$ time points of the \acp{SDE} \ref{eq:lotka-volterra} with an integrator time step $\delta t$ and initial system state $(r_0,f_0)$ can be generated given a vector of standard normal random variates $\rvct{u}_2$ as defined in the following pseudo-code.
+A simulator for these \acp{SDE} can be formed by using an Euler--Maruyuma \citep{kloeden1992numerical} integration scheme to generate simulated realisations of the sto\-chastic process at discrete time points. If the white-noise processes $n_r$ and $n_f$ have variances $\sigma_r^2$ and $\sigma_f^2$ respectively, then an Euler--Maruyama discretisation of $N_s$ time points of the \acp{SDE} \ref{eq:lotka-volterra} with an integrator time step $\delta t$ and initial system state $(r_0,f_0)$ can be generated given a vector of standard normal random variates $\rvct{u}_2$ as defined in the following pseudo-code.
 \vspace{3mm}
 \hrule
 \begin{algorithmic}
@@ -1314,8 +1316,8 @@ A simulator for these \acp{SDE} can be formed by using an Euler--Maruyuma \citep
   \State $\rvar{r}_0 \gets r_0$  
   \State $\rvar{f}_0 \gets f_0$
   \For{$s \in \fset{1 \dots N_s}$}
-    \State $\rvar{r}_s \gets \rvar{r}_{s-1} + \delta t(\rvar{z}_1 \rvar{r}_{s-1} - \rvar{z}_2 \rvar{r}_{s-1} \rvar{f}_{s-1}) + \sqrt{\delta t} \sigma  \rvar{u}_{2,2s}$
-    \State $\rvar{f}_s \gets \rvar{f}_{s-1} + \delta t(\rvar{z}_4 \rvar{r}_{s-1} \rvar{f}_{s-1} - \rvar{z}_3 \rvar{f}_{s-1}) + \sqrt{\delta t} \sigma  \rvar{u}_{2,2s+1}$
+    \State $\rvar{r}_s \gets \rvar{r}_{s-1} + \delta t(\rvar{z}_1 \rvar{r}_{s-1} - \rvar{z}_2 \rvar{r}_{s-1} \rvar{f}_{s-1}) + \sqrt{\delta t} \sigma_r  \rvar{u}_{2,2s}$
+    \State $\rvar{f}_s \gets \rvar{f}_{s-1} + \delta t(\rvar{z}_4 \rvar{r}_{s-1} \rvar{f}_{s-1} - \rvar{z}_3 \rvar{f}_{s-1}) + \sqrt{\delta t} \sigma_f  \rvar{u}_{2,2s+1}$
   \EndFor
   \State $\rvct{x} \gets \lsb \rvar{r}_1,\, \rvar{f}_1, \,\dots \rvar{r}_{N_s},\,\rvar{f}_{N_s} \rsb$
   \State \Return $\rvct{x}$
@@ -1326,7 +1328,7 @@ A simulator for these \acp{SDE} can be formed by using an Euler--Maruyuma \citep
 \vspace{1mm}
 As suggested by the notation we can consider this Euler--Maruyama integration as defining the observed generator of a directed generative model, mapping from the unobserved parameter variables $\rvct{z}$ and an auxiliary vector of standard normal random inputs $\rvct{u}_2$ to a vector formed by the concatenation of the simulated state sequences. This mapping is differentiable with respect to $\rvct{z}$ and $\rvct{u}_2$ and so defines a differentiable generative model. The generator in this case has the Markovian structure discussed in Section \ref{subsec:dgm-exploiting-model-structure} allowing efficient computation of the Cholesky factor of the Jacobian matrix product $\jacobian{\genfunc_{\rvct{x}}}\jacobian{\genfunc_{\rvct{x}}}\tr$.
 
-In the parameterisation used in \eqref{eq:lotka-volterra}, all of the parameter variables $\rvct{z}$ are required to be positive. A simple suitable choice of a prior distribution on the parameters is therefore a log-normal distribution
+In the parameterisation used in \eqref{eq:lotka-volterra}, all of the parameter variables $\rvct{z}$ are required to be positive. A simple choice of a prior distribution on the parameters is therefore a log-normal distribution
 \begin{equation}
   \pden{\rvct{z}}(\vct{z}) = \prod_{i=1}^4 \textrm{LogNorm}(z_i \gvn m_i, s_i)
 \end{equation}
@@ -1383,11 +1385,11 @@ To test how informative the nine summary statistics used in the \ac{ABC} \ac{MCM
 
 The resulting estimates of the marginal posteriors on the model parameters formed using the samples from the constrained \ac{HMC} chains run in these two cases are shown in the top two rows in Figure \ref{fig:lotka-volterra-param-posterior}, with the top row (labelled `Cons. HMC (all)') corresponding to the posterior distribution conditioned on all of the data, and the second row (labelled `Cons. HMC (sum.)') corresponding to the posterior distribution conditioned on just the summary statistics of the data. It can be seen that in both cases the estimated posteriors are concentrated around the parameter values used to generate the data (indicated by orange dashed lines), unlike the previous results in Figure \ref{fig:lotka-volterra-param-posterior-abc-summary}. Interestingly there seems to be minimal loss of information about the parameters when conditioning on just the summary statistics rather than the full data here, with the estimated marginal posteriors for the summary statistics chains only barely noticeably more diffuse than the corresponding marginal posterior estimates for the full data chains. In both cases the estimated \ac{PSRF} statistics across the 10 chains are $\hat{R} = 1.00$.
 
-We also tested our proposed approach of performing \ac{ABC} inference by running chains in the input space to the generator, as discussed in Section \ref{sec:abc-inference-in-input-space}. Encouragingly we found that by performing \ac{MCMC} updates to the random inputs to the generator, we are able to tractably perform \ac{ABC} inference when conditioning on the full observed data, even when using relatively simple non-gradient based \ac{MCMC} methods. In particular based on the auxiliary pseudo-marginal slice sampling methods discussed in Chapter \ref{ch:pseudo-marginal-methods}, we tried using alternating elliptical slice sampling updates of the random inputs $\rvct{u}_1$ used to generate the parameters, i.e. $\rvct{z} = \genfunc_{\rvct{z}}(\rvct{u}_1)$, and remaining random inputs $\rvct{u}_2$ used to generate the simulated observations given parameters, i.e. $\rvct{x} = \genfunc_{\rvct{x}|\rvct{z}}(\rvct{z},\rvct{u}_2)$. Using this method, which has zero free parameters to tune, we were able to construct chains which appeared to converge to a reasonable approximate posterior both when using a uniform ball kernel with $\epsilon=100$ and $\epsilon=10$ and when using a Gaussian kernel with $\epsilon=10$. We also ran \ac{HMC} chains with a $\epsilon=10$ Gaussian kernel, using an integrator time step $\delta t = 2.5 \times 10^{-3}$ and a number of leapfrog steps per proposed update $L$ sampled uniformly from $[10, 20]$. For the slice sampling approaches we ran 10 independent chains of 60\,000 samples for each kernel / tolerance combination, discarding the first 30\,000 samples as warm-up iterations, and for the \ac{HMC} case we ran 10 independent chains of 10\,000 samples, discarding the first 5\,000 samples as warm-up iterations.
+We also tested our proposed approach of performing \ac{ABC} inference by running chains in the input space to the generator, as discussed in Section \ref{sec:abc-inference-in-input-space}. Encouragingly we found that by performing \ac{MCMC} updates to the random inputs to the generator, we are able to tractably perform \ac{ABC} inference when conditioning on the full observed data, even when using relatively simple non-gradient based \ac{MCMC} methods. In particular based on the auxiliary pseudo-marginal slice sampling methods discussed in Chapter \ref{ch:pseudo-marginal-methods}, we tried using alternating elliptical slice sampling updates of the random inputs $\rvct{u}_1$ used to generate the parameters, i.e. $\rvct{z} = \genfunc_{\rvct{z}}(\rvct{u}_1)$, and remaining random inputs $\rvct{u}_2$ used to generate the simulated observations given parameters, i.e. $\rvct{x} = \genfunc_{\rvct{x}|\rvct{z}}(\rvct{z},\rvct{u}_2)$. Using this method, which has zero free parameters to tune, we were able to construct chains which appeared to converge to a reasonable approximate posterior both when using a uniform ball kernel with $\epsilon=100$ and $\epsilon=10$ and when using a Gaussian kernel with $\epsilon=10$. We also ran \ac{HMC} chains with a $\epsilon=10$ Gaussian kernel, using an integrator time step $\delta t = 2.5 \times 10^{-3}$ and a number of leapfrog steps per update $L$ sampled uniformly from $[10, 20]$. For the slice sampling approaches we ran 10 independent chains of 60\,000 samples for each kernel and tolerance combination, discarding the first 30\,000 samples as warm-up iterations, and for the \ac{HMC} case we ran 10 independent chains of 10\,000 samples, discarding the first 5000 samples as warm-up iterations.
 
 Estimates of the marginal posterior distributions on the parameters for these chains are shown in the last four rows of Figure \ref{fig:lotka-volterra-param-posterior}, with the label `ABC SS' indicating elliptical slice sampling chains and `ABC HMC' the \ac{HMC} chains and a $U$ in parenthesis in the label indicating use of uniform ball kernel and a $G$ in parenthesis in the label $G$ a Gaussian kernel, with in both cases the corresponding $\epsilon$ tolerance also given in the parentheses. It is immediately evident that the estimated \ac{ABC} marginal posteriors here are more diffuse than for the constrained \ac{HMC} chains, particularly for the slice sampling chains using a uniform ball kernel with $\epsilon = 100$ (fourth row), though the estimated posteriors are still significantly more concentrated than for the summary statistic based \ac{ABC} posterior shown in Figure \ref{fig:lotka-volterra-param-posterior-abc-summary} (note the difference in the horizontal scales compared to Figure \ref{fig:lotka-volterra-param-posterior}). Unlike the summary-statistic based pseudo-marginal \ac{ABC} \ac{MCMC} estimates  in Figure \ref{fig:lotka-volterra-param-posterior-abc-summary} though, all of the marginal posterior estimates for these \ac{ABC} methods using the full set of observations are concentrated around the region of the parameters used to generate the data, and seem to broadly consistent, albeit more diffuse, with the constrained \ac{HMC} estimates of the true posterior.
 
-Between the four different approaches, the estimates of the \ac{ABC} posterior using a uniform ball kernel with $\epsilon = 10$ (row three) seem to be the closest to the constrained \ac{HMC} estimates of the true posterior (first row), with in particular the marginal estimates for $\rvar{z}_1$ and $\rvar{z}_2$ visually very similar. For the $\rvar{z}_3$ and $\rvar{z}_4$ marginal posterior estimates in the uniform ball kernel $\epsilon = 10$ case there are spurious appearing peaks however suggesting possible convergence issues and this is backed up by a \ac{PSRF} statistic of $\hat{R} = 1.89$ across the 10 chains. Although not as visible in the marginal posterior estimates, the Gaussian kernel \ac{HMC} chains also suffered convergence issues, with a \ac{PSRF} statistic of $\hat{R} = 1.33$ across the 10 chains. The $\epsilon=10$ Gaussian kernel and $\epsilon=100$ uniform ball kernel slice sampling chains both had estimated \ac{PSRF} statistics of $\hat{R} = 1.01$.
+Between the four different approaches, the estimates of the \ac{ABC} posterior using a uniform ball kernel with $\epsilon = 10$ (third row) are closest to the constrained \ac{HMC} estimates of the true posterior (first row), with in particular the marginal estimates for $\rvar{z}_1$ and $\rvar{z}_2$ visually very similar. For the $\rvar{z}_3$ and $\rvar{z}_4$ marginal posterior estimates in the uniform ball kernel $\epsilon = 10$ case there are spurious appearing peaks however suggesting possible convergence issues and this is backed up by a \ac{PSRF} statistic of $\hat{R} = 1.89$ across the 10 chains. Although not as visible in the marginal posterior estimates, the Gaussian kernel \ac{HMC} chains also suffered convergence issues, with a \ac{PSRF} statistic of $\hat{R} = 1.33$ across the 10 chains. The $\epsilon=10$ Gaussian kernel and $\epsilon=100$ uniform ball kernel slice sampling chains both had estimated \ac{PSRF} statistics of $\hat{R} = 1.01$.
 
 \begin{figure}
 \centering
@@ -1449,12 +1451,11 @@ Somewhat counter-intuitively perhaps, the constrained \ac{HMC} chains conditione
   \EndFor
   \State \Return $\mtx{W}_{L}\rvct{h}_{L-1} + \vct{b}_L$
 \EndFunction
-\Function{$\genfunc_{\rvct{x}|\rvct{z}}$}{$[\rvct{z}_a;\,\rvct{z}_b;\,\rvct{z}_c],\,\rvct{u}_n$}
+\Function{$\genfunc_{\rvct{x}|\rvct{z}}$}{$[\rvct{z}_a;\,\rvct{z}_b;\,\rvct{z}_c]$}
   \State $\rvct{P} \gets \Call{JointPositions}{\rvct{z}_a,\rvct{z}_b}$
   \State $\rvct{C}_1,\,\rvct{C}_2 \gets \Call{CameraMatrices}{\rvct{z}_c}$
   \State $\rvct{X}_1 \gets \Call{Project}{\rvct{C}_1, \rvct{P}}$
   \State $\rvct{X}_2 \gets \Call{Project}{\rvct{C}_2, \rvct{P}}$
-  \State $\rvct{n} \gets \epsilon \rvct{u}_n$ 
   \State \Return $\Call{Flatten}{[\rvct{X}_1; \rvct{X}_2]}$
 \EndFunction
 \end{algorithmic}
@@ -1526,7 +1527,7 @@ We ran chains using the proposed constrained \ac{HMC} method with the noisy gene
 
 For the standard \ac{HMC} chains we used an integrator step size of $\delta t = 2 \times 10^{-4}$ and a number of leapfrog steps $L$ per proposed update randomly sampled from $[100,200]$. We again ran five chains, independently sampling the initial $\rvct{u}$ state from the normal prior, and running each chain for 1200 samples. The small integrator step size used here was the result of higher step sizes leading to some chains accepting very few or in some cases no updates. This issue was also encountered when using smaller numbers of leapfrog steps per update, including just one integrator step, with these chains however showing marginally slower overall run-time adjusted convergence. Given the small size of $\epsilon$ here and the resulting tight concentration of the posterior mass around the fibre $\preimage{\genfunc_{\rvct{x}}}{\vct{x}}$, the need for a small step size when using an unconstrained \ac{HMC} approach is not surprising, however the ability of the constrained \ac{HMC} updates to support a much larger step size is encouraging. %provides evidence in support of the earlier assertion in Section \ref{sec:abc-inference-in-input-space} that the constrained \ac{HMC} updates can give 
 
-Due to the high-dimensional nature of the latent variables being inferred it is challenging to assess the convergence of the chains here. As a proxy measure for convergence, we computed the \ac{RMSE} of an estimate of the three-dimensional joint positions compared the true positions, computed using the mean of the three-joint positions generated from the posterior $\rvct{u}$ input samples. In this binocular case, the disparity in projected joint positions between the two projections gives information about the distances of the corresponding joints from the image plane in the depth direction and so we would expect the posterior distribution on the three-dimensional pose to be concentrated around the true values used to generate the observations.
+Due to the high-dimensional nature of the latent variables being inferred it is challenging to assess the convergence of the chains here. As a proxy measure for convergence, we computed the \acf{RMSE} of an estimate of the three-dimensional joint positions compared the true positions, computed using the mean of the three-joint positions generated from the posterior $\rvct{u}$ input samples. In this binocular case, the disparity in projected joint positions between the two projections gives information about the distances of the corresponding joints from the image plane in the depth direction and so we would expect the posterior distribution on the three-dimensional pose to be concentrated around the true values used to generate the observations.
 
 The right column of Figure \ref{fig:pose-inference} shows the \ac{RMSE} values as a function of the computation time taken to generate the number of samples included in the estimate, for each of the three generated scenes (with the projection visualisations corresponding to the \ac{RMSE} plots in each row). The constrained \ac{HMC} chains (green curves) consistently give position estimates which converge more quickly towards the true positions. In this case standard \ac{HMC} performs relatively poorly despite the significantly cheaper cost of each integrator step compared to the constrained dynamics. The posterior distribution on the model inputs appeared to be multimodal here, with the chains often appearing to converge to slightly different modes. Visually inspecting the sampled poses and individual run traces (not shown) it seems that there are a number of local modes corresponding to a small subset of joints being `incorrectly' positioned; both the \ac{HMC} and constrained \ac{HMC} chains are likely to be equally susceptible to getting stuck in local modes, as neither dynamic is likely to overcome large energy barriers. %In general the constrained \ac{HMC} method seemed to be less susceptible to this issue.
 
@@ -1561,7 +1562,7 @@ The formulation of generative models as deterministic functions of random input 
 
 From a computational perspective this may seem a potentially rash idea. The dimensionality of the inputs $\rvct{u}$ will typically be significantly higher than the dimensionality of the latent variables $\rvct{x}$. Trying to infer all of $\rvct{u}$ when we are only directly interested in the subset which are used to generate $\rvct{z}$ might appear as if it is increasing the dimensionality of the inference problem for little gain. However as we saw in the previous chapter pseudo-marginal \ac{MCMC} methods, which include the standard \ac{ABC} \ac{MCMC} algorithm, can be considered as Metropolis--Hastings transition operator on an augmented state space including auxiliary random inputs, in which updates to these auxiliary variables are proposed independently of the previous values. Although independently proposing updates to the auxiliary variables by drawing values directly from a random number generator conceals their presence in the algorithm by not requiring them to be explicitly enumerated, the succession of values drawn still implicitly defines a Markov chain on these (potentially high-dimensional) variables.
 
-The approaches we propose in this chapter make the construction of a chain on the joint space of all random inputs explicit. The explicit form of the \ac{ABC} posterior density on the generator inputs \eqref{eq:abc-density-input-space} allows the application of a much greater range of \ac{MCMC} methods to \ac{ABC} inference problems than the standard pseudo-marginal Metropolois--Hastings based algorithm. In particular it opens up the door to adaptive methods such as slice sampling and gradient-based approaches such as \ac{HMC}. As we saw in the Lotka--Volterra experiments, in some cases by using these more efficient transition operators, we are able to tractably condition on all observed data when performing inference in a simulator model when standard \ac{ABC} methods are only able to function at all when reducing to summary statistics. The use of slice sampling methods within \ac{ABC} inference problems seems particularly promising, with the algorithms having minimal or no free parameters to tune and requiring no model gradients meaning there is a relatively low implementation overhead required to apply them to existing models. 
+The approaches we propose in this chapter make the construction of a chain on the joint space of all random inputs explicit. The explicit form of the \ac{ABC} posterior density on the generator inputs \eqref{eq:abc-density-input-space} allows the application of a much greater range of \ac{MCMC} methods to \ac{ABC} inference problems than the standard pseudo-marginal Metropolis--Hastings based algorithm. In particular it opens up the door to adaptive methods such as slice sampling and gradient-based approaches such as \ac{HMC}. As we saw in the Lotka--Volterra experiments, in some cases by using these more efficient transition operators, we are able to tractably condition on all observed data when performing inference in a simulator model when standard \ac{ABC} methods are only able to function at all when reducing to summary statistics. The use of slice sampling methods within \ac{ABC} inference problems seems particularly promising, with the algorithms having minimal or no free parameters to tune and requiring no model gradients meaning there is a relatively low implementation overhead required to apply them to existing models. 
 %We have presented a generally applicable framework for performing inference in differentiable generative models. Though simulating the constrained Hamiltonian dynamic is computationally costly, the resulting coherent exploration of the state space can lead to significantly improved sampling efficiency over alternative methods.
 
 For the restricted class of \emph{differentiable generative models}, the constrained \ac{HMC} approach we propose in some cases allows asymptotically exact inference where \ac{ABC} methods might otherwise be used. The proposed algorithm helps deal with two of the key issues in \ac{ABC} methods --- enabling inference in continuous spaces as $\epsilon$ collapses to zero and allowing efficient inference when conditioning on high-dimensional observations without the need for dimensionality reduction with summary statistics (and the resulting task of choosing appropriate summary statistics). As well as being of practical importance itself, this approach should be useful in providing `ground truth' inferences in more complex models to assess the affect of the approximations used in \ac{ABC} methods on the quality of the inferences. The application of constrained \ac{HMC} to a generator function outputting summary statistics in the Lotka--Volterra experiments was an interesting example of this: that the posterior conditioning exactly on the summaries without use of an \ac{ABC} kernel would be nearly as informative about the parameters as conditioning on all of the data was not obvious a-priori, and highlighted the complex interaction between the use of summaries and the kernel and tolerance choice in the resulting \ac{ABC} posterior.
@@ -1592,6 +1593,6 @@ Our method also differs in treating all inputs to a generator equivalently; whil
 
 %\emph{Coupled \ac{ABC}} \citep{neal2012efficient} also formulates a simulator model as a deterministic function of the model parameters and a vector of auxiliary random inputs. The proposed algorithm requires that 
 
-\emph{Automatic Variational ABC} \citep{moreno2016automatic} considers the application of variational inference methods to simulator models. The proposed method utilises a reparameterisation of a directed generative model as a deterministic function of the model parameters ($\rvct{z}$ in our notation) and the auxiliary random inputs used in generation of the observations given parameter values ($\rvct{u}_2$ in our notation). The authors also use a further reparameterisation of the models as a determinsitic function of a vector of auxiliary random variables with a fixed distribution, this motivated by a similar `reparameterisation trick' employed in training \ac{VAE} models \citep{kingma2013auto}. This formulation is used to construct a stochastic estimator of an \ac{ABC} kernel based variational lower bound, which is then maximised using a stochastic gradient ascent algorithm. Calculation of the stochastic gradient estimator requires propagating gradients through the simulator, with as in our case reverse-mode \ac{AD} used to automate this process. %The application of variational inference methods to \ac{ABC} inference problems is an interesting direction, and 
+\emph{Automatic Variational ABC} \citep{moreno2016automatic} considers the application of variational inference methods to simulator models. The proposed method utilises a reparameterisation of a directed generative model as a deterministic function of the model parameters ($\rvct{z}$ in our notation) and the auxiliary random inputs used in generation of the observations given parameter values ($\rvct{u}_2$ in our notation). The authors also use a further reparameterisation of the models as a deterministic function of a vector of auxiliary random variables with a fixed distribution, this motivated by a similar `reparameterisation trick' employed in training \ac{VAE} models \citep{kingma2013auto}. This formulation is used to construct a stochastic estimator of an \ac{ABC} kernel based variational lower bound, which is then maximised using a stochastic gradient ascent algorithm. Calculation of the stochastic gradient estimator requires propagating gradients through the simulator, with as in our case reverse-mode \ac{AD} used to automate this process. %The application of variational inference methods to \ac{ABC} inference problems is an interesting direction, and 
 
 %The application of variational inference methods with an \ac{ABC} setting is an interesting direction
