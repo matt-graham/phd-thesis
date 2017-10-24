@@ -1,0 +1,156 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{lmodern}
+\usepackage{enumitem}
+\setlist[description]{style=nextline}
+\usepackage[left=3cm,right=3cm,top=3cm,bottom=3cm]{geometry}
+\author{Matt Graham}
+\title{List of corrections completed}
+\begin{document}
+\maketitle
+
+\section*{Main corrections}\label{main-corrections}
+
+\begin{description}
+
+\item[Page 38 - Comment on criticisms of Bayesian model choice, such as high
+  sensitivity to priors and problems for misspecified models, perhaps
+  with reference to Bernardo and Smith's concept of ``M-closed'' and
+  other settings in ``Bayesian Theory'' (Section 6.1.2)]
+  Additional material added to end of Section 1.3.4 (from paragraph starting `A common criticsm...' on page 39).
+\item[Pg 199 - Discuss reasons for taking \(\delta t = 1\) rather than \(\delta t \ll 1\) in the Lotka-Volterra SDE example.]
+  Added clarification of dependence of efficient Jacobian product decomposition in the Lotka--Volterra experiments on observing all simulated time steps as opposed to simulating using a smaller $\delta t$ and observing only e.g. every 10th. Sentence added at end of paragraph below generator code snippet on page 201, with added material beginning `This Markovian structure...'.
+\end{description}
+
+\section*{Minor corrections}\label{minor-corrections}
+
+\begin{description}
+\item[
+  Some Radon-Nikodyn derivatives were written with \(\partial\) symbols.]
+  All instances of use partial derivatives in Radon--Nikodym corrected.
+\item[
+  Page 31 - ``in figure 1.4 we assume the local latent and observed
+  variables are conditionally independent given the global latent
+  variables''. Reword to make clear that it's conditional independence
+  of (y, z) pairs of the other pairs.]
+  Conditional independence statement clarified in first paragraph on page 31.
+\item[
+  Pg 103 - Mention condition that p must be absolutely continuous with
+  respect to q.]
+  Absolute continuity condition added in first paragraph on page 105.
+\item[
+  Pg 107 - Introduce the notation \(Y, v\) used for the measure of the
+  latent variables.]
+  Reference measure $\nu$ notation now explicitly defined in last paragraph on page 109.
+\item[
+  A few mathematical terms not defined e.g. Pg 172 - ``foliation'', Pg 181 - ``submersion''
+  ]
+  The term `foliation' was replaced with `partition' which is less technical but still gives the correct meaning on bottom of page 174. Giving a correct definition of `foliation' would have required introducing further non-relevant differential geometry material which I didn't think was worthwhile. The term `submersion' is now defined in a margin note on page 183 and `fibre' is defined on a margin note added to page 174.
+\item[
+  Pg 157 - Clarify: ``a generative model\ldots{} will not uniquely
+  define the resulting joint distribution''. It could be argued this
+  should be the other way round.]
+  Sentence at start of last paragraph on page 159 reworded.
+\item[
+  Pg 200 - Clarify why population blowup is a problem for inference.]
+  Added explanation at end of second paragraph on page 202.
+\item[
+  Pg 201 - Confirm that ABC summary statistics were normalised.]
+  On reviewing the code for this experiment, I found that I did not normalise the summary statistics. I repeated the relevant experiments with the summary statistics normalised by their estimated standard deviations under the prior (and excluding outliers corresponding to unstable dynamics). A description of the normalisation scheme was added (end of second paragraph on page 203, starting `To account for') and the analysis of the results in following two paragraphs and Figure 4.10 updated to reflect the results of the new correctly normalised experiments.
+\item[
+  Pg 237 - First term of (5.37) seems incorrect.]
+  Term corrected in equation (5.37) on page 239.
+\end{description}
+
+\section*{Typos}\label{typos}
+
+\begin{description}
+\item[
+  Pg 88 - ``The variables \(x \in X\) on which the target distribution P
+  which we wish to estimate integrals with respect to\ldots{}'']
+  Second paragraph page 90, `The variables $\boldsymbol{\mathsf{x}} \in X$ on which the target distribution $P$ is defined'
+\item[
+  Pg 104 - ``with they also giving'']
+  Last paragraph (start of section 3.2) on page 106, `as part of an'
+\item[
+  Pg 106 - ``assumption of that the'']
+  First sentence of second pagraph on page 108, `under an assumption that'
+\item[
+  Pg 108 - ``we known that'']
+  Start of last paragraph on page 110 `we know that'
+\item[
+  Pg 133 - ``\(j \in \{1..j-1\}\)'']
+  Code snippet on bottom of page 135, $j \in \lbrace 1 \,...\,i-1\rbrace$
+\item[
+  Pg 163 - ``contribution from to'']
+  Penultimate line in last paragraph on page 165. `contribution to the estimator'
+\item[
+  Pg 167 - ``it challenging to monitoring'']
+  Third paragraph page 169, `it challenging to monitor'
+\item[
+  Pg 176 - ``left target distributions'']
+  First paragraph in Section 4.8 on page 178, `leaves a target distribution'
+\item[
+  Pg 183 - ``from the that proposed'']
+  Last paragraph on page 185 `from that proposed in'
+\item[
+  Pg 190 - ``with they employing'']
+  Third paragraph on page 192, `with a pseudo-marginal ABC'
+\item[
+  Pg 197 - What does ``grouped chains'' refer to?]  
+  Second paragraph on page 199, changed `in seconds, grouped chains of each the four approaches tested' to `in seconds for each of the four approaches tested'  
+\item[
+  Pg 202 - ``conditioned on the summary statistics of the data being
+  within a distance of \(\epsilon=2.5\) of the data'' should end ``of
+  the observed summaries''.]
+  Clause `the estimated posterior may in fact be reflective of the true location of the mass of the distribution conditioned on the summary statistics of the data being within a distance of $\epsilon = 2.5$ of the data' removed from inside parentheses in first paragraph on page 204. 
+\item[
+  Pg 204 - ``we can simply defined'']
+  Second paragraph on page 206 `we can simply define an augmented'
+\item[
+  Pg 213 - ``and these with which a model can be repurposed''?]
+  Clause removed from first sentence of last paragraph on page 215 `[of the approach] and these with which a model can be repurposed to another task while using the same inference methods[, we also considered]'
+\item[
+  Pg 223 - ``a sequence of\ldots{} transition operator\ldots{} are
+  defined'']
+  After equation (5.5) on page 225 `a sequece of $K-1$ Markov transition operators'
+\item[
+  Pg 227 - ``with they linking'']
+  After equation (5.15) on page 229 `and $\boldsymbol{\mathsf{x}} \,|\, \beta$, with they lonking this idea to simulated tempering' to `and $\boldsymbol{\mathsf{x}} \,|\, \beta$ as an obvious analogue to simulated tempering'
+\item[
+  Pg 227 - ``in of the'']
+  After equation (5.15) on page 229, `In of the equations' to `In the equation'
+\item[
+  Pg 228 - ``momenta however'' -\textgreater{} ``momenta. However'']
+  Second last paragraph on page 230 `This can be ameliorated by regular resampling of the momenta however this potentially increases random-walk behaviour' to `This can be ameliorated by regular resampling of the momenta at a cost of increasing the random-walk behaviour'
+\item[
+  Pg 234 - ``to corresponds to'']
+  Start of second paragraph on page 236 `target distribution to corresponds to' to `target distribution corresponds to'
+\item[
+  Pg 234 - ``respect to the the'']
+  After equation (5.25) on page 236 `as expectations with respect to the the marginal distributions' to `as expectations with respect to the marginal distributions'
+\item[
+  Pg 240 - ``the as result of'']
+  Final paragraph on page 242 `on $\log Z$ the as result of (5.33)' to `on $\log Z$ as a result of (5.33)'
+\item[
+  Pg 292 - ``Maria Antonieta Nunes'' -\textgreater{} ``Matthew A Nunes'']
+  Reference [44], last entry on page 296.
+\end{description}
+
+\section*{Additional corrections}
+
+\begin{itemize}
+  \item Various typos fixed throughout document as encountered while going through corrections.
+  \item Small text and hyphenation changes throughout document to fix overful hboxes (lines with too many characters).
+  \item Changes to bibliography entries to use consistent formatting.
+  \item Fixes to small mistakes in various figures such as missing axis tick labels or disconnected edges on factor graphs.
+  \item Minor update to acknowledgements.
+  \item Updating acronyms to be cross-reference to list of abbreviations in abstract.
+  \item Fixes to Lebesgue integral notation to make consistent across chapters e.g. $\mathrm{d}\mu(x)$ changed to $\mu(\mathrm{d}x)$.
+  \item Added content comparing continuous tempering method to \emph{Importance tempering} by Gramacy, Samworth and King (2010) in Discussion section on page 254.
+\end{itemize}
+
+\end{document}

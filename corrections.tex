@@ -1,0 +1,198 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Matt Graham Corrections},
+            pdfauthor={Dennis Prangle},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+  \title{Matt Graham Corrections}
+  \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+  \author{Dennis Prangle}
+  \preauthor{\centering\large\emph}
+  \postauthor{\par}
+  \predate{\centering\large\emph}
+  \postdate{\par}
+  \date{October 10, 2017}
+
+
+\begin{document}
+\maketitle
+
+\subsection{Main corrections}\label{main-corrections}
+
+\begin{itemize}
+\tightlist
+\item
+  Page 38 - Comment on criticisms of Bayesian model choice, such as high
+  sensitivity to priors and problems for misspecified models, perhaps
+  with reference to Bernardo and Smith's concept of ``M-closed'' and
+  other settings in ``Bayesian Theory'' (Section 6.1.2).
+\item
+  Pg 199 - Discuss reasons for taking \(\delta t = 1\) rather than
+  \(\delta t \ll 1\) in the Lotka-Volterra SDE example.
+\end{itemize}
+
+\subsection{Minor corrections}\label{minor-corrections}
+
+\begin{itemize}
+\tightlist
+\item
+  Some Radon-Nikodyn derivatives were written with \(\partial\) symbols.
+\item
+  Page 31 - ``in figure 1.4 we assume the local latent and observed
+  variables are conditionally independent given the global latent
+  variables''. Reword to make clear that it's conditional independence
+  of (y, z) pairs of the other pairs.
+\item
+  Pg 103 - Mention condition that p must be absolutely continuous with
+  respect to q.
+\item
+  Pg 107 - Introduce the notation \(Y, v\) used for the measure of the
+  latent variables.
+\item
+  A few mathematical terms not defined e.g.
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Pg 172 - ``foliation''
+  \item
+    Pg 181 - ``submersion''
+  \end{itemize}
+\item
+  Pg 157 - Clarify: ``a generative model\ldots{} will not uniquely
+  define the resulting joint distribution''. It could be argued this
+  should be the other way round.
+\item
+  Pg 200 - Clarify why population blowup is a problem for inference.
+\item
+  Pg 201 - Confirm that ABC summary statistics were normalised.
+\item
+  Pg 237 - First term of (5.37) seems incorrect.
+\end{itemize}
+
+\section{Typos}\label{typos}
+
+\begin{itemize}
+\tightlist
+\item
+  Pg 88 - ``The variables \(x \in X\) on which the target distribution P
+  which we wish to estimate integrals with respect to\ldots{}''
+\item
+  Pg 104 - ``with they also giving''
+\item
+  Pg 106 - ``assumption of that the''
+\item
+  Pg 108 - ``we known that''
+\item
+  Pg 133 - ``\(j \in \{1..j-1\}\)''
+\item
+  Pg 163 - ``contribution from to''
+\item
+  Pg 167 - ``it challenging to monitoring''
+\item
+  Pg 176 - ``left target distributions''
+\item
+  Pg 183 - ``from the that proposed''
+\item
+  Pg 190 - ``with they employing''
+\item
+  Pg 197 - What does ``grouped chains'' refer to?
+\item
+  Pg 202 - ``conditioned on the summary statistics of the data being
+  within a distance of \(\epsilon=2.5\) of the data'' should end ``of
+  the observed summaries''.
+\item
+  Pg 204 - ``we can simply defined''
+\item
+  Pg 213 - ``and these with which a model can be repurposed''?
+\item
+  Pg 223 - ``a sequence of\ldots{} transition operator\ldots{} are
+  defined''
+\item
+  Pg 227 - ``with they linking''
+\item
+  Pg 227 - ``in of the''
+\item
+  Pg 228 - ``momenta however'' -\textgreater{} ``momenta. However''
+\item
+  Pg 234 - ``to corresponds to''
+\item
+  Pg 234 - ``respect to the the''
+\item
+  Pg 240 - ``the as result of''
+\item
+  Pg 292 - ``Maria Antonieta Nunes'' -\textgreater{} ``Matthew A Nunes''
+\end{itemize}
+
+
+\end{document}
