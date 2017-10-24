@@ -1,0 +1,2 @@
+\pgfplotstableread{data/lcg-37-61-128-37.cvs}{\lcgfile}
+\drawgrid[zero color=black!80, one color=Maroon, cell ht=0.22em, cell wd=0.22em]{\lcgfile}
